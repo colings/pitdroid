@@ -14,8 +14,11 @@ import com.bonstead.pitdroid.R;
 public class DashActivity extends SherlockFragment implements HeaterMeter.Listener
 {
 	private HeaterMeter mHeaterMeter;
+
+	private TextView mFanSpeed;
 	private TextView[] mProbeNames = new TextView[HeaterMeter.kNumProbes];
 	private TextView[] mProbeVals = new TextView[HeaterMeter.kNumProbes];
+	private TextView mPitDelta;
 	private DecimalFormat mOneDec = new DecimalFormat("0.0");
 
     @Override
@@ -23,6 +26,8 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
                     Bundle savedInstanceState)
     {
     	View view = inflater.inflate(R.layout.activity_dash, container, false);
+
+    	mFanSpeed = (TextView)view.findViewById(R.id.fanSpeedVal);
 
         mProbeNames[0] = (TextView)view.findViewById(R.id.probe0name);
         mProbeNames[1] = (TextView)view.findViewById(R.id.probe1name);
@@ -34,11 +39,16 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
         mProbeVals[2] = (TextView)view.findViewById(R.id.probe2val);
         mProbeVals[3] = (TextView)view.findViewById(R.id.probe3val);
         
+        mPitDelta = (TextView)view.findViewById(R.id.probe0delta);
+        
+        mFanSpeed.setText("-");
+
 		for (int p = 0; p < HeaterMeter.kNumProbes; p++)
 		{
 			mProbeNames[p].setText("-");
 			mProbeVals[p].setText("-");
 		}
+		mPitDelta.setText("-");
 		
     	MainActivity main = (MainActivity)container.getContext();
     	mHeaterMeter = main.mHeaterMeter;
@@ -60,6 +70,8 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
     {
 		HeaterMeter.PackedSample sample = mHeaterMeter.getNewestSample();
 		
+        mFanSpeed.setText((int)(sample.mFanSpeed * 100) + "%");
+
 		for (int p = 0; p < HeaterMeter.kNumProbes; p++)
 		{
 			mProbeNames[p].setText(mHeaterMeter.mProbes[p].mName + ": ");
@@ -67,6 +79,19 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
 				mProbeVals[p].setText("-");
 			else
 				mProbeVals[p].setText(mOneDec.format(sample.mProbes[p]) + "°");
+		}
+		
+		if (Double.isNaN(sample.mProbes[0]))
+		{
+			mPitDelta.setText(mOneDec.format(-sample.mSetPoint) + "°");
+		}
+		else
+		{
+			double delta = sample.mProbes[0] - sample.mSetPoint;
+			if (delta > 0)
+				mPitDelta.setText("(+" + mOneDec.format(delta) + "°)");
+			else
+				mPitDelta.setText("(" + mOneDec.format(delta) + "°)");
 		}
     }
 }

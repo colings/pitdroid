@@ -47,9 +47,9 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
         mSetPoint = new SampleTimeSeries(mHeaterMeter.mSetPoint, true);
         mFanSpeed = new SampleTimeSeries(mHeaterMeter.mFanSpeed, false);
         
-        final int kSetPoint = Color.rgb(204, 28, 35);
-        final int kFanSpeedLine = Color.rgb(94, 188, 237);
-        final int kFanSpeedFill = Color.rgb(61, 123, 163);
+        final int kFanSpeed = Color.rgb(102, 204, 255);
+        final int kLidOpen = Color.rgb(255, 221, 153);
+        final int kSetPoint = Color.rgb(255, 0, 0);
         final int[] kProbes = { Color.rgb(238, 119, 51),
         						Color.rgb(102, 204, 51),
         						Color.rgb(34, 153, 119),
@@ -57,19 +57,21 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
         final int kGraphBackground = Color.rgb(34, 68, 102);
 
         PointLabelFormatter plf = null;
+        LineAndPointFormatter lpf = null;
+        
+        lpf = new LineAndPointFormatter(kFanSpeed, null, kFanSpeed, plf);
+        lpf.getFillPaint().setAlpha(80);
+        mPlot.addSeries(mFanSpeed, lpf);
+        
+        lpf = new LineAndPointFormatter(kSetPoint, null, null, plf);
+        mPlot.addSeries(mSetPoint, lpf);
 
-        mPlot.addSeries(mFanSpeed, new LineAndPointFormatter(kFanSpeedLine, null, kFanSpeedFill, plf));
-        mPlot.addSeries(mSetPoint, new LineAndPointFormatter(kSetPoint, null, null, plf));
-
-        for (int p = 0; p < HeaterMeter.kNumProbes; p++)
+        for (int p = HeaterMeter.kNumProbes - 1; p >= 0; p--)
         {
-        	LineAndPointFormatter lpf = new LineAndPointFormatter(kProbes[p], null, null, plf);
+        	lpf = new LineAndPointFormatter(kProbes[p], null, null, plf);
         	lpf.getLinePaint().setShadowLayer(2, 1, 1, Color.BLACK);
         	mPlot.addSeries(mProbes[p], lpf);
         }
-
-        // reduce the number of range labels
-        //mySimpleXYPlot.setTicksPerRangeLabel(3);
 
         // Remove the title, domain, and range labels
         mPlot.getLayoutManager().remove(mPlot.getTitleWidget());
@@ -96,6 +98,7 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
         mPlot.getLayoutManager().position(mPlot.getGraphWidget(), 0, XLayoutStyle.ABSOLUTE_FROM_LEFT,
                     0, YLayoutStyle.ABSOLUTE_FROM_TOP);
         
+        // Set all the background colors to the same value
         mPlot.getBackgroundPaint().setColor(kGraphBackground);
         mPlot.getGraphWidget().getBackgroundPaint().setColor(kGraphBackground);
         mPlot.getGraphWidget().getGridBackgroundPaint().setColor(kGraphBackground);
@@ -107,7 +110,9 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
         // Add some extra room on the bottom, so the legend doesn't overlap
         mPlot.getGraphWidget().setMarginBottom(20);        
 
-        //mPlot.setMarkupEnabled(true);
+        // Force the range (temperature) to always be from 0-1, since we normalize them
+        // so we can display fan speed on the same graph.
+        mPlot.setRangeBoundaries(0.0, 1.0, BoundaryMode.FIXED);
 
         mPlot.setDomainValueFormat( new java.text.Format()
 	        {
