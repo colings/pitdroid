@@ -5,6 +5,28 @@
     android:layout_height="match_parent" >
 
     <TableRow
+        android:id="@+id/tableRow0"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" >
+
+        <TextView
+            android:id="@+id/fanSpeedName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingRight="5dp"
+            android:text="@string/fan_speed"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
+
+        <TextView
+            android:id="@+id/fanSpeedVal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0%"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    </TableRow>
+    
+    <TableRow
         android:id="@+id/tableRow1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" >
@@ -13,15 +35,25 @@
             android:id="@+id/probe0name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Probe0"
+            android:paddingRight="5dp"
+            android:text="Probe 0:"
             android:textAppearance="?android:attr/textAppearanceLarge" />
 
         <TextView
             android:id="@+id/probe0val"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="0"
+            android:paddingRight="5dp"
+            android:text="0.0°"
             android:textAppearance="?android:attr/textAppearanceLarge" />
+
+        <TextView
+            android:id="@+id/probe0delta"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="(+0.0°)"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
+
     </TableRow>
 
     <TableRow
@@ -33,14 +65,15 @@
             android:id="@+id/probe1name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Probe1"
+            android:paddingRight="5dp"
+            android:text="Probe 1:"
             android:textAppearance="?android:attr/textAppearanceLarge" />
 
         <TextView
             android:id="@+id/probe1val"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="0"
+            android:text="0.0°"
             android:textAppearance="?android:attr/textAppearanceLarge" />
 
     </TableRow>
@@ -54,14 +87,15 @@
             android:id="@+id/probe2name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Probe2"
+            android:paddingRight="5dp"
+            android:text="Probe 3:"
             android:textAppearance="?android:attr/textAppearanceLarge" />
 
         <TextView
             android:id="@+id/probe2val"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="0"
+            android:text="0.0°"
             android:textAppearance="?android:attr/textAppearanceLarge" />
 
     </TableRow>
@@ -75,14 +109,15 @@
             android:id="@+id/probe3name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Probe3"
+            android:paddingRight="5dp"
+            android:text="Probe 4:"
             android:textAppearance="?android:attr/textAppearanceLarge" />
 
         <TextView
             android:id="@+id/probe3val"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="0"
+            android:text="0.0°"
             android:textAppearance="?android:attr/textAppearanceLarge" />
 
     </TableRow>
