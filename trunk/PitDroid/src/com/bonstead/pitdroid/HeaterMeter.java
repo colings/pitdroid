@@ -27,69 +27,40 @@ public class HeaterMeter
     private final static int kCompactInterval = 2*60;
     
     public String mServerAddress;
-	Sampler mSetPoint = new Sampler("Set Point");
-	Sampler mFanSpeed = new Sampler("Fan Speed");
-	Sampler[] mProbes = new Sampler[kNumProbes];
+    
+    public LinkedList<Sample> mSamples;
+    public String[] mProbeNames = new String[kNumProbes];
+    
 	private int mNewestTime = 0;
 	private int mLastCompactTime = 0;
 	private double mMinTemperature = Double.MAX_VALUE;
 	private double mMaxTemperature = Double.MIN_VALUE;
     private ArrayList<Listener> mListeners = new ArrayList<Listener>();
 
-    class PackedSample
+    class Sample
     {
     	int mTime;
-    	double mSetPoint;
     	double mFanSpeed;
+    	double mLidOpen;
+    	double mSetPoint;
     	double[] mProbes = new double[kNumProbes];
     }
-
-	class Sample
+    
+    class NamedSample extends Sample
     {
-    	double mValue;
-    	int mTime;
-    	
-    	Sample(int time, double value)
-    	{
-    		mTime = time;
-    		mValue = value;
-    	}
+    	String[] mProbeNames = new String[kNumProbes];
     }
-	
-	class Sampler
-	{
-		Sampler(String name)
-		{
-			mName = name;
-		}
-
-		String mName;
-	    LinkedList<Sample> mHistory = new LinkedList<Sample>();
-	    
-		public double getNormalized(double temperature)
-		{
-			return (temperature - mMinTemperature) / (mMaxTemperature - mMinTemperature);
-		}
-		
-		public double getLatest()
-		{
-			if (mHistory.size() > 0 && mHistory.getLast().mTime == mNewestTime)
-				return mHistory.getLast().mValue;
-			else
-				return Double.NaN;
-		}
-	}
 
 	public interface Listener
 	{
-		public void samplesUpdated();
+		public void samplesUpdated(final LinkedList<Sample> samples, final String[] names);
 	}
 	
 	public HeaterMeter()
 	{
 		for (int p = 0; p < kNumProbes; p++)
 		{
-			mProbes[p] = new Sampler("-");
+			mProbeNames[p] = "-";
 		}
 	}
 
@@ -103,25 +74,17 @@ public class HeaterMeter
 		mListeners.remove(listener);
 	}
 
+	public double getNormalized(double temperature)
+	{
+		return (temperature - mMinTemperature) / (mMaxTemperature - mMinTemperature);
+	}
+	
 	public double getOriginal(double normalized)
 	{
 		return (normalized * (mMaxTemperature - mMinTemperature)) + mMinTemperature;
 	}
 
-	public PackedSample getNewestSample()
-	{
-	    PackedSample sample = new PackedSample();
-	    
-	    sample.mTime = mNewestTime;
-	    sample.mSetPoint = mSetPoint.getLatest();
-		sample.mFanSpeed = mFanSpeed.getLatest();
-		for (int i = 0; i < kNumProbes; i++)
-			sample.mProbes[i] = mProbes[i].getLatest();
-		
-		return sample;
-	}
-	
-    private void updateMinMax(double temp)
+	private void updateMinMax(double temp)
     {
     	// Round our numbers up/down to a multiple of 10, making sure it's increased at
     	// least 1.  This gives us some visual headroom in the graph.
@@ -142,21 +105,21 @@ public class HeaterMeter
     	else
     	{
     		BufferedReader reader = getUrlReader("http://" + mServerAddress + kStatusURL);
-    		return readerToString(reader);
+    		return parseStatus(readerToString(reader));
     	}
     }
     
-    // Suppress warning since we know it's an ArrayList of packed samples, even if Java doesn't
+    // Suppress warning since we know it's an LinkedList of samples, even if Java doesn't
     @SuppressWarnings("unchecked")
 	public void updateMain(Object data)
     {
-    	if (data instanceof String)
+    	if (data instanceof NamedSample)
     	{
-    		addStatus((String)data);
+    		addStatus((NamedSample)data);
     	}
-    	else
+    	else if (data != null)
     	{
-    		addHistory((ArrayList<PackedSample>)data);
+    		addHistory((LinkedList<Sample>)data);
     	}
     	
     	if (mNewestTime >= mLastCompactTime + kCompactInterval)
@@ -165,69 +128,87 @@ public class HeaterMeter
     	}
     	
     	for (int l = 0; l < mListeners.size(); l++)
-    		mListeners.get(l).samplesUpdated();
+    		mListeners.get(l).samplesUpdated(mSamples, mProbeNames);
 
     }
 
-    public void addStatus(String status)
+    public NamedSample parseStatus(String status)
     {
 		try
 		{
 			JSONTokener tokener = new JSONTokener(status);
 			JSONObject json = new JSONObject(tokener);
 			
-			int time = json.getInt("time");
+			NamedSample sample = new NamedSample();
 
-			if (time != mNewestTime)
+			sample.mTime = json.getInt("time");
+			sample.mSetPoint = json.getDouble("set");
+			
+	    	JSONObject faninfo = json.getJSONObject("fan");
+	    	sample.mFanSpeed = faninfo.getDouble("c");
+
+	    	sample.mLidOpen = json.getDouble("lid");
+			
+			JSONArray temps = json.getJSONArray("temps");
+			for (int i = 0; i < temps.length(); i++)
 			{
-				mNewestTime = time;
-
-				double value = json.getDouble("set");
-				updateMinMax(value);
-		    	mSetPoint.mHistory.add(new Sample(time, value));
-				
-		    	JSONObject faninfo = json.getJSONObject("fan");
-		    	int fanspeed = faninfo.getInt("c");
-		    	mFanSpeed.mHistory.add(new Sample(time, fanspeed/100.0));
-
-		    	//"lid":0
-				
-				JSONArray temps = json.getJSONArray("temps");
-				for (int i = 0; i < temps.length(); i++)
-				{
-				    JSONObject row = temps.getJSONObject(i);
-				    
-				    mProbes[i].mName = row.getString("n");
-				    
-				    if (!row.isNull("c"))
-				    {
-				    	value = row.getDouble("c");
-				    	updateMinMax(value);
-				    	
-			    		mProbes[i].mHistory.add(new Sample(time, value));
-				    }
-				}
+			    JSONObject row = temps.getJSONObject(i);
+			    
+			    sample.mProbeNames[i] = row.getString("n");
+			    
+			    if (!row.isNull("c"))
+			    {
+		    		sample.mProbes[i] = row.getDouble("c");
+			    }
+			    else
+			    {
+			    	sample.mProbes[i] = Double.NaN;
+			    }
 			}
+			
+			return sample;
     	}
     	catch (JSONException e)
     	{
     		// TODO Auto-generated catch block
     		e.printStackTrace();
+    		return null;
     	}
     }
-    
-    public Object parseHistory(Reader reader)
+
+    private void addStatus(NamedSample sample)
+    {
+    	if (mNewestTime != sample.mTime)
+    	{
+    		mNewestTime = sample.mTime;
+    		
+			for (int p = 0; p < kNumProbes; p++)
+				mProbeNames[p] = sample.mProbeNames[p];
+
+			updateMinMax(sample.mSetPoint);
+	    	
+			for (int p = 0; p < kNumProbes; p++)
+			{
+			    if (!Double.isNaN(sample.mProbes[p]))
+			    {
+			    	updateMinMax(sample.mProbes[p]);
+			    }
+			}
+    	}
+    }
+
+    public LinkedList<Sample> parseHistory(Reader reader)
     {
 	    try
 	    {
-	    	ArrayList<PackedSample> history = new ArrayList<PackedSample>();
+	    	LinkedList<Sample> history = new LinkedList<Sample>();
 
 	    	CSVReader csvReader = new CSVReader(reader);
 		
 	    	String [] nextLine;
 			while ((nextLine = csvReader.readNext()) != null)
 			{
-				PackedSample sample = new PackedSample();
+				Sample sample = new Sample();
 
 				// First parameter is the time
 				sample.mTime = Integer.parseInt(nextLine[0]);
@@ -248,8 +229,18 @@ public class HeaterMeter
 					}
 				}
 
-				// Seventh is the fan speed
-				sample.mFanSpeed = Double.parseDouble(nextLine[6]) / 100.0;
+				// Seventh is the fan speed/lid open
+				sample.mFanSpeed = Double.parseDouble(nextLine[6]);
+				if (sample.mFanSpeed < 0)
+				{
+					sample.mLidOpen = 1.0;
+					sample.mFanSpeed = 0.0;
+				}
+				else
+				{
+					sample.mLidOpen = 0.0;
+					sample.mFanSpeed = sample.mFanSpeed;
+				}
 				
 				history.add(sample);
 			}
@@ -263,28 +254,25 @@ public class HeaterMeter
 			return null;
 		}
     }
-    
-    private void addHistory(ArrayList<PackedSample> history)
+
+    private void addHistory(LinkedList<Sample> history)
     {
-    	for (int i = 0; i < history.size(); i++)
+    	mSamples = history;
+
+    	Iterator<Sample> it = mSamples.iterator();
+    	while (it.hasNext())
 		{
-    		PackedSample sample = history.get(i);
+    		Sample sample = it.next();
 
-    		int time = sample.mTime;
-
-			mNewestTime = Math.max(mNewestTime, time);
+			mNewestTime = Math.max(mNewestTime, sample.mTime);
 
 			updateMinMax(sample.mSetPoint);
-	    	mSetPoint.mHistory.add(new Sample(time, sample.mSetPoint));
-			
-	    	mFanSpeed.mHistory.add(new Sample(time, sample.mFanSpeed));
 	    	
 			for (int p = 0; p < kNumProbes; p++)
 			{
 			    if (!Double.isNaN(sample.mProbes[p]))
 			    {
 			    	updateMinMax(sample.mProbes[p]);
-		    		mProbes[p].mHistory.add(new Sample(time, sample.mProbes[p]));
 			    }
 			}
 		}
@@ -293,7 +281,7 @@ public class HeaterMeter
     }
     
     private void compactSamples()
-    {
+    {/*
     	int firstSampleTime = mSetPoint.mHistory.getFirst().mTime;
     	
     	compactSamples(mSetPoint, firstSampleTime);
@@ -302,10 +290,10 @@ public class HeaterMeter
 		{
 			compactSamples(mProbes[p], firstSampleTime);
 		}
-		
+		*/
 		mLastCompactTime = mNewestTime;
     }
-
+/*
     private void compactSamples(Sampler sampler, int firstSampleTime)
     {
     	Iterator<Sample> it = sampler.mHistory.iterator();
@@ -318,7 +306,7 @@ public class HeaterMeter
     			it.remove();
     	}
     }
-
+*/
     private BufferedReader getUrlReader(String urlName)
     {
 		try
@@ -366,4 +354,38 @@ public class HeaterMeter
 			return null;
 		}
     }
+    
+    /*
+	function degPerHour(probeIdx)
+	{
+	    var pname = "#dph" + probeIdx; 
+	    var data = graphData[mapJson[probeIdx]].data;
+	    if (data.length != 0 && !isNaN(data[data.length-1][1]))
+	    {
+	        var val = data[data.length-1][1];
+	       
+	        var time = data[data.length-1][0];
+	        // Target is 59mins30secs ago, allows drawing with scale set to 1hr
+	        var targetTime = time - (60 * 60 * 1000) + 30000;
+	        for (var i=data.length-1; i>=0; --i)
+	            if (data[i][0] <= targetTime && !isNaN(data[i][1]))
+	            {
+	                var diffTemp = val - data[i][1];
+	                var diffTime = time - data[i][0];
+	                diffTime /= (60.0 * 60.0 * 1000.0);
+	                var dph = diffTemp / diffTime;
+	                // Don't display if there isn't clear increase, prevents wild numbers
+	                if (dph < 1.0)
+	                    break;
+	                var timeRemain180 = ((180.0 - val) / dph) * 3600;
+	                timeRemain180 = (timeRemain180 > 0) ? formatTimer(timeRemain180, false) + " to 180&deg;<br />" : "";
+	                var timeRemain200 = ((200.0 - val) / dph) * 3600;
+	                timeRemain200 = (timeRemain200 > 0) ? formatTimer(timeRemain200, false) + " to 200&deg;" : "";
+	                $(pname).html(diffTemp.toFixed(1) + "&deg;/hr<br />" + timeRemain180 + timeRemain200).show();
+	                return;
+	            }
+	    }  // if has valid data
+	    $(pname).hide();
+	}
+    */
 }

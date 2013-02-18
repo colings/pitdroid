@@ -1,36 +1,57 @@
 package com.bonstead.pitdroid;
 
 import java.util.Iterator;
+import java.util.LinkedList;
 
 import com.androidplot.series.XYSeries;
 import com.bonstead.pitdroid.HeaterMeter.Sample;
-import com.bonstead.pitdroid.HeaterMeter.Sampler;
 
 public class SampleTimeSeries implements XYSeries
 {
-    private Sampler mSampler;
-    private boolean mIsNormalized;
+	static final int kFanSpeed = HeaterMeter.kNumProbes;
+	static final int kLidOpen = HeaterMeter.kNumProbes + 1;
+	static final int kSetPoint = HeaterMeter.kNumProbes + 2;
+
+	private HeaterMeter mHeaterMeter;
+	private int mIndex;
     
     private Iterator<Sample> mIterator;
     private Sample mCurrentValue;
     private int mCurrentIdx;
 
-    public SampleTimeSeries(Sampler sampler, boolean isNormalized)
+    public SampleTimeSeries(HeaterMeter heatermeter, int index)
     {
-    	mSampler = sampler;
-    	mIsNormalized = isNormalized;
+    	mHeaterMeter = heatermeter;
+    	mIndex = index;
     }
-    
+
     @Override
     public String getTitle()
     {
-        return mSampler.mName;
+    	if (mIndex < HeaterMeter.kNumProbes)
+    	{
+   			return mHeaterMeter.mProbeNames[mIndex];
+    	}
+    	else if	(mIndex == kFanSpeed)
+    	{
+    		return "Fan Speed";
+    	}
+    	else if (mIndex == kLidOpen)
+    	{
+    		return "Lid Open";
+    	}
+    	else if (mIndex == kSetPoint)
+    	{
+    		return "Set Point";
+    	}
+    	
+    	return null;
     }
 
     @Override
     public int size()
     {
-        return mSampler.mHistory.size();
+        return mHeaterMeter.mSamples.size();
     }
 
     @Override
@@ -42,19 +63,36 @@ public class SampleTimeSeries implements XYSeries
     @Override
     public Number getY(int index)
     {
-    	double value = getSample(index).mValue;
+    	Sample sample = getSample(index);
 
-    	if (mIsNormalized)
-    		return mSampler.getNormalized(value);
-    	else
-    		return value;
+    	if (mIndex < HeaterMeter.kNumProbes)
+    	{
+    		if (Double.isNaN(sample.mProbes[mIndex]))
+    			return null;
+    		else
+    			return mHeaterMeter.getNormalized(sample.mProbes[mIndex]);
+    	}
+    	else if	(mIndex == kFanSpeed)
+    	{
+    		return (int)sample.mFanSpeed / 100.0;
+    	}
+    	else if (mIndex == kLidOpen)
+    	{
+    		return sample.mLidOpen;
+    	}
+    	else if (mIndex == kSetPoint)
+    	{
+    		return mHeaterMeter.getNormalized(sample.mSetPoint);
+    	}
+    	
+    	return null;
     }
 
     private Sample getSample(int index)
     {
     	if (index == 0)
     	{
-    		mIterator = mSampler.mHistory.iterator();
+    		mIterator = mHeaterMeter.mSamples.iterator();
     		mCurrentValue = mIterator.next();
     		mCurrentIdx = 0;
     		return mCurrentValue;
@@ -72,7 +110,7 @@ public class SampleTimeSeries implements XYSeries
     	else
     	{
     		System.out.print("Shouldn't hit this");
-    		return mSampler.mHistory.get(index);
+    		return mHeaterMeter.mSamples.get(index);
     	}
     }
 }

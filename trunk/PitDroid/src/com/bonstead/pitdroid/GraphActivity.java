@@ -1,5 +1,7 @@
 package com.bonstead.pitdroid;
 
+import java.util.LinkedList;
+
 import android.os.Bundle;
 
 import com.androidplot.Plot.BorderStyle;
@@ -16,14 +18,16 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.actionbarsherlock.app.SherlockFragment;
+import com.bonstead.pitdroid.HeaterMeter.Sample;
 import com.bonstead.pitdroid.R;
 
 public class GraphActivity extends SherlockFragment implements HeaterMeter.Listener
 {
 	private XYPlot mPlot;
+    private SampleTimeSeries mFanSpeed;
+    private SampleTimeSeries mLidOpen;
     private SampleTimeSeries[] mProbes = new SampleTimeSeries[HeaterMeter.kNumProbes];
     private SampleTimeSeries mSetPoint;
-    private SampleTimeSeries mFanSpeed;
 
     private HeaterMeter mHeaterMeter;
 
@@ -40,12 +44,13 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
         // initialize our XYPlot reference:
         mPlot = (XYPlot) view.findViewById(R.id.plot);
 
-        mProbes[0] = new SampleTimeSeries(mHeaterMeter.mProbes[0], true);
-        mProbes[1] = new SampleTimeSeries(mHeaterMeter.mProbes[1], true);
-        mProbes[2] = new SampleTimeSeries(mHeaterMeter.mProbes[2], true);
-        mProbes[3] = new SampleTimeSeries(mHeaterMeter.mProbes[3], true);
-        mSetPoint = new SampleTimeSeries(mHeaterMeter.mSetPoint, true);
-        mFanSpeed = new SampleTimeSeries(mHeaterMeter.mFanSpeed, false);
+        mFanSpeed = new SampleTimeSeries(mHeaterMeter, SampleTimeSeries.kFanSpeed);
+        mLidOpen = new SampleTimeSeries(mHeaterMeter, SampleTimeSeries.kLidOpen);
+        mSetPoint = new SampleTimeSeries(mHeaterMeter, SampleTimeSeries.kSetPoint);
+        mProbes[0] = new SampleTimeSeries(mHeaterMeter, 0);
+        mProbes[1] = new SampleTimeSeries(mHeaterMeter, 1);
+        mProbes[2] = new SampleTimeSeries(mHeaterMeter, 2);
+        mProbes[3] = new SampleTimeSeries(mHeaterMeter, 3);
         
         final int kFanSpeed = Color.rgb(102, 204, 255);
         final int kLidOpen = Color.rgb(255, 221, 153);
@@ -62,6 +67,10 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
         lpf = new LineAndPointFormatter(kFanSpeed, null, kFanSpeed, plf);
         lpf.getFillPaint().setAlpha(80);
         mPlot.addSeries(mFanSpeed, lpf);
+
+        lpf = new LineAndPointFormatter(kLidOpen, null, kLidOpen, plf);
+        lpf.getFillPaint().setAlpha(80);
+        mPlot.addSeries(mLidOpen, lpf);
         
         lpf = new LineAndPointFormatter(kSetPoint, null, null, plf);
         mPlot.addSeries(mSetPoint, lpf);
@@ -167,9 +176,9 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
 		mHeaterMeter.removeListener(this);
 	}
 
-    @Override
-    public void samplesUpdated()
-    {
+	@Override
+	public void samplesUpdated(LinkedList<Sample> samples, String[] names)
+	{
     	mPlot.redraw();
-    }
+	}
 }

@@ -1,6 +1,8 @@
 package com.bonstead.pitdroid;
 
 import java.text.DecimalFormat;
+import java.util.LinkedList;
+
 import android.os.Bundle;
 
 import android.view.LayoutInflater;
@@ -10,6 +12,7 @@ import android.widget.TextView;
 
 import com.actionbarsherlock.app.SherlockFragment;
 import com.bonstead.pitdroid.R;
+import com.bonstead.pitdroid.HeaterMeter.Sample;
 
 public class DashActivity extends SherlockFragment implements HeaterMeter.Listener
 {
@@ -66,15 +69,15 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
 	}
 
 	@Override
-    public void samplesUpdated()
+    public void samplesUpdated(final LinkedList<Sample> samples, final String[] names)
     {
-		HeaterMeter.PackedSample sample = mHeaterMeter.getNewestSample();
-		
+		Sample sample = samples.getLast();
+
         mFanSpeed.setText((int)(sample.mFanSpeed * 100) + "%");
 
 		for (int p = 0; p < HeaterMeter.kNumProbes; p++)
 		{
-			mProbeNames[p].setText(mHeaterMeter.mProbes[p].mName + ": ");
+			mProbeNames[p].setText(names[p] + ": ");
 			if (Double.isNaN(sample.mProbes[p]))
 				mProbeVals[p].setText("-");
 			else
