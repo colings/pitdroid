@@ -73,7 +73,7 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
     {
 		Sample sample = samples.getLast();
 
-        mFanSpeed.setText((int)(sample.mFanSpeed * 100) + "%");
+        mFanSpeed.setText((int)sample.mFanSpeed + "%");
 
 		for (int p = 0; p < HeaterMeter.kNumProbes; p++)
 		{

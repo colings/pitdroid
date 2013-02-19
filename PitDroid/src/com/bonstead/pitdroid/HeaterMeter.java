@@ -129,7 +129,6 @@ public class HeaterMeter
     	
     	for (int l = 0; l < mListeners.size(); l++)
     		mListeners.get(l).samplesUpdated(mSamples, mProbeNames);
-
     }
 
     public NamedSample parseStatus(String status)
