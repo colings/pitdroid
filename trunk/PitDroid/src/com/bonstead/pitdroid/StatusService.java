@@ -23,8 +23,6 @@ public class StatusService extends Service {
 
     private final IBinder mBinder = new LocalBinder();
     public MainActivity mMainActivity;
-    private final ScheduledExecutorService mScheduler = Executors.newScheduledThreadPool(1);
-    private ScheduledFuture<?> mUpdateTimer;
 
     /**
      * Class for clients to access.  Because we know this service always
@@ -76,19 +74,6 @@ public class StatusService extends Service {
     {
         // Display a notification about us starting.  We put an icon in the status bar.
         showNotification();
-
-        final Runnable update = new Runnable()
-        {
-            public void run()
-            {
-        		if (mMainActivity != null)
-        		{
-        			Object data = mMainActivity.mHeaterMeter.updateThread();
-        			mMainActivity.mHandler.sendMessage(mMainActivity.mHandler.obtainMessage(0, data));
-        		}
-        	}
-        };
-        mUpdateTimer = mScheduler.scheduleAtFixedRate(update, 0, HeaterMeter.kMinSampleTime, TimeUnit.MILLISECONDS);
     }
 
     /**

@@ -1,6 +1,10 @@
 package com.bonstead.pitdroid;
 
 import java.util.ArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -35,7 +39,9 @@ public class MainActivity extends SherlockFragmentActivity
 	private StatusService mBoundService;
 	private boolean mIsBound = false;
     public HeaterMeter mHeaterMeter = new HeaterMeter();
-    
+    private final ScheduledExecutorService mScheduler = Executors.newScheduledThreadPool(1);
+    private ScheduledFuture<?> mUpdateTimer;
+
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
@@ -64,10 +70,20 @@ public class MainActivity extends SherlockFragmentActivity
 		
 		mHeaterMeter.mServerAddress = serverAddr;
 		
-	    Intent intent = new Intent(this, StatusService.class);
+        final Runnable update = new Runnable()
+        {
+            public void run()
+            {
+       			Object data = mHeaterMeter.updateThread();
+       			mHandler.sendMessage(mHandler.obtainMessage(0, data));
+        	}
+        };
+        mUpdateTimer = mScheduler.scheduleAtFixedRate(update, 0, HeaterMeter.kMinSampleTime, TimeUnit.MILLISECONDS);
+
+//	    Intent intent = new Intent(this, StatusService.class);
 //	    intent.putExtra("urlpath", "http://");
-	    startService(intent);
-	    doBindService();
+//	    startService(intent);
+//	    doBindService();
 	}
 
 	Handler mHandler = new Handler()
@@ -131,8 +147,8 @@ public class MainActivity extends SherlockFragmentActivity
 		// TODO Auto-generated method stub
 		super.onDestroy();
 		
-		doUnbindService();
-	    stopService(new Intent(this, StatusService.class));
+//		doUnbindService();
+//	    stopService(new Intent(this, StatusService.class));
 	}
 
 	@Override
