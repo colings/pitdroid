@@ -1,24 +1,20 @@
 package com.bonstead.pitdroid;
 
-import java.util.LinkedList;
-
 import android.os.Bundle;
 
 import com.androidplot.Plot.BorderStyle;
 import com.androidplot.ui.AnchorPosition;
-import com.androidplot.ui.DynamicTableModel;
 import com.androidplot.ui.SizeLayoutType;
 import com.androidplot.ui.SizeMetrics;
 import com.androidplot.xy.*;
 import android.graphics.Color;
-import android.graphics.Paint;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.actionbarsherlock.app.SherlockFragment;
-import com.bonstead.pitdroid.HeaterMeter.Sample;
+import com.bonstead.pitdroid.HeaterMeter.NamedSample;
 import com.bonstead.pitdroid.R;
 
 public class GraphActivity extends SherlockFragment implements HeaterMeter.Listener
@@ -35,8 +31,7 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                     Bundle savedInstanceState)
     {
-    	MainActivity main = (MainActivity)container.getContext();
-    	mHeaterMeter = main.mHeaterMeter;
+    	mHeaterMeter = ((PitDroidApplication)this.getActivity().getApplication()).mHeaterMeter;
     	mHeaterMeter.addListener(this);
 
     	View view = inflater.inflate(R.layout.activity_graph, container, false);
@@ -125,7 +120,8 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
 
         mPlot.setDomainValueFormat( new java.text.Format()
 	        {
-	            // create a simple date format that draws on the year portion of our timestamp.
+				private static final long serialVersionUID = 1L;
+				// create a simple date format that draws on the year portion of our timestamp.
 	            // see http://download.oracle.com/javase/1.4.2/docs/api/java/text/SimpleDateFormat.html
 	            // for a full description of SimpleDateFormat.
 	            private java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("HH:mm");//"hh:mm a");
@@ -149,6 +145,8 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
 
         mPlot.setRangeValueFormat( new java.text.Format()
 	        {
+        		private static final long serialVersionUID = 1L;
+
 	            @Override
 	            public StringBuffer format(Object obj, StringBuffer toAppendTo, java.text.FieldPosition pos)
 	            {
@@ -177,7 +175,7 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
 	}
 
 	@Override
-	public void samplesUpdated(LinkedList<Sample> samples, String[] names)
+	public void samplesUpdated(final NamedSample latestSample)
 	{
     	mPlot.redraw();
 	}

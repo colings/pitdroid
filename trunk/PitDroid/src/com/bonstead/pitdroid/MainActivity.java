@@ -20,6 +20,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -38,9 +39,18 @@ public class MainActivity extends SherlockFragmentActivity
 	TextView tabText;
 	private StatusService mBoundService;
 	private boolean mIsBound = false;
-    public HeaterMeter mHeaterMeter = new HeaterMeter();
     private final ScheduledExecutorService mScheduler = Executors.newScheduledThreadPool(1);
-    private ScheduledFuture<?> mUpdateTimer;
+    private ScheduledFuture<?> mUpdateTimer = null;
+    private HeaterMeter mHeaterMeter = null;
+
+    private final Runnable mUpdate = new Runnable()
+    {
+        public void run()
+        {
+   			Object data = mHeaterMeter.updateThread();
+   			mHandler.sendMessage(mHandler.obtainMessage(0, data));
+    	}
+    };
 
 	@Override
 	public void onCreate(Bundle savedInstanceState)
@@ -68,18 +78,9 @@ public class MainActivity extends SherlockFragmentActivity
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
 		String serverAddr = prefs.getString("server", "");
 		
+    	mHeaterMeter = ((PitDroidApplication)this.getApplication()).mHeaterMeter;
 		mHeaterMeter.mServerAddress = serverAddr;
 		
-        final Runnable update = new Runnable()
-        {
-            public void run()
-            {
-       			Object data = mHeaterMeter.updateThread();
-       			mHandler.sendMessage(mHandler.obtainMessage(0, data));
-        	}
-        };
-        mUpdateTimer = mScheduler.scheduleAtFixedRate(update, 0, HeaterMeter.kMinSampleTime, TimeUnit.MILLISECONDS);
-
 //	    Intent intent = new Intent(this, StatusService.class);
 //	    intent.putExtra("urlpath", "http://");
 //	    startService(intent);
@@ -152,15 +153,32 @@ public class MainActivity extends SherlockFragmentActivity
 	}
 
 	@Override
-	protected void onPause() {
-		// TODO Auto-generated method stub
+	protected void onPause()
+	{
 		super.onPause();
+
+		Log.i("PitDroid", "onPause");
+
+		if (mUpdateTimer != null)
+		{
+			Log.i("PitDroid", "Canceling update timer");
+			mUpdateTimer.cancel(false);
+			mUpdateTimer = null;
+		}
 	}
 
 	@Override
-	protected void onPostResume() {
-		// TODO Auto-generated method stub
+	protected void onPostResume()
+	{
 		super.onPostResume();
+		
+		Log.i("PitDroid", "onPostResume");
+
+		if (mUpdateTimer == null)
+		{
+			Log.i("PitDroid", "Starting update timer");
+			mUpdateTimer = mScheduler.scheduleAtFixedRate(mUpdate, 0, HeaterMeter.kMinSampleTime, TimeUnit.MILLISECONDS);
+		}
 	}
 
 	@Override
