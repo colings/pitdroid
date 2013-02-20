@@ -1,7 +1,6 @@
 package com.bonstead.pitdroid;
 
 import java.text.DecimalFormat;
-import java.util.LinkedList;
 
 import android.os.Bundle;
 
@@ -11,13 +10,11 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.actionbarsherlock.app.SherlockFragment;
+import com.bonstead.pitdroid.HeaterMeter.NamedSample;
 import com.bonstead.pitdroid.R;
-import com.bonstead.pitdroid.HeaterMeter.Sample;
 
 public class DashActivity extends SherlockFragment implements HeaterMeter.Listener
 {
-	private HeaterMeter mHeaterMeter;
-
 	private TextView mFanSpeed;
 	private TextView[] mProbeNames = new TextView[HeaterMeter.kNumProbes];
 	private TextView[] mProbeVals = new TextView[HeaterMeter.kNumProbes];
@@ -44,6 +41,16 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
         
         mPitDelta = (TextView)view.findViewById(R.id.probe0delta);
         
+        setDefaults();
+		
+    	HeaterMeter heaterMeter = ((PitDroidApplication)this.getActivity().getApplication()).mHeaterMeter;
+    	heaterMeter.addListener(this);
+   
+        return view;
+    }
+    
+    private void setDefaults()
+    {
         mFanSpeed.setText("-");
 
 		for (int p = 0; p < HeaterMeter.kNumProbes; p++)
@@ -52,49 +59,53 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
 			mProbeVals[p].setText("-");
 		}
 		mPitDelta.setText("-");
-		
-    	MainActivity main = (MainActivity)container.getContext();
-    	mHeaterMeter = main.mHeaterMeter;
-    	mHeaterMeter.addListener(this);
-   
-        return view;
     }
-    
+
     @Override
 	public void onDestroyView()
     {
 		super.onDestroyView();
 		
-		mHeaterMeter.removeListener(this);
+    	HeaterMeter heaterMeter = ((PitDroidApplication)this.getActivity().getApplication()).mHeaterMeter;
+		heaterMeter.removeListener(this);
 	}
 
 	@Override
-    public void samplesUpdated(final LinkedList<Sample> samples, final String[] names)
+    public void samplesUpdated(final NamedSample latestSample)
     {
-		Sample sample = samples.getLast();
-
-        mFanSpeed.setText((int)sample.mFanSpeed + "%");
-
-		for (int p = 0; p < HeaterMeter.kNumProbes; p++)
+		if (latestSample == null)
 		{
-			mProbeNames[p].setText(names[p] + ": ");
-			if (Double.isNaN(sample.mProbes[p]))
-				mProbeVals[p].setText("-");
-			else
-				mProbeVals[p].setText(mOneDec.format(sample.mProbes[p]) + "°");
-		}
-		
-		if (Double.isNaN(sample.mProbes[0]))
-		{
-			mPitDelta.setText(mOneDec.format(-sample.mSetPoint) + "°");
+			setDefaults();
 		}
 		else
 		{
-			double delta = sample.mProbes[0] - sample.mSetPoint;
-			if (delta > 0)
-				mPitDelta.setText("(+" + mOneDec.format(delta) + "°)");
+	        mFanSpeed.setText((int)latestSample.mFanSpeed + "%");
+	
+			for (int p = 0; p < HeaterMeter.kNumProbes; p++)
+			{
+				if (latestSample.mProbeNames[p] == null)
+					mProbeNames[p].setText("-");
+				else
+					mProbeNames[p].setText(latestSample.mProbeNames[p] + ": ");
+				
+				if (Double.isNaN(latestSample.mProbes[p]))
+					mProbeVals[p].setText("-");
+				else
+					mProbeVals[p].setText(mOneDec.format(latestSample.mProbes[p]) + "°");
+			}
+			
+			if (Double.isNaN(latestSample.mProbes[0]))
+			{
+				mPitDelta.setText(mOneDec.format(-latestSample.mSetPoint) + "°");
+			}
 			else
-				mPitDelta.setText("(" + mOneDec.format(delta) + "°)");
+			{
+				double delta = latestSample.mProbes[0] - latestSample.mSetPoint;
+				if (delta > 0)
+					mPitDelta.setText("(+" + mOneDec.format(delta) + "°)");
+				else
+					mPitDelta.setText("(" + mOneDec.format(delta) + "°)");
+			}
 		}
     }
 }

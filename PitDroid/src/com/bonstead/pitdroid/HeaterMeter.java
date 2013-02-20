@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -15,24 +16,30 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import android.util.Log;
 import au.com.bytecode.opencsv.CSVReader;
 
 public class HeaterMeter
 {
 	public final static int kNumProbes = 4;
-	public final static String kHistoryURL = "/luci/lm/hist";
-	public final static String kStatusURL = "/luci/lm/hmstatus";
+	private final static String kHistoryURL = "/luci/lm/hist";
+	private final static String kStatusURL = "/luci/lm/hmstatus";
 	// No point in trying to sample faster than this, it's the update rate of the HeaterMeter hardware
     public final static int kMinSampleTime = 1000;
-    private final static int kCompactInterval = 2*60;
-    
+    // Wait at least this long between full history refreshes
+    private final static long kMinHistoryUpdateTime = 5000;
+    // If we're updating and it's been more than this long since the last update, force a
+    // full history refresh, so we don't have too much data missing.
+    private final static long kMaxUpdateDelta = 5000;
+
     public String mServerAddress;
     
-    public LinkedList<Sample> mSamples;
+    public LinkedList<Sample> mSamples = new LinkedList<Sample>();
     public String[] mProbeNames = new String[kNumProbes];
-    
+ 
+    private long mLastUpdateTime = 0;
+	private long mLastHistoryTime = 0;
 	private int mNewestTime = 0;
-	private int mLastCompactTime = 0;
 	private double mMinTemperature = Double.MAX_VALUE;
 	private double mMaxTemperature = Double.MIN_VALUE;
     private ArrayList<Listener> mListeners = new ArrayList<Listener>();
@@ -44,16 +51,46 @@ public class HeaterMeter
     	double mLidOpen;
     	double mSetPoint;
     	double[] mProbes = new double[kNumProbes];
+    	
+    	Sample()
+    	{
+    		mTime = 0;
+    		mFanSpeed = 0;
+    		mLidOpen = 0;
+    		mSetPoint = Double.NaN;
+    		for (int p = 0; p < kNumProbes; p++)
+    			mProbes[p] = Double.NaN;
+    	}
+    	
+    	Sample(Sample otherSample)
+    	{
+    		mTime = otherSample.mTime;
+    		mFanSpeed = otherSample.mFanSpeed;
+    		mLidOpen = otherSample.mLidOpen;
+    		mSetPoint = otherSample.mSetPoint;
+    		for (int p = 0; p < kNumProbes; p++)
+    			mProbes[p] = otherSample.mProbes[p];
+    	}
     }
     
     class NamedSample extends Sample
     {
     	String[] mProbeNames = new String[kNumProbes];
+    	
+    	NamedSample()
+    	{
+    		super();
+    	}
+
+    	NamedSample(Sample otherSample)
+    	{
+    		super(otherSample);
+    	}
     }
 
 	public interface Listener
 	{
-		public void samplesUpdated(final LinkedList<Sample> samples, final String[] names);
+		public void samplesUpdated(final NamedSample latestSample);
 	}
 	
 	public HeaterMeter()
@@ -97,38 +134,60 @@ public class HeaterMeter
     
     public Object updateThread()
     {
-    	if (mNewestTime == 0)
+    	Object ret = null;
+
+    	long currentTime = System.currentTimeMillis();
+
+    	long timeSinceLastUpdate = currentTime - mLastUpdateTime;
+
+    	// If we don't have any samples, or we have over 500, rebuild the samples from
+    	// scratch based on the history.  The upper end check keeps us from blowing memory
+    	// on hours and hours of high precision samples that you won't even be able to see.
+    	// The time check is so that we don't read the history, then immediately read it
+    	// again because our previous read hadn't been processed by the main thread yet.
+    	if ((mSamples.size() == 0 || mSamples.size() > 500 || timeSinceLastUpdate > kMaxUpdateDelta) &&
+    		(currentTime - mLastHistoryTime) > kMinHistoryUpdateTime)
 		{
+    		mLastHistoryTime = currentTime;
+
+    		Log.i("HeaterMeter", "Getting history");
+    		
 	    	BufferedReader reader = getUrlReader("http://" + mServerAddress + kHistoryURL);
-	    	return parseHistory(reader);
+	    	if (reader != null)
+	    		ret = parseHistory(reader);
 		}
     	else
     	{
     		BufferedReader reader = getUrlReader("http://" + mServerAddress + kStatusURL);
-    		return parseStatus(readerToString(reader));
+    		if (reader != null)
+    			ret = parseStatus(readerToString(reader));
     	}
+    	
+    	if (ret != null)
+    	{
+    		mLastUpdateTime = currentTime;
+    	}
+    	
+    	return ret;
     }
     
     // Suppress warning since we know it's an LinkedList of samples, even if Java doesn't
     @SuppressWarnings("unchecked")
 	public void updateMain(Object data)
     {
+    	NamedSample latestSample = null;
+
     	if (data instanceof NamedSample)
     	{
-    		addStatus((NamedSample)data);
+    		latestSample = addStatus((NamedSample)data);
     	}
     	else if (data != null)
     	{
-    		addHistory((LinkedList<Sample>)data);
+    		latestSample = addHistory((LinkedList<Sample>)data);
     	}
-    	
-    	if (mNewestTime >= mLastCompactTime + kCompactInterval)
-    	{
-    		compactSamples();
-    	}
-    	
+
     	for (int l = 0; l < mListeners.size(); l++)
-    		mListeners.get(l).samplesUpdated(mSamples, mProbeNames);
+    		mListeners.get(l).samplesUpdated(latestSample);
     }
 
     public NamedSample parseStatus(String status)
@@ -175,7 +234,7 @@ public class HeaterMeter
     	}
     }
 
-    private void addStatus(NamedSample sample)
+    private NamedSample addStatus(NamedSample sample)
     {
     	if (mNewestTime != sample.mTime)
     	{
@@ -193,7 +252,13 @@ public class HeaterMeter
 			    	updateMinMax(sample.mProbes[p]);
 			    }
 			}
+			
+			Sample simpleSample = new Sample(sample);
+
+			mSamples.add(simpleSample);
     	}
+    	
+    	return sample;
     }
 
     public LinkedList<Sample> parseHistory(Reader reader)
@@ -254,10 +319,13 @@ public class HeaterMeter
 		}
     }
 
-    private void addHistory(LinkedList<Sample> history)
+    private NamedSample addHistory(LinkedList<Sample> history)
     {
     	mSamples = history;
 
+    	mMinTemperature = Double.MAX_VALUE;
+    	mMaxTemperature = Double.MIN_VALUE;
+    	
     	Iterator<Sample> it = mSamples.iterator();
     	while (it.hasNext())
 		{
@@ -276,36 +344,19 @@ public class HeaterMeter
 			}
 		}
     	
-    	mLastCompactTime = mNewestTime;
-    }
-    
-    private void compactSamples()
-    {/*
-    	int firstSampleTime = mSetPoint.mHistory.getFirst().mTime;
-    	
-    	compactSamples(mSetPoint, firstSampleTime);
-    	compactSamples(mFanSpeed, firstSampleTime);
-		for (int p = 0; p < kNumProbes; p++)
-		{
-			compactSamples(mProbes[p], firstSampleTime);
-		}
-		*/
-		mLastCompactTime = mNewestTime;
-    }
-/*
-    private void compactSamples(Sampler sampler, int firstSampleTime)
-    {
-    	Iterator<Sample> it = sampler.mHistory.iterator();
-    	while (it.hasNext())
+    	NamedSample latestSample = null;
+    	if (mSamples.size() > 0)
     	{
-    		Sample sample = it.next();
-    		
-    		// Remove a sample if it is older than our last compact time, and not a 60 second multiple of our original time (history is on 60 second intervals)
-    		if (sample.mTime < mLastCompactTime && (sample.mTime - firstSampleTime) % 60 != 0)
-    			it.remove();
+    		latestSample = new NamedSample(mSamples.getLast());
+    		for (int p = 0; p < kNumProbes; p++)
+    		{
+    			latestSample.mProbeNames[p] = mProbeNames[p];
+    		}
     	}
+    	
+    	return latestSample;
     }
-*/
+
     private BufferedReader getUrlReader(String urlName)
     {
 		try
@@ -317,6 +368,10 @@ public class HeaterMeter
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+		catch (UnknownHostException e)
+		{
+			Log.i("HeaterMeter", "Unknown host: " + e.getLocalizedMessage());
 		}
 		catch (IOException e)
 		{
