@@ -4,9 +4,12 @@ import java.text.DecimalFormat;
 
 import android.os.Bundle;
 
+import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.actionbarsherlock.app.SherlockFragment;
@@ -41,6 +44,16 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
         
         mPitDelta = (TextView)view.findViewById(R.id.probe0delta);
         
+        setAlarmClickListener(view, R.id.probe0Alarm, 0);
+        setAlarmClickListener(view, R.id.probe1Alarm, 1);
+        setAlarmClickListener(view, R.id.probe2Alarm, 2);
+        setAlarmClickListener(view, R.id.probe3Alarm, 3);
+        
+        updateAlarmButtonImage(view, R.id.probe0Alarm, 0);
+        updateAlarmButtonImage(view, R.id.probe1Alarm, 1);
+        updateAlarmButtonImage(view, R.id.probe2Alarm, 2);
+        updateAlarmButtonImage(view, R.id.probe3Alarm, 3);
+
         setDefaults();
 		
     	HeaterMeter heaterMeter = ((PitDroidApplication)this.getActivity().getApplication()).mHeaterMeter;
@@ -49,6 +62,38 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
         return view;
     }
     
+    private void setAlarmClickListener(View view, final int id, final int index)
+    {
+        ImageButton button = (ImageButton)view.findViewById(id);
+        button.setOnClickListener(new OnClickListener()
+        {          
+            public void onClick(View view)
+            {
+                DialogFragment dialog = new AlarmDialog();
+                
+                Bundle bundle = new Bundle();
+                bundle.putInt("probeIndex", index);
+                dialog.setArguments(bundle);
+                
+                dialog.show(getFragmentManager(), "AlarmDialog");
+                
+                updateAlarmButtonImage(view, id, index);
+            }
+        });
+    }
+
+    private void updateAlarmButtonImage(View view, final int id, final int index)
+    {
+    	HeaterMeter heaterMeter = ((PitDroidApplication)this.getActivity().getApplication()).mHeaterMeter;
+
+    	ImageButton button = (ImageButton)view.findViewById(id);
+
+    	if (heaterMeter.mProbeLoAlarm[index] > 0 || heaterMeter.mProbeHiAlarm[index] > 0)
+    		button.setImageResource(R.drawable.ic_alarm_set);
+    	else
+    		button.setImageResource(R.drawable.ic_alarm_unset);
+    }
+
     private void setDefaults()
     {
         mFanSpeed.setText("-");
@@ -80,7 +125,7 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
 		else
 		{
 	        mFanSpeed.setText((int)latestSample.mFanSpeed + "%");
-	
+
 			for (int p = 0; p < HeaterMeter.kNumProbes; p++)
 			{
 				if (latestSample.mProbeNames[p] == null)

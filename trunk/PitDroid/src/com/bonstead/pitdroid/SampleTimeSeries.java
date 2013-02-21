@@ -1,7 +1,6 @@
 package com.bonstead.pitdroid;
 
 import java.util.Iterator;
-import java.util.LinkedList;
 
 import com.androidplot.series.XYSeries;
 import com.bonstead.pitdroid.HeaterMeter.Sample;

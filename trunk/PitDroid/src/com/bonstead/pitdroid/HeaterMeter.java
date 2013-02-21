@@ -16,6 +16,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import au.com.bytecode.opencsv.CSVReader;
 
@@ -33,6 +36,8 @@ public class HeaterMeter
     private final static long kMaxUpdateDelta = 5000;
 
     public String mServerAddress;
+    public int[] mProbeLoAlarm = new int[kNumProbes];
+    public int[] mProbeHiAlarm = new int[kNumProbes];
     
     public LinkedList<Sample> mSamples = new LinkedList<Sample>();
     public String[] mProbeNames = new String[kNumProbes];
@@ -131,7 +136,40 @@ public class HeaterMeter
     	mMinTemperature = Math.min(mMinTemperature, roundedDown);
     	mMaxTemperature = Math.max(mMaxTemperature, roundedUp);
     }
-    
+
+	public void initPreferences(Context context)
+	{
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+		mServerAddress = prefs.getString("server", "");
+
+        for (int p = 0; p < kNumProbes; p++)
+        {
+        	String loName = "alarm" + p + "Lo";
+        	mProbeLoAlarm[p] = prefs.getInt(loName, -70);
+            
+        	String hiName = "alarm" + p + "Hi";
+        	mProbeHiAlarm[p] = prefs.getInt(hiName, -200);
+        }
+	}
+
+	public void preferencesChanged(Context context)
+	{
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor editor = prefs.edit();
+
+        for (int p = 0; p < kNumProbes; p++)
+        {
+        	String loName = "alarm" + p + "Lo";
+            editor.putInt(loName, mProbeLoAlarm[p]);
+            
+        	String hiName = "alarm" + p + "Hi";
+            editor.putInt(hiName, mProbeHiAlarm[p]);
+        }
+        
+        editor.commit();
+	}
+	
     public Object updateThread()
     {
     	Object ret = null;
