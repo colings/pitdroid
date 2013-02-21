@@ -21,7 +21,6 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
-import android.view.View;
 import android.widget.TextView;
 
 import com.actionbarsherlock.app.ActionBar;
@@ -73,13 +72,9 @@ public class MainActivity extends SherlockFragmentActivity
 		mTabsAdapter.addTab(
 		                bar.newTab().setText("Graph"),
 		                GraphActivity.class, null);
-		
-		// Get the xml/preferences.xml preferences
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-		String serverAddr = prefs.getString("server", "");
-		
+
     	mHeaterMeter = ((PitDroidApplication)this.getApplication()).mHeaterMeter;
-		mHeaterMeter.mServerAddress = serverAddr;
+    	mHeaterMeter.initPreferences(getBaseContext());
 		
 //	    Intent intent = new Intent(this, StatusService.class);
 //	    intent.putExtra("urlpath", "http://");
