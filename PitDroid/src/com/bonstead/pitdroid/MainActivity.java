@@ -10,9 +10,12 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
@@ -27,8 +30,10 @@ import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
 import com.bonstead.pitdroid.R;
 
-public class MainActivity extends SherlockFragmentActivity
+public class MainActivity extends SherlockFragmentActivity implements OnSharedPreferenceChangeListener
 {
+	static final String TAG = "MainActivity";
+
 	ViewPager mViewPager;
 	TabsAdapter mTabsAdapter;
 	TextView tabCenter;
@@ -51,7 +56,10 @@ public class MainActivity extends SherlockFragmentActivity
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		
+
+    	if (BuildConfig.DEBUG)
+    		Log.v(TAG, "onCreate");
+
 		mViewPager = new ViewPager(this);
 		mViewPager.setId(R.id.pager);
 		
@@ -70,12 +78,12 @@ public class MainActivity extends SherlockFragmentActivity
 		                GraphActivity.class, null);
 
     	mHeaterMeter = ((PitDroidApplication)this.getApplication()).mHeaterMeter;
-    	mHeaterMeter.initPreferences(getBaseContext());
-		
-    	Intent alarmIntent = new Intent(this, AlarmService.class);
-    	mServiceAlarm = PendingIntent.getService(this, 0, alarmIntent, 0);
-    	AlarmManager alarm = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
-    	alarm.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 60*1000, mServiceAlarm);
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+    	mHeaterMeter.initPreferences(prefs);
+        prefs.registerOnSharedPreferenceChangeListener(this);
+
+   		updateAlarmService();
 	}
 
 	Handler mHandler = new Handler()
@@ -87,13 +95,59 @@ public class MainActivity extends SherlockFragmentActivity
 		}
 	};
 
+	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
+	{
+    	mHeaterMeter.initPreferences(sharedPreferences);
+	}
+
 	@Override
 	protected void onDestroy()
 	{
 		super.onDestroy();
 		
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        prefs.unregisterOnSharedPreferenceChangeListener(this);
+
+    	if (BuildConfig.DEBUG)
+    		Log.v(TAG, "onDestroy");
+
+    	stopAlarmService();
+	}
+
+	public void updateAlarmService()
+	{
+    	if (mHeaterMeter.hasAlarms())
+    	{
+    		stopAlarmService();
+    		startAlarmService();
+    	}
+    	else
+    	{
+    		stopAlarmService();
+    	}
+	}
+
+	private void startAlarmService()
+	{
+		if (mServiceAlarm == null)
+		{
+	    	if (BuildConfig.DEBUG)
+	    		Log.v(TAG, "Start alarm service");
+	
+	    	Intent alarmIntent = new Intent(this, AlarmService.class);
+	    	mServiceAlarm = PendingIntent.getService(this, 0, alarmIntent, 0);
+	    	AlarmManager alarm = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+	    	alarm.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), mHeaterMeter.mBackgroundUpdateTime*60*1000, mServiceAlarm);
+		}
+	}
+	
+	private void stopAlarmService()
+	{
 		if (mServiceAlarm != null)
 		{
+	    	if (BuildConfig.DEBUG)
+	    		Log.v(TAG, "Stop alarm service");
+
 			AlarmManager alarm = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
 			alarm.cancel(mServiceAlarm);
 			mServiceAlarm = null;
@@ -101,17 +155,20 @@ public class MainActivity extends SherlockFragmentActivity
 
 	    stopService(new Intent(this, AlarmService.class));
 	}
-
+	
 	@Override
 	protected void onPause()
 	{
 		super.onPause();
 
-		Log.i("PitDroid", "onPause");
+    	if (BuildConfig.DEBUG)
+    		Log.v(TAG, "onPause");
 
 		if (mUpdateTimer != null)
 		{
-			Log.i("PitDroid", "Canceling update timer");
+	    	if (BuildConfig.DEBUG)
+	    		Log.v(TAG, "Canceling update timer");
+
 			mUpdateTimer.cancel(false);
 			mUpdateTimer = null;
 		}
@@ -122,12 +179,20 @@ public class MainActivity extends SherlockFragmentActivity
 	{
 		super.onPostResume();
 		
-		Log.i("PitDroid", "onPostResume");
+    	if (BuildConfig.DEBUG)
+    		Log.v(TAG, "onPostResume");
 
 		if (mUpdateTimer == null)
 		{
-			Log.i("PitDroid", "Starting update timer");
+	    	if (BuildConfig.DEBUG)
+	    		Log.v(TAG, "Starting update timer");
+
 			mUpdateTimer = mScheduler.scheduleAtFixedRate(mUpdate, 0, HeaterMeter.kMinSampleTime, TimeUnit.MILLISECONDS);
+		}
+		else
+		{
+			if (BuildConfig.DEBUG)
+				Log.v(TAG, "Update timer already set, skipping");
 		}
 	}
 

@@ -15,10 +15,12 @@ import android.util.Log;
 
 public class AlarmService extends Service
 {
+	static final String TAG = "AlarmService";
     // Unique Identification Number for the Notification.
     // We use it on Notification start, and to cancel it.
     private int NOTIFICATION = 1;
     static final String NAME = "com.bonstead.pitdroid.AlarmService";
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId)
     {
@@ -26,7 +28,8 @@ public class AlarmService extends Service
         final WakeLock lock = mgr.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, NAME);
         lock.acquire();
         
-    	Log.i("StatusService", "onStartCommand");
+    	if (BuildConfig.DEBUG)
+    		Log.v(TAG, "onStartCommand");
 
         //showNotification(null, null);
         
@@ -35,8 +38,20 @@ public class AlarmService extends Service
     	    @Override
     	    public void run()
     	    {
+    	    	if (BuildConfig.DEBUG)
+    	    		Log.v(TAG, "Getting sample from HeaterMeter...");
+    	    	
     	    	HeaterMeter heatermeter = ((PitDroidApplication)getApplication()).mHeaterMeter;
     	    	NamedSample sample = heatermeter.getSample();
+    	    	
+    	    	if (BuildConfig.DEBUG)
+    	    	{
+    	    		if (sample != null)
+    	    			Log.v(TAG, "Got sample");
+    	    		else
+    	    			Log.v(TAG, "Sample was null");
+    	    	}
+    	    	
     	        showNotification(sample, heatermeter);
     	        
     	        lock.release();
@@ -55,6 +70,9 @@ public class AlarmService extends Service
     public void onDestroy()
     {
 		super.onDestroy();
+
+    	if (BuildConfig.DEBUG)
+    		Log.v(TAG, "onDestroy");
 
         // Cancel the persistent notification.
         stopForeground(true);
@@ -85,33 +103,34 @@ public class AlarmService extends Service
     		}
     	}
     	
-    	if (latestSample == null || hasAlarms)
-    	{
-	        NotificationCompat.Builder builder =
-	        		new NotificationCompat.Builder(this)
-					.setSmallIcon(R.drawable.ic_status)  
-					.setContentTitle(getText(R.string.app_name))  
-					.setContentText(contentText != null ? contentText : getString(R.string.alarm_service_info))
-					.setOngoing(true);
-	        
-	        if (hasAlarms)
-	        {
-	        	Log.i("StatusService", "Alarm notification:" + contentText);
-	        	builder.setDefaults(Notification.DEFAULT_VIBRATE);
-	        }
-	        else
-	        {
-	        	Log.i("StatusService", "Info notification");
-				builder.setOnlyAlertOnce(true);
-	        }
+        NotificationCompat.Builder builder =
+        		new NotificationCompat.Builder(this)
+				.setSmallIcon(R.drawable.ic_status)  
+				.setContentTitle(getText(R.string.app_name))  
+				.setContentText(contentText != null ? contentText : getString(R.string.alarm_service_info))
+				.setOngoing(true);
+        
+        if (hasAlarms)
+        {
+        	if (BuildConfig.DEBUG)
+        		Log.v(TAG, "Alarm notification:" + contentText);
 
-	        Intent notificationIntent = new Intent(this, MainActivity.class);  
-	        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent,   
-	                PendingIntent.FLAG_UPDATE_CURRENT);
-	        builder.setContentIntent(contentIntent);
-	
-	        startForeground(NOTIFICATION, builder.build());
-    	}
+        	builder.setDefaults(Notification.DEFAULT_VIBRATE | Notification.DEFAULT_SOUND | Notification.DEFAULT_LIGHTS);
+        }
+        else
+        {
+        	if (BuildConfig.DEBUG)
+        		Log.v(TAG, "Info notification");
+
+			builder.setOnlyAlertOnce(true);
+        }
+
+        Intent notificationIntent = new Intent(this, MainActivity.class);  
+        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent,   
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(contentIntent);
+
+        startForeground(NOTIFICATION, builder.build());
     }
  
     @Override
