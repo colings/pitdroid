@@ -8,5 +8,6 @@
     <string name="alarm">Alarm</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
+    <string name="alarm_service_info">Monitoring probe alarms</string>
 
 </resources>

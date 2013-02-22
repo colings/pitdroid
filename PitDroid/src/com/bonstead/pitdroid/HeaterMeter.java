@@ -7,6 +7,7 @@ import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -48,7 +49,8 @@ public class HeaterMeter
 	private double mMinTemperature = Double.MAX_VALUE;
 	private double mMaxTemperature = Double.MIN_VALUE;
     private ArrayList<Listener> mListeners = new ArrayList<Listener>();
-
+	private DecimalFormat mOneDec = new DecimalFormat("0.0");
+	
     class Sample
     {
     	int mTime;
@@ -126,6 +128,24 @@ public class HeaterMeter
 		return (normalized * (mMaxTemperature - mMinTemperature)) + mMinTemperature;
 	}
 
+	public String formatTemperature(double temperature)
+	{
+		return mOneDec.format(temperature) + "°";
+	}
+
+	public boolean isAlarmed(int probeIndex, double temperature)
+	{
+		if ((mProbeLoAlarm[probeIndex] > 0 && temperature < mProbeLoAlarm[probeIndex]) ||
+			(mProbeHiAlarm[probeIndex] > 0 && temperature > mProbeHiAlarm[probeIndex]))
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
 	private void updateMinMax(double temp)
     {
     	// Round our numbers up/down to a multiple of 10, making sure it's increased at
@@ -168,6 +188,17 @@ public class HeaterMeter
         }
         
         editor.commit();
+	}
+	
+	public NamedSample getSample()
+	{
+		BufferedReader reader = getUrlReader("http://" + mServerAddress + kStatusURL);
+		if (reader != null)
+		{
+			return parseStatus(readerToString(reader));
+		}
+		
+		return null;
 	}
 	
     public Object updateThread()
