@@ -12,7 +12,12 @@ import android.widget.EditText;
 
 public class AlarmDialog extends DialogFragment
 {
-	String mLoEnabledName, mLoValueName, mHiEnabledName, mHiValueName;
+	public AlarmDialogListener mListener = null;
+
+	public interface AlarmDialogListener
+	{
+	    void onFinishAlarmDialog(int probeIndex);
+	}
 
 	@Override
 	public Dialog onCreateDialog(Bundle savedInstanceState)
@@ -57,7 +62,11 @@ public class AlarmDialog extends DialogFragment
 			        // Set the new settings on the HeaterMeter and tell it to save them
 			        heaterMeter.mProbeLoAlarm[probeIndex] = loValue;
 			        heaterMeter.mProbeHiAlarm[probeIndex] = hiValue;
-			        heaterMeter.preferencesChanged(getActivity().getBaseContext());
+
+			        if (mListener != null)
+			        {
+			        	mListener.onFinishAlarmDialog(probeIndex);
+			        }
 				}
 			})
 			.setNegativeButton(R.string.cancel, null);

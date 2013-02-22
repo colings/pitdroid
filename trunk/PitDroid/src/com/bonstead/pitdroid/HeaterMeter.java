@@ -17,14 +17,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
-import android.content.Context;
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import au.com.bytecode.opencsv.CSVReader;
 
 public class HeaterMeter
 {
+	static final String TAG = "HeaterMeter";
+
 	public final static int kNumProbes = 4;
 	private final static String kHistoryURL = "/luci/lm/hist";
 	private final static String kStatusURL = "/luci/lm/hmstatus";
@@ -37,6 +37,7 @@ public class HeaterMeter
     private final static long kMaxUpdateDelta = 5000;
 
     public String mServerAddress;
+    public int mBackgroundUpdateTime;
     public int[] mProbeLoAlarm = new int[kNumProbes];
     public int[] mProbeHiAlarm = new int[kNumProbes];
     
@@ -133,6 +134,17 @@ public class HeaterMeter
 		return mOneDec.format(temperature) + "°";
 	}
 
+	public boolean hasAlarms()
+	{
+		for (int p = 0; p < kNumProbes; p++)
+		{
+			if (mProbeLoAlarm[p] > 0 || mProbeHiAlarm[p] > 0)
+				return true;
+		}
+		
+		return false;
+	}
+	
 	public boolean isAlarmed(int probeIndex, double temperature)
 	{
 		if ((mProbeLoAlarm[probeIndex] > 0 && temperature < mProbeLoAlarm[probeIndex]) ||
@@ -157,12 +169,12 @@ public class HeaterMeter
     	mMaxTemperature = Math.max(mMaxTemperature, roundedUp);
     }
 
-	public void initPreferences(Context context)
+	public void initPreferences(SharedPreferences prefs)
 	{
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-
 		mServerAddress = prefs.getString("server", "");
 
+		mBackgroundUpdateTime = Integer.valueOf(prefs.getString("backgroundUpdateTime", "15"));
+		
         for (int p = 0; p < kNumProbes; p++)
         {
         	String loName = "alarm" + p + "Lo";
@@ -173,9 +185,8 @@ public class HeaterMeter
         }
 	}
 
-	public void preferencesChanged(Context context)
+	public void preferencesChanged(SharedPreferences prefs)
 	{
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor editor = prefs.edit();
 
         for (int p = 0; p < kNumProbes; p++)
@@ -219,7 +230,8 @@ public class HeaterMeter
 		{
     		mLastHistoryTime = currentTime;
 
-    		Log.i("HeaterMeter", "Getting history");
+        	if (BuildConfig.DEBUG)
+        		Log.v(TAG, "Getting history");
     		
 	    	BufferedReader reader = getUrlReader("http://" + mServerAddress + kHistoryURL);
 	    	if (reader != null)
@@ -440,7 +452,8 @@ public class HeaterMeter
 		}
 		catch (UnknownHostException e)
 		{
-			Log.i("HeaterMeter", "Unknown host: " + e.getLocalizedMessage());
+        	if (BuildConfig.DEBUG)
+        		Log.e(TAG, "Unknown host: " + e.getLocalizedMessage());
 		}
 		catch (IOException e)
 		{

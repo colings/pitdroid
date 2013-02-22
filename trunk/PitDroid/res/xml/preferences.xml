@@ -4,5 +4,5 @@
                 android:summary="The address of the HeaterMeter"
                 android:title="Server"
                 android:key="server" />
-        <!--  <EditTextPreference android:key="backgroundUpdateTime" android:title="Background Update Time" android:summary="Interval in seconds for background updates" android:defaultValue="10"/> -->
+        <ListPreference android:entries="@array/backgroundUpdateText" android:entryValues="@array/backgroundUpdateValues" android:key="backgroundUpdateTime" android:summary="@string/backgroundUpdateTimeDesc" android:title="@string/backgroundUpdateTitle" android:defaultValue="15"/>
 </PreferenceScreen>
