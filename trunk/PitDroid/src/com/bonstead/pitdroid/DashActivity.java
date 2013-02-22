@@ -1,7 +1,6 @@
 package com.bonstead.pitdroid;
 
-import java.text.DecimalFormat;
-
+import android.graphics.Color;
 import android.os.Bundle;
 
 import android.support.v4.app.DialogFragment;
@@ -22,13 +21,16 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
 	private TextView[] mProbeNames = new TextView[HeaterMeter.kNumProbes];
 	private TextView[] mProbeVals = new TextView[HeaterMeter.kNumProbes];
 	private TextView mPitDelta;
-	private DecimalFormat mOneDec = new DecimalFormat("0.0");
+
+	private HeaterMeter mHeaterMeter;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                     Bundle savedInstanceState)
     {
     	View view = inflater.inflate(R.layout.activity_dash, container, false);
+
+    	mHeaterMeter = ((PitDroidApplication)this.getActivity().getApplication()).mHeaterMeter;
 
     	mFanSpeed = (TextView)view.findViewById(R.id.fanSpeedVal);
 
@@ -56,8 +58,7 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
 
         setDefaults();
 		
-    	HeaterMeter heaterMeter = ((PitDroidApplication)this.getActivity().getApplication()).mHeaterMeter;
-    	heaterMeter.addListener(this);
+    	mHeaterMeter.addListener(this);
    
         return view;
     }
@@ -84,11 +85,9 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
 
     private void updateAlarmButtonImage(View view, final int id, final int index)
     {
-    	HeaterMeter heaterMeter = ((PitDroidApplication)this.getActivity().getApplication()).mHeaterMeter;
-
     	ImageButton button = (ImageButton)view.findViewById(id);
 
-    	if (heaterMeter.mProbeLoAlarm[index] > 0 || heaterMeter.mProbeHiAlarm[index] > 0)
+    	if (mHeaterMeter.mProbeLoAlarm[index] > 0 || mHeaterMeter.mProbeHiAlarm[index] > 0)
     		button.setImageResource(R.drawable.ic_alarm_set);
     	else
     		button.setImageResource(R.drawable.ic_alarm_unset);
@@ -136,20 +135,29 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
 				if (Double.isNaN(latestSample.mProbes[p]))
 					mProbeVals[p].setText("-");
 				else
-					mProbeVals[p].setText(mOneDec.format(latestSample.mProbes[p]) + "°");
+					mProbeVals[p].setText(mHeaterMeter.formatTemperature(latestSample.mProbes[p]));
+				
+				if (mHeaterMeter.isAlarmed(p, latestSample.mProbes[p]))
+				{
+					mProbeVals[p].setTextColor(Color.RED);
+				}
+				else
+				{
+					mProbeVals[p].setTextColor(Color.WHITE);
+				}
 			}
 			
 			if (Double.isNaN(latestSample.mProbes[0]))
 			{
-				mPitDelta.setText(mOneDec.format(-latestSample.mSetPoint) + "°");
+				mPitDelta.setText(mHeaterMeter.formatTemperature(-latestSample.mSetPoint));
 			}
 			else
 			{
 				double delta = latestSample.mProbes[0] - latestSample.mSetPoint;
 				if (delta > 0)
-					mPitDelta.setText("(+" + mOneDec.format(delta) + "°)");
+					mPitDelta.setText("(+" + mHeaterMeter.formatTemperature(delta) + ")");
 				else
-					mPitDelta.setText("(" + mOneDec.format(delta) + "°)");
+					mPitDelta.setText("(" + mHeaterMeter.formatTemperature(delta) + ")");
 			}
 		}
     }

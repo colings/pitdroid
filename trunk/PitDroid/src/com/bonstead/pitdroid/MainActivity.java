@@ -6,16 +6,13 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import android.content.ComponentName;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Message;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
@@ -36,11 +33,10 @@ public class MainActivity extends SherlockFragmentActivity
 	TabsAdapter mTabsAdapter;
 	TextView tabCenter;
 	TextView tabText;
-	private StatusService mBoundService;
-	private boolean mIsBound = false;
     private final ScheduledExecutorService mScheduler = Executors.newScheduledThreadPool(1);
     private ScheduledFuture<?> mUpdateTimer = null;
     private HeaterMeter mHeaterMeter = null;
+    private PendingIntent mServiceAlarm = null;
 
     private final Runnable mUpdate = new Runnable()
     {
@@ -76,10 +72,10 @@ public class MainActivity extends SherlockFragmentActivity
     	mHeaterMeter = ((PitDroidApplication)this.getApplication()).mHeaterMeter;
     	mHeaterMeter.initPreferences(getBaseContext());
 		
-//	    Intent intent = new Intent(this, StatusService.class);
-//	    intent.putExtra("urlpath", "http://");
-//	    startService(intent);
-//	    doBindService();
+    	Intent alarmIntent = new Intent(this, AlarmService.class);
+    	mServiceAlarm = PendingIntent.getService(this, 0, alarmIntent, 0);
+    	AlarmManager alarm = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+    	alarm.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 60*1000, mServiceAlarm);
 	}
 
 	Handler mHandler = new Handler()
@@ -91,60 +87,19 @@ public class MainActivity extends SherlockFragmentActivity
 		}
 	};
 
-	private ServiceConnection mConnection = new ServiceConnection()
-	{
-	    public void onServiceConnected(ComponentName className, IBinder service)
-	    {
-	        // This is called when the connection with the service has been
-	        // established, giving us the service object we can use to
-	        // interact with the service.  Because we have bound to a explicit
-	        // service that we know is running in our own process, we can
-	        // cast its IBinder to a concrete class and directly access it.
-	        mBoundService = ((StatusService.LocalBinder)service).getService();
-	        mBoundService.mMainActivity = MainActivity.this;
-
-			SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-			String serverAddr = prefs.getString("server", "");
-			mBoundService.init(serverAddr);
-	    }
-
-	    public void onServiceDisconnected(ComponentName className)
-	    {
-	        // This is called when the connection with the service has been
-	        // unexpectedly disconnected -- that is, its process crashed.
-	        // Because it is running in our same process, we should never
-	        // see this happen.
-	        mBoundService = null;
-	    }
-	};
-
-	void doBindService()
-	{
-	    // Establish a connection with the service.  We use an explicit
-	    // class name because we want a specific service implementation that
-	    // we know will be running in our own process (and thus won't be
-	    // supporting component replacement by other applications).
-	    bindService(new Intent(this, StatusService.class), mConnection, Context.BIND_AUTO_CREATE);
-	    mIsBound = true;
-	}
-
-	void doUnbindService()
-	{
-	    if (mIsBound)
-	    {
-	        // Detach our existing connection.
-	        unbindService(mConnection);
-	        mIsBound = false;
-	    }
-	}
-	 @Override
+	@Override
 	protected void onDestroy()
 	{
-		// TODO Auto-generated method stub
 		super.onDestroy();
 		
-//		doUnbindService();
-//	    stopService(new Intent(this, StatusService.class));
+		if (mServiceAlarm != null)
+		{
+			AlarmManager alarm = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+			alarm.cancel(mServiceAlarm);
+			mServiceAlarm = null;
+		}
+
+	    stopService(new Intent(this, AlarmService.class));
 	}
 
 	@Override
