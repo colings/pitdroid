@@ -118,11 +118,27 @@ public class AlarmService extends Service
         	if (BuildConfig.DEBUG)
         		Log.v(TAG, "Alarm notification:" + contentText);
 
-        	builder.setDefaults(Notification.DEFAULT_VIBRATE | Notification.DEFAULT_LIGHTS);
+    		builder.setDefaults(Notification.DEFAULT_VIBRATE | Notification.DEFAULT_LIGHTS);
 
-        	Uri alert = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-	        
-        	builder.setSound(alert, AudioManager.STREAM_ALARM);
+        	AudioManager am = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+        	boolean isSilentMode = (am.getRingerMode() != AudioManager.RINGER_MODE_NORMAL);
+
+        	if (BuildConfig.DEBUG)
+        		Log.v(TAG, "Silent mode:" + (isSilentMode ? "on" : "off"));
+
+        	if (!isSilentMode || heatermeter.mAlwaysSoundAlarm)
+        	{
+            	if (BuildConfig.DEBUG)
+            		Log.v(TAG, "Using alarm sound");
+
+        		Uri alert = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+        		builder.setSound(alert, AudioManager.STREAM_ALARM);
+        	}
+        	else
+        	{
+            	if (BuildConfig.DEBUG)
+            		Log.v(TAG, "Not using alarm sound");
+        	}
         }
         else
         {
