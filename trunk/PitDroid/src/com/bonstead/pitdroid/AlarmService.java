@@ -7,6 +7,9 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioManager;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
@@ -115,7 +118,11 @@ public class AlarmService extends Service
         	if (BuildConfig.DEBUG)
         		Log.v(TAG, "Alarm notification:" + contentText);
 
-        	builder.setDefaults(Notification.DEFAULT_VIBRATE | Notification.DEFAULT_SOUND | Notification.DEFAULT_LIGHTS);
+        	builder.setDefaults(Notification.DEFAULT_VIBRATE | Notification.DEFAULT_LIGHTS);
+
+        	Uri alert = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+	        
+        	builder.setSound(alert, AudioManager.STREAM_ALARM);
         }
         else
         {

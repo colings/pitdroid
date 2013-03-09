@@ -13,7 +13,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.actionbarsherlock.app.SherlockFragment;
-import com.bonstead.pitdroid.AlarmDialog.AlarmDialogListener;
+import com.bonstead.pitdroid.AlarmSettingsDialog.AlarmDialogListener;
 import com.bonstead.pitdroid.HeaterMeter.NamedSample;
 import com.bonstead.pitdroid.R;
 
@@ -72,7 +72,7 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
         {          
             public void onClick(View view)
             {
-            	AlarmDialog dialog = new AlarmDialog();
+            	AlarmSettingsDialog dialog = new AlarmSettingsDialog();
                 
                 Bundle bundle = new Bundle();
                 bundle.putInt("probeIndex", index);
@@ -128,7 +128,7 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
 			mProbeNames[p].setText("-");
 			mProbeVals[p].setText("-");
 		}
-		mPitDelta.setText("-");
+		mPitDelta.setText("");
     }
 
     @Override
@@ -175,7 +175,7 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
 			
 			if (Double.isNaN(latestSample.mProbes[0]))
 			{
-				mPitDelta.setText(mHeaterMeter.formatTemperature(-latestSample.mSetPoint));
+				mPitDelta.setText("");
 			}
 			else
 			{
