@@ -9,8 +9,8 @@
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="alarm_service_info">Monitoring probe alarms</string>
-    <string name="backgroundUpdateTimeDesc">Interval in minutes for background updates</string>
-    <string name="backgroundUpdateTitle">Background Update Time</string>
+    <string name="backgroundUpdateTimeSummary">Interval in minutes for background updates</string>
+    <string name="backgroundUpdateTimeTitle">Background update time</string>
     <string-array name="backgroundUpdateText">
         <item >5 minutes</item>
         <item >10 minutes</item>
@@ -27,5 +27,10 @@
         <item >25</item>
         <item >30</item>
     </string-array>
+        <string name="serverSummary">The address of the HeaterMeter</string>
+        <string name="serverTitle">Server</string>
+        <string name="alwaysSoundAlarmTitle">Always use alarm sound</string>
+        <string name="alwaysSoundAlarmSummaryOn">Always use alarm sounds, even when in vibrate or silent mode</string>
+        <string name="alwaysSoundAlarmSummaryOff">Don\'t play alarm sounds when in vibrate or silent mode.</string>
 
 </resources>

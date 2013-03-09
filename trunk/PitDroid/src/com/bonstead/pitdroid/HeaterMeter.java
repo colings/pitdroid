@@ -38,6 +38,7 @@ public class HeaterMeter
 
     public String mServerAddress;
     public int mBackgroundUpdateTime;
+    public boolean mAlwaysSoundAlarm = true;
     public int[] mProbeLoAlarm = new int[kNumProbes];
     public int[] mProbeHiAlarm = new int[kNumProbes];
     
@@ -175,6 +176,8 @@ public class HeaterMeter
 
 		mBackgroundUpdateTime = Integer.valueOf(prefs.getString("backgroundUpdateTime", "15"));
 		
+		mAlwaysSoundAlarm = prefs.getBoolean("alwaysSoundAlarm", true);
+
         for (int p = 0; p < kNumProbes; p++)
         {
         	String loName = "alarm" + p + "Lo";
