@@ -1,5 +1,6 @@
 package com.bonstead.pitdroid;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -86,14 +87,27 @@ public class MainActivity extends SherlockFragmentActivity implements OnSharedPr
    		updateAlarmService();
 	}
 
-	Handler mHandler = new Handler()
+	static class IncomingHandler extends Handler
 	{
+		private final WeakReference<MainActivity> mActivity; 
+		
+		IncomingHandler(MainActivity activity)
+		{
+			mActivity = new WeakReference<MainActivity>(activity);
+		}
+		    
 		@Override
 		public void handleMessage(Message msg)
 		{
-			mHeaterMeter.updateMain(msg.obj);
+			MainActivity activity = mActivity.get();
+			if (activity != null)
+			{
+				activity.mHeaterMeter.updateMain(msg.obj);
+			}
 		}
-	};
+	}
+	
+	private final IncomingHandler mHandler = new IncomingHandler(this);
 
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
 	{

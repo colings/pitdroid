@@ -10,7 +10,7 @@ import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
-public class AlarmDialog extends DialogFragment
+public class AlarmSettingsDialog extends DialogFragment
 {
 	public AlarmDialogListener mListener = null;
 
