@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
-        <EditTextPreference
-                android:summary="@string/serverSummary"
-                android:title="@string/serverTitle"
-                android:key="server" />
-        <ListPreference android:entries="@array/backgroundUpdateText" android:entryValues="@array/backgroundUpdateValues" android:key="backgroundUpdateTime" android:summary="@string/backgroundUpdateTimeSummary" android:title="@string/backgroundUpdateTimeTitle" android:defaultValue="15"/>
-        <CheckBoxPreference android:key="alwaysSoundAlarm" android:title="@string/alwaysSoundAlarmTitle" android:summaryOff="@string/alwaysSoundAlarmSummaryOff" android:summaryOn="@string/alwaysSoundAlarmSummaryOn"/>
-</PreferenceScreen>
