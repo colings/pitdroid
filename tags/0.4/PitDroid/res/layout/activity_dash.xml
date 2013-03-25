@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:id="@+id/TableLayout1" android:layout_width="match_parent"
+	android:layout_height="match_parent">
+
+	<TableRow android:id="@+id/tableRow1" android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:gravity="center_vertical">
+
+		<ImageButton android:id="@+id/probe0Alarm"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:contentDescription="@string/alarm" android:src="@drawable/ic_alarm_unset" />
+
+		<TextView android:id="@+id/probe0name" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:paddingRight="5dp"
+			android:text="Probe 0:" android:textAppearance="?android:attr/textAppearanceLarge" />
+
+		<TextView android:id="@+id/probe0val" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:paddingRight="5dp"
+			android:text="0.0°" android:textAppearance="?android:attr/textAppearanceLarge" />
+
+		<TextView android:id="@+id/probe0delta" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:text="(+0.0°)"
+			android:textAppearance="?android:attr/textAppearanceLarge" />
+
+	</TableRow>
+
+	<TableRow android:id="@+id/tableRow2" android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:gravity="center_vertical">
+
+		<ImageButton android:id="@+id/probe1Alarm"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:contentDescription="@string/alarm" android:src="@drawable/ic_alarm_unset" />
+
+		<TextView android:id="@+id/probe1name" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:paddingRight="5dp"
+			android:text="Probe 1:" android:textAppearance="?android:attr/textAppearanceLarge" />
+
+		<TextView android:id="@+id/probe1val" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:text="0.0°"
+			android:textAppearance="?android:attr/textAppearanceLarge" />
+
+	</TableRow>
+
+	<TableRow android:id="@+id/tableRow3" android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:gravity="center_vertical">
+
+		<ImageButton android:id="@+id/probe2Alarm"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:contentDescription="@string/alarm" android:src="@drawable/ic_alarm_unset" />
+
+		<TextView android:id="@+id/probe2name" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:paddingRight="5dp"
+			android:text="Probe 3:" android:textAppearance="?android:attr/textAppearanceLarge" />
+
+		<TextView android:id="@+id/probe2val" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:text="0.0°"
+			android:textAppearance="?android:attr/textAppearanceLarge" />
+
+	</TableRow>
+
+	<TableRow android:id="@+id/tableRow4" android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:gravity="center_vertical">
+
+		<ImageButton android:id="@+id/probe3Alarm"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:contentDescription="@string/alarm" android:src="@drawable/ic_alarm_unset" />
+
+		<TextView android:id="@+id/probe3name" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:paddingRight="5dp"
+			android:text="Probe 4:" android:textAppearance="?android:attr/textAppearanceLarge" />
+
+		<TextView android:id="@+id/probe3val" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:text="0.0°"
+			android:textAppearance="?android:attr/textAppearanceLarge" />
+
+	</TableRow>
+
+	<TableRow android:id="@+id/tableRow5" android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:gravity="center_vertical">
+
+		<TextView android:id="@+id/textView1" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:text="" />
+
+		<TextView android:id="@+id/fanSpeedName"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:paddingRight="5dp" android:text="@string/fan_speed"
+			android:textAppearance="?android:attr/textAppearanceLarge" />
+
+		<TextView android:id="@+id/fanSpeedVal" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:text="0%"
+			android:textAppearance="?android:attr/textAppearanceLarge" />
+
+	</TableRow>
+
+</TableLayout>
+
