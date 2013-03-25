@@ -43,10 +43,10 @@ public class AlarmService extends Service
     	    {
     	    	if (BuildConfig.DEBUG)
     	    		Log.v(TAG, "Getting sample from HeaterMeter...");
-    	    	
+
     	    	HeaterMeter heatermeter = ((PitDroidApplication)getApplication()).mHeaterMeter;
     	    	NamedSample sample = heatermeter.getSample();
-    	    	
+
     	    	if (BuildConfig.DEBUG)
     	    	{
     	    		if (sample != null)
@@ -54,10 +54,10 @@ public class AlarmService extends Service
     	    		else
     	    			Log.v(TAG, "Sample was null");
     	    	}
-    	    	
-    	        showNotification(sample, heatermeter);
-    	        
-    	        lock.release();
+
+   	    		showNotification(sample, heatermeter);
+
+	            lock.release();
     	    }
     	};
     	
@@ -92,6 +92,7 @@ public class AlarmService extends Service
 
     	if (latestSample != null)
     	{
+        	// If we've got a sample, check if any of the alarms are triggered
     		for (int p = 0; p < HeaterMeter.kNumProbes; p++)
     		{
     			if (heatermeter.isAlarmed(p, latestSample.mProbes[p]))
@@ -101,9 +102,20 @@ public class AlarmService extends Service
     				if (contentText == null)
     					contentText = new String();
     				
-    				contentText += latestSample.mProbeNames[p] + " - " + heatermeter.formatTemperature(latestSample.mProbes[p]) + " ";
+    				contentText += latestSample.mProbeNames[p] + " - ";
+    				
+    				if (Double.isNaN(latestSample.mProbes[p]))
+    					contentText += "off";
+    				else
+    					contentText += heatermeter.formatTemperature(latestSample.mProbes[p]) + " ";
     			}
     		}
+    	}
+    	else
+    	{
+    		// If we didn't get a sample, that's an alarm in itself
+    		hasAlarms = true;
+    		contentText = getText(R.string.no_server).toString();
     	}
     	
         NotificationCompat.Builder builder =
