@@ -32,5 +32,6 @@
         <string name="alwaysSoundAlarmTitle">Always use alarm sound</string>
         <string name="alwaysSoundAlarmSummaryOn">Always use alarm sounds, even when in vibrate or silent mode</string>
         <string name="alwaysSoundAlarmSummaryOff">Don\'t play alarm sounds when in vibrate or silent mode.</string>
+        <string name="no_server">Unable to contact server</string>
 
 </resources>

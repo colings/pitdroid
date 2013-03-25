@@ -148,15 +148,14 @@ public class HeaterMeter
 	
 	public boolean isAlarmed(int probeIndex, double temperature)
 	{
-		if ((mProbeLoAlarm[probeIndex] > 0 && temperature < mProbeLoAlarm[probeIndex]) ||
-			(mProbeHiAlarm[probeIndex] > 0 && temperature > mProbeHiAlarm[probeIndex]))
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
+		boolean hasLo = mProbeLoAlarm[probeIndex] > 0;
+		boolean hasHi = mProbeHiAlarm[probeIndex] > 0;
+		
+		boolean alarmNaN = (hasLo || hasHi) && Double.isNaN(temperature);
+		boolean alarmLo  = (hasLo && temperature < mProbeLoAlarm[probeIndex]);
+		boolean alarmHi  = (hasHi && temperature > mProbeHiAlarm[probeIndex]);
+
+		return alarmNaN || alarmLo || alarmHi;
 	}
 
 	private void updateMinMax(double temp)
@@ -450,8 +449,8 @@ public class HeaterMeter
 		}
 		catch (MalformedURLException e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+        	if (BuildConfig.DEBUG)
+        		Log.e(TAG, "Bad server address");
 		}
 		catch (UnknownHostException e)
 		{
@@ -460,8 +459,8 @@ public class HeaterMeter
 		}
 		catch (IOException e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+        	if (BuildConfig.DEBUG)
+        		Log.e(TAG, "IO exception");
 		}
 		
 		return null;
