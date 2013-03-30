@@ -1,7 +1,5 @@
 package com.bonstead.pitdroid;
 
-import java.util.Iterator;
-
 import com.androidplot.series.XYSeries;
 import com.bonstead.pitdroid.HeaterMeter.Sample;
 
@@ -13,10 +11,6 @@ public class SampleTimeSeries implements XYSeries
 
 	private HeaterMeter mHeaterMeter;
 	private int mIndex;
-    
-    private Iterator<Sample> mIterator;
-    private Sample mCurrentValue;
-    private int mCurrentIdx;
 
     public SampleTimeSeries(HeaterMeter heatermeter, int index)
     {
@@ -56,13 +50,13 @@ public class SampleTimeSeries implements XYSeries
     @Override
     public Number getX(int index)
     {
-    	return getSample(index).mTime;
+    	return mHeaterMeter.mSamples.get(index).mTime;
     }
 
     @Override
     public Number getY(int index)
     {
-    	Sample sample = getSample(index);
+    	Sample sample = mHeaterMeter.mSamples.get(index);
 
     	if (mIndex < HeaterMeter.kNumProbes)
     	{
@@ -85,31 +79,5 @@ public class SampleTimeSeries implements XYSeries
     	}
     	
     	return null;
-    }
-
-    private Sample getSample(int index)
-    {
-    	if (index == 0)
-    	{
-    		mIterator = mHeaterMeter.mSamples.iterator();
-    		mCurrentValue = mIterator.next();
-    		mCurrentIdx = 0;
-    		return mCurrentValue;
-    	}
-    	else if (index == mCurrentIdx)
-    	{
-    		return mCurrentValue;
-    	}
-    	else if (index == mCurrentIdx + 1)
-    	{
-    		mCurrentValue = mIterator.next();
-    		mCurrentIdx++;
-    		return mCurrentValue;
-    	}
-    	else
-    	{
-    		System.out.print("Shouldn't hit this");
-    		return mHeaterMeter.mSamples.get(index);
-    	}
     }
 }

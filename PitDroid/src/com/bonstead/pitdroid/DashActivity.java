@@ -22,6 +22,7 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
 	private TextView mFanSpeed;
 	private TextView[] mProbeNames = new TextView[HeaterMeter.kNumProbes];
 	private TextView[] mProbeVals = new TextView[HeaterMeter.kNumProbes];
+	private TextView[] mProbeTimes = new TextView[HeaterMeter.kNumProbes];
 	private TextView mPitDelta;
 
 	private HeaterMeter mHeaterMeter;
@@ -36,17 +37,21 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
 
     	mFanSpeed = (TextView)view.findViewById(R.id.fanSpeedVal);
 
-        mProbeNames[0] = (TextView)view.findViewById(R.id.probe0name);
-        mProbeNames[1] = (TextView)view.findViewById(R.id.probe1name);
-        mProbeNames[2] = (TextView)view.findViewById(R.id.probe2name);
-        mProbeNames[3] = (TextView)view.findViewById(R.id.probe3name);
+        mProbeNames[0] = (TextView)view.findViewById(R.id.probe0Name);
+        mProbeNames[1] = (TextView)view.findViewById(R.id.probe1Name);
+        mProbeNames[2] = (TextView)view.findViewById(R.id.probe2Name);
+        mProbeNames[3] = (TextView)view.findViewById(R.id.probe3Name);
 
-        mProbeVals[0] = (TextView)view.findViewById(R.id.probe0val);
-        mProbeVals[1] = (TextView)view.findViewById(R.id.probe1val);
-        mProbeVals[2] = (TextView)view.findViewById(R.id.probe2val);
-        mProbeVals[3] = (TextView)view.findViewById(R.id.probe3val);
+        mProbeVals[0] = (TextView)view.findViewById(R.id.probe0Val);
+        mProbeVals[1] = (TextView)view.findViewById(R.id.probe1Val);
+        mProbeVals[2] = (TextView)view.findViewById(R.id.probe2Val);
+        mProbeVals[3] = (TextView)view.findViewById(R.id.probe3Val);
+
+        mProbeTimes[1] = (TextView)view.findViewById(R.id.probe1Time);
+        mProbeTimes[2] = (TextView)view.findViewById(R.id.probe2Time);
+        mProbeTimes[3] = (TextView)view.findViewById(R.id.probe3Time);
         
-        mPitDelta = (TextView)view.findViewById(R.id.probe0delta);
+        mPitDelta = (TextView)view.findViewById(R.id.probe0Delta);
         
         setAlarmClickListener(view, R.id.probe0Alarm, 0);
         setAlarmClickListener(view, R.id.probe1Alarm, 1);
@@ -127,6 +132,8 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
 		{
 			mProbeNames[p].setText("-");
 			mProbeVals[p].setText("-");
+			if (mProbeTimes[p] != null)
+				mProbeTimes[p].setText("");
 		}
 		mPitDelta.setText("");
     }
@@ -171,6 +178,15 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
 				{
 					mProbeVals[p].setTextColor(Color.WHITE);
 				}
+				
+				if (mProbeTimes[p] != null)
+				{
+					String timeUntilAlarm = mHeaterMeter.timeUntilAlarm(p);
+					if (timeUntilAlarm != null)
+						mProbeTimes[p].setText(timeUntilAlarm);
+					else
+						mProbeTimes[p].setText("");
+				}
 			}
 			
 			if (Double.isNaN(latestSample.mProbes[0]))
@@ -181,9 +197,9 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
 			{
 				double delta = latestSample.mProbes[0] - latestSample.mSetPoint;
 				if (delta > 0)
-					mPitDelta.setText("(+" + mHeaterMeter.formatTemperature(delta) + ")");
+					mPitDelta.setText(mHeaterMeter.formatTemperature(delta) + " above set temp");
 				else
-					mPitDelta.setText("(" + mHeaterMeter.formatTemperature(delta) + ")");
+					mPitDelta.setText(mHeaterMeter.formatTemperature(-delta) + " below set temp");
 			}
 		}
     }
