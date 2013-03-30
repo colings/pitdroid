@@ -42,7 +42,7 @@ public class HeaterMeter
     public int[] mProbeLoAlarm = new int[kNumProbes];
     public int[] mProbeHiAlarm = new int[kNumProbes];
     
-    public LinkedList<Sample> mSamples = new LinkedList<Sample>();
+    public ArrayList<Sample> mSamples = new ArrayList<Sample>();
     public String[] mProbeNames = new String[kNumProbes];
  
     private long mLastUpdateTime = 0;
@@ -158,6 +158,50 @@ public class HeaterMeter
 		return alarmNaN || alarmLo || alarmHi;
 	}
 
+	public String timeUntilAlarm(int probeIndex)
+	{
+		// If we've got an alarm set and our most recent sample had a reading for this
+		// probe, see if we can calculate an estimated time to alarm.
+		if (mProbeHiAlarm[probeIndex] > 0 && mSamples.size() > 0 &&
+			!Double.isNaN(mSamples.get(mSamples.size() - 1).mProbes[probeIndex]))
+		{
+			Sample lastSample = mSamples.get(mSamples.size() - 1);
+			double val = lastSample.mProbes[probeIndex];
+			int time = lastSample.mTime;
+
+	    	// Target is 59mins30secs ago, allows drawing with scale set to 1hr
+	        final int targetTime = time - (60 * 60) + 30;
+
+	        for (int i = mSamples.size() - 1; i >= 0; --i)
+			{
+	    		Sample sample = mSamples.get(i);
+
+	            if (sample.mTime <= targetTime && !Double.isNaN(sample.mProbes[probeIndex]))
+	            {
+	                double diffTemp = val - sample.mProbes[probeIndex];
+	                double diffTime = time - sample.mTime;
+	                diffTime /= 60.0 * 60.0;
+	                double degreesPerHour = diffTemp / diffTime;
+	                
+	                // Don't display if there isn't clear increase, prevents wild numbers
+	                if (degreesPerHour < 1.0)
+	                    break;
+	                
+	                int minutesRemaining = (int)(((mProbeHiAlarm[probeIndex] - val) / degreesPerHour) * 60);
+	                int hoursRemaining = minutesRemaining / 60;
+	                minutesRemaining = minutesRemaining % 60;
+	                
+	                if (hoursRemaining > 0)
+	                	return String.format("%d hours, %d minutes to %d°", hoursRemaining, minutesRemaining, (int)mProbeHiAlarm[probeIndex]);
+	                else
+	                	return String.format("%d minutes to %d°", minutesRemaining, (int)mProbeHiAlarm[probeIndex]);
+	            }
+			}
+	    }
+	    	
+	    return null;
+	}
+	
 	private void updateMinMax(double temp)
     {
     	// Round our numbers up/down to a multiple of 10, making sure it's increased at
@@ -254,7 +298,7 @@ public class HeaterMeter
     	return ret;
     }
     
-    // Suppress warning since we know it's an LinkedList of samples, even if Java doesn't
+    // Suppress warning since we know it's an ArrayList of samples, even if Java doesn't
     @SuppressWarnings("unchecked")
 	public void updateMain(Object data)
     {
@@ -266,7 +310,7 @@ public class HeaterMeter
     	}
     	else if (data != null)
     	{
-    		latestSample = addHistory((LinkedList<Sample>)data);
+    		latestSample = addHistory((ArrayList<Sample>)data);
     	}
 
     	for (int l = 0; l < mListeners.size(); l++)
@@ -344,11 +388,11 @@ public class HeaterMeter
     	return sample;
     }
 
-    public LinkedList<Sample> parseHistory(Reader reader)
+    public ArrayList<Sample> parseHistory(Reader reader)
     {
 	    try
 	    {
-	    	LinkedList<Sample> history = new LinkedList<Sample>();
+	    	ArrayList<Sample> history = new ArrayList<Sample>();
 
 	    	CSVReader csvReader = new CSVReader(reader);
 		
@@ -402,7 +446,7 @@ public class HeaterMeter
 		}
     }
 
-    private NamedSample addHistory(LinkedList<Sample> history)
+    private NamedSample addHistory(ArrayList<Sample> history)
     {
     	mSamples = history;
 
@@ -430,7 +474,7 @@ public class HeaterMeter
     	NamedSample latestSample = null;
     	if (mSamples.size() > 0)
     	{
-    		latestSample = new NamedSample(mSamples.getLast());
+    		latestSample = new NamedSample(mSamples.get(mSamples.size()-1));
     		for (int p = 0; p < kNumProbes; p++)
     		{
     			latestSample.mProbeNames[p] = mProbeNames[p];
@@ -492,38 +536,4 @@ public class HeaterMeter
 			return null;
 		}
     }
-    
-    /*
-	function degPerHour(probeIdx)
-	{
-	    var pname = "#dph" + probeIdx; 
-	    var data = graphData[mapJson[probeIdx]].data;
-	    if (data.length != 0 && !isNaN(data[data.length-1][1]))
-	    {
-	        var val = data[data.length-1][1];
-	       
-	        var time = data[data.length-1][0];
-	        // Target is 59mins30secs ago, allows drawing with scale set to 1hr
-	        var targetTime = time - (60 * 60 * 1000) + 30000;
-	        for (var i=data.length-1; i>=0; --i)
-	            if (data[i][0] <= targetTime && !isNaN(data[i][1]))
-	            {
-	                var diffTemp = val - data[i][1];
-	                var diffTime = time - data[i][0];
-	                diffTime /= (60.0 * 60.0 * 1000.0);
-	                var dph = diffTemp / diffTime;
-	                // Don't display if there isn't clear increase, prevents wild numbers
-	                if (dph < 1.0)
-	                    break;
-	                var timeRemain180 = ((180.0 - val) / dph) * 3600;
-	                timeRemain180 = (timeRemain180 > 0) ? formatTimer(timeRemain180, false) + " to 180&deg;<br />" : "";
-	                var timeRemain200 = ((200.0 - val) / dph) * 3600;
-	                timeRemain200 = (timeRemain200 > 0) ? formatTimer(timeRemain200, false) + " to 200&deg;" : "";
-	                $(pname).html(diffTemp.toFixed(1) + "&deg;/hr<br />" + timeRemain180 + timeRemain200).show();
-	                return;
-	            }
-	    }  // if has valid data
-	    $(pname).hide();
-	}
-    */
 }
