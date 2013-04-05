@@ -1,24 +1,40 @@
 package com.bonstead.pitdroid;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
+import android.graphics.Color;
+import android.graphics.PointF;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
+import android.view.View;
+import android.view.View.OnTouchListener;
+import android.view.ViewGroup;
+
+import com.actionbarsherlock.app.SherlockFragment;
 
 import com.androidplot.Plot.BorderStyle;
 import com.androidplot.ui.AnchorPosition;
 import com.androidplot.ui.SizeLayoutType;
 import com.androidplot.ui.SizeMetrics;
-import com.androidplot.xy.*;
-import android.graphics.Color;
+import com.androidplot.xy.BoundaryMode;
+import com.androidplot.xy.LineAndPointFormatter;
+import com.androidplot.xy.PointLabelFormatter;
+import com.androidplot.xy.XLayoutStyle;
+import com.androidplot.xy.XYPlot;
+import com.androidplot.xy.YLayoutStyle;
 
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-
-import com.actionbarsherlock.app.SherlockFragment;
 import com.bonstead.pitdroid.HeaterMeter.NamedSample;
-import com.bonstead.pitdroid.R;
+import com.bonstead.pitdroid.PanZoomTracker;
+import com.bonstead.pitdroid.PanZoomTracker.Range;
 
-public class GraphActivity extends SherlockFragment implements HeaterMeter.Listener
-{
+public class GraphActivity extends SherlockFragment implements 	HeaterMeter.Listener, OnTouchListener
+{			
+	static final String TAG = "GraphActivity";
+	
 	private XYPlot mPlot;
     private SampleTimeSeries mFanSpeed;
     private SampleTimeSeries mLidOpen;
@@ -27,18 +43,37 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
 
     private HeaterMeter mHeaterMeter;
 
+    private ScaleGestureDetector scaleGestureDetector;
+    
+    static final int INVALID_POINTER_ID = -1;  
+    private PanZoomTracker mPZT;
+    private PointF	mLastTouch;
+    private int 	mActivePointerId;    
+    private float 	lastZooming;
+    private float 	lastPanning;
+    
+    // max, min, default panning window sizes (seconds)
+    public final int MIN_DOMAIN_SPAN =  	  		  60;   
+    public final int MAX_DOMAIN_SPAN =	 	48 * 60 * 60;
+    public final int DEFAULT_DOMAIN_SPAN = 	 2 * 60 * 60;
+    
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                     Bundle savedInstanceState)
     {
     	mHeaterMeter = ((PitDroidApplication)this.getActivity().getApplication()).mHeaterMeter;
     	mHeaterMeter.addListener(this);
-
+        
     	View view = inflater.inflate(R.layout.activity_graph, container, false);
 
         // initialize our XYPlot reference:
         mPlot = (XYPlot) view.findViewById(R.id.plot);
-
+        mPlot.setOnTouchListener(this);
+               
+        // Create a scaleGestureDetector to look for gesture events
+        scaleGestureDetector = new ScaleGestureDetector(view.getContext(), new ScaleListener());
+    	mPZT = mHeaterMeter.getPanZoomTracker();
+        
         mFanSpeed = new SampleTimeSeries(mHeaterMeter, SampleTimeSeries.kFanSpeed);
         mLidOpen = new SampleTimeSeries(mHeaterMeter, SampleTimeSeries.kLidOpen);
         mSetPoint = new SampleTimeSeries(mHeaterMeter, SampleTimeSeries.kSetPoint);
@@ -177,6 +212,181 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
 	@Override
 	public void samplesUpdated(final NamedSample latestSample)
 	{
-    	mPlot.redraw();
-	}
+		if (mPZT.domainWindow == null) {
+			// Initialize panning window if uninitialized or confused
+			mPZT.domainWindow = new Range<Number>(latestSample.mTime - mPZT.domainWindowSpan, latestSample.mTime);
+			mPZT.domainWindowSpan = DEFAULT_DOMAIN_SPAN;			
+		} else if (!mPZT.panning) {
+	    	// If most recent sample is visible in the current panning window,
+	    	// shift the panning window to show the updated sample.
+	    	mPZT.domainWindow.setMax(latestSample.mTime);
+            mPZT.domainWindow.min = mPZT.domainWindow.max.intValue() - mPZT.domainWindowSpan;
+	    }
+	    redrawPlot();
+	}	
+	
+	/*
+	 * Update plot boundaries and any visual indicators before redrawing
+	 */
+    private void redrawPlot() {
+    	// ToDo: Update Panning/Zoom visual indicator 
+    	   	
+    	mPlot.setDomainBoundaries(mPZT.domainWindow.min, mPZT.domainWindow.max, BoundaryMode.FIXED);
+        mPlot.redraw();
+    }
+	
+
+    private class ScaleListener extends 
+    	ScaleGestureDetector.SimpleOnScaleGestureListener {
+    	
+    	@Override
+    	public boolean onScale(ScaleGestureDetector detector) {
+    		lastZooming = detector.getScaleFactor();
+     		zoom(lastZooming);
+            redrawPlot();
+            return true;
+    	}
+    }   
+    
+    @Override
+    public boolean onTouch(View arg0, MotionEvent event) {
+        
+    	// Let the ScaleGestureDetector inspect all events
+    	scaleGestureDetector.onTouchEvent(event);	
+    	  	
+        switch (event.getAction() & MotionEvent.ACTION_MASK) {
+        
+        case MotionEvent.ACTION_DOWN:  {
+            mLastTouch = new PointF(event.getX(), event.getY());
+            mActivePointerId = event.getPointerId(0);
+            break;
+        }       
+
+        case MotionEvent.ACTION_CANCEL:  {
+        	mActivePointerId = INVALID_POINTER_ID;
+        	break;
+        }
+
+        case MotionEvent.ACTION_UP:      {
+        	// Start a timer to add inertia to the panning and zooming
+        	// redraw() is non-blocking, so let the timer trigger on 200ms cycle to 
+        	Timer t = new Timer();
+            t.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    if (Math.abs(lastPanning)>1f || Math.abs(lastZooming-1)>0.00001f) {
+                    	lastPanning*=.8;
+                    	pan((int)lastPanning);                  
+                    	lastZooming+=(1-lastZooming)*.1;
+                    	zoom(lastZooming);
+                    	redrawPlot();
+                    } else {
+                    	// the thread lives until the scrolling and zooming are imperceptible
+                    	cancel();
+                    }
+               }
+            }, 0, 200);
+            break;
+        }
+        
+        case MotionEvent.ACTION_POINTER_UP: {
+        	final int pointerIndex = (event.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK)
+        			>> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+        	final int pointerId = event.getPointerId(pointerIndex);
+        	if (pointerId == mActivePointerId) {
+        		// This was our active pointer going up.  Choose a new 
+        		// active pointer and adjust accordingly.
+        		final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
+        		mLastTouch.set (event.getX(newPointerIndex), event.getY(newPointerIndex));
+        		mActivePointerId = event.getPointerId(newPointerIndex);
+        	}
+        	Log.v(TAG, "action pointer up: "+lastPanning+"  lastZooming:"+lastZooming);
+
+        	break;
+        }
+    	        		              
+        case MotionEvent.ACTION_MOVE:
+        	final int pointerIndex = event.findPointerIndex(mActivePointerId);
+        	final float x = event.getX(pointerIndex);
+        	final float y = event.getY(pointerIndex);
+        	
+        	// Only move if the ScaleGestureDetector isn't processing a gesture
+        	if (!scaleGestureDetector.isInProgress()) {
+        		lastPanning = mLastTouch.x - x;     		
+        		pan((int)lastPanning);     
+        		mPZT.panning = isDomainWindowPanned();
+        	}
+        	mLastTouch.set(x, y);
+        	redrawPlot();
+            break;
+        }
+        return true;
+    }
+    
+    /*
+     * Find the maximum sample value from all series assigned to the Plot
+     *
+     * @param thisPlot
+     */
+    private Range<Number> getSeriesSetMinMax(XYPlot thisPlot) {
+       return new Range<Number>( mHeaterMeter.mSamples.get(0).mTime, 
+    		   					 mHeaterMeter.mSamples.get(mHeaterMeter.mSamples.size()-1).mTime);
+    }
+
+    /*
+     * Returns percentage of zoom percentage
+     */
+    public float getScaleFactor() {
+    	return (float)(mPZT.domainWindow.intValue() / getSeriesSetMinMax(mPlot).intValue());
+    }
+    
+    /*
+     * Pan the domain window along the sample set by keeping
+     * the domainWindowSpan constant and recalcuating the window bounds.
+     *
+     * @pan    Number of sample values to increase/decrease window
+     */
+    private void pan (int pan) {
+       float step = mPZT.domainWindowSpan / mPlot.getWidth();
+       float offset = pan * step;
+ 
+       Range<Number> sampleRange = getSeriesSetMinMax(mPlot);
+        
+       // If there are not enough samples to fill the current domainWindow, don't pan
+       if ((offset < 0) && (mPZT.domainWindow.min.intValue() <= sampleRange.min.intValue()))
+    	   return;
+        
+       // Ensure max does not extend beyond sample set
+       mPZT.domainWindow.max = Math.min(sampleRange.max.intValue(), mPZT.domainWindow.max.intValue() + (int)offset);
+       // Keeping domainWindowSpan constant, recalculate the min value
+       mPZT.domainWindow.min = mPZT.domainWindow.max.intValue() - mPZT.domainWindowSpan;         	
+    }
+    
+    /*
+     *  Zoom the domain window
+     *
+     * Right (max) value remains fixed and Left (lower) value is scaled
+     */
+    private void zoom (float deltaScaleFactor) {      	
+       mPZT.domainWindowSpan = (int)(mPZT.domainWindowSpan / deltaScaleFactor);
+
+       // Ensure the domainWindowSpan remains within reasonable bounds
+       mPZT.domainWindowSpan = Math.max(mPZT.domainWindowSpan, MIN_DOMAIN_SPAN);
+       mPZT.domainWindowSpan = Math.min(mPZT.domainWindowSpan, MAX_DOMAIN_SPAN);
+       mPZT.domainWindow.min = mPZT.domainWindow.max.intValue() - mPZT.domainWindowSpan;
+    }
+    
+    /*
+     * Helper function to check whether panning window is showing the
+     * most recent samples or if the window has been panned over
+     * to older (historical) data.
+     */
+    private boolean isDomainWindowPanned () {
+    	if (mPZT.domainWindow == null) 
+    		return false;
+    	int latestValue = getSeriesSetMinMax(mPlot).max.intValue();
+    	return (mPZT.domainWindow.max.intValue() < latestValue) ? true : false;
+    }
+
+
 }
