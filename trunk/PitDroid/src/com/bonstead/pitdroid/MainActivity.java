@@ -22,9 +22,12 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
+import android.view.View;
+import android.view.MotionEvent;
 import android.widget.TextView;
 
 import com.actionbarsherlock.app.ActionBar;
+
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.app.ActionBar.Tab;
 import com.actionbarsherlock.view.Menu;
@@ -35,7 +38,7 @@ public class MainActivity extends SherlockFragmentActivity implements OnSharedPr
 {
 	static final String TAG = "MainActivity";
 
-	ViewPager mViewPager;
+	NoScrollViewPager mViewPager;
 	TabsAdapter mTabsAdapter;
 	TextView tabCenter;
 	TextView tabText;
@@ -43,7 +46,24 @@ public class MainActivity extends SherlockFragmentActivity implements OnSharedPr
     private ScheduledFuture<?> mUpdateTimer = null;
     private HeaterMeter mHeaterMeter = null;
     private PendingIntent mServiceAlarm = null;
+    
+    // Custom ViewPager to disable Fragment scrolling on swipe 
+    private class NoScrollViewPager extends ViewPager {
+        public NoScrollViewPager(Context context) {
+        	super(context);
+        }
 
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            return false;
+        }
+
+        @Override
+        public boolean onInterceptTouchEvent(MotionEvent event) {
+            return false;
+        }        
+    };
+      
     private final Runnable mUpdate = new Runnable()
     {
         public void run()
@@ -61,7 +81,7 @@ public class MainActivity extends SherlockFragmentActivity implements OnSharedPr
     	if (BuildConfig.DEBUG)
     		Log.v(TAG, "onCreate");
 
-		mViewPager = new ViewPager(this);
+    	mViewPager = new NoScrollViewPager(this);
 		mViewPager.setId(R.id.pager);
 		
 		setContentView(mViewPager);

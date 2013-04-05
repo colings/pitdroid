@@ -52,6 +52,9 @@ public class HeaterMeter
 	private double mMaxTemperature = Double.MIN_VALUE;
     private ArrayList<Listener> mListeners = new ArrayList<Listener>();
 	private DecimalFormat mOneDec = new DecimalFormat("0.0");
+
+	// Create PanZoomTracker to hold pan/zoom window details 
+    private PanZoomTracker mPanZoomTracker = new PanZoomTracker();
 	
     class Sample
     {
@@ -279,9 +282,14 @@ public class HeaterMeter
         	if (BuildConfig.DEBUG)
         		Log.v(TAG, "Getting history");
     		
-	    	BufferedReader reader = getUrlReader("http://" + mServerAddress + kHistoryURL);
-	    	if (reader != null)
-	    		ret = parseHistory(reader);
+         	if (false) {
+        		Log.v(TAG, "Generating random data");
+        		ret = generateDummyData(1000, currentTime);
+        	} else {
+	    	    BufferedReader reader = getUrlReader("http://" + mServerAddress + kHistoryURL);
+	    	    if (reader != null)
+	    		    ret = parseHistory(reader);
+        	}    
 		}
     	else
     	{
@@ -388,6 +396,41 @@ public class HeaterMeter
     	return sample;
     }
 
+    public ArrayList<Sample> generateDummyData(int numSamples, long currentTime)  {
+    	ArrayList<Sample> history = new ArrayList<Sample>();
+    	
+   	    currentTime /= 1000;
+    	
+    	for (int j=0; j < numSamples;j++)  {
+    		Sample sample = new Sample();
+    		sample.mTime = (int)(currentTime - (numSamples - j)*170);  
+    		
+    		sample.mSetPoint = 225.0;
+    		
+    		for (int i=0; i < 1; i++) {  			
+    			if (j == 0 ) {
+    				sample.mProbes[i] = sample.mSetPoint - 50 + (Math.random() * 100);     				
+    			} else if (j==1) { 
+        			sample.mProbes[i] = history.get(0).mProbes[i] - 4 + (Math.random() * 10);        			
+    			} else {
+    				int sloping = (history.get(j-1).mProbes[i] < history.get(j-2).mProbes[i]) ? -1 : 1;
+    				sloping = (Math.random() > 0.95) ? sloping * -1 : sloping;
+    				sample.mProbes[i] = history.get(j-1).mProbes[i] + sloping * (Math.random() * 2);
+    			}
+    		}
+    		
+			// Seventh is the fan speed/lid open
+			sample.mFanSpeed = 0.0;
+			sample.mLidOpen = 0.0;
+    		
+    		history.add(sample);
+    	}
+    	return history;
+    }
+
+	public PanZoomTracker getPanZoomTracker() {
+    	return mPanZoomTracker;
+    }  
     public ArrayList<Sample> parseHistory(Reader reader)
     {
 	    try
