@@ -12,72 +12,72 @@ public class SampleTimeSeries implements XYSeries
 	private HeaterMeter mHeaterMeter;
 	private int mIndex;
 
-    public SampleTimeSeries(HeaterMeter heatermeter, int index)
-    {
-    	mHeaterMeter = heatermeter;
-    	mIndex = index;
-    }
+	public SampleTimeSeries(HeaterMeter heatermeter, int index)
+	{
+		mHeaterMeter = heatermeter;
+		mIndex = index;
+	}
 
-    @Override
-    public String getTitle()
-    {
-    	if (mIndex < HeaterMeter.kNumProbes)
-    	{
-   			return mHeaterMeter.mProbeNames[mIndex];
-    	}
-    	else if	(mIndex == kFanSpeed)
-    	{
-    		return "Fan Speed";
-    	}
-    	else if (mIndex == kLidOpen)
-    	{
-    		return "Lid Open";
-    	}
-    	else if (mIndex == kSetPoint)
-    	{
-    		return "Set Point";
-    	}
-    	
-    	return null;
-    }
+	@Override
+	public String getTitle()
+	{
+		if (mIndex < HeaterMeter.kNumProbes)
+		{
+			return mHeaterMeter.mProbeNames[mIndex];
+		}
+		else if (mIndex == kFanSpeed)
+		{
+			return "Fan Speed";
+		}
+		else if (mIndex == kLidOpen)
+		{
+			return "Lid Open";
+		}
+		else if (mIndex == kSetPoint)
+		{
+			return "Set Point";
+		}
 
-    @Override
-    public int size()
-    {
-        return mHeaterMeter.mSamples.size();
-    }
+		return null;
+	}
 
-    @Override
-    public Number getX(int index)
-    {
-    	return mHeaterMeter.mSamples.get(index).mTime;
-    }
+	@Override
+	public int size()
+	{
+		return mHeaterMeter.mSamples.size();
+	}
 
-    @Override
-    public Number getY(int index)
-    {
-    	Sample sample = mHeaterMeter.mSamples.get(index);
+	@Override
+	public Number getX(int index)
+	{
+		return mHeaterMeter.mSamples.get(index).mTime;
+	}
 
-    	if (mIndex < HeaterMeter.kNumProbes)
-    	{
-    		if (Double.isNaN(sample.mProbes[mIndex]))
-    			return null;
-    		else
-    			return mHeaterMeter.getNormalized(sample.mProbes[mIndex]);
-    	}
-    	else if	(mIndex == kFanSpeed)
-    	{
-    		return (int)sample.mFanSpeed / 100.0;
-    	}
-    	else if (mIndex == kLidOpen)
-    	{
-    		return sample.mLidOpen;
-    	}
-    	else if (mIndex == kSetPoint)
-    	{
-    		return mHeaterMeter.getNormalized(sample.mSetPoint);
-    	}
-    	
-    	return null;
-    }
+	@Override
+	public Number getY(int index)
+	{
+		Sample sample = mHeaterMeter.mSamples.get(index);
+
+		if (mIndex < HeaterMeter.kNumProbes)
+		{
+			if (Double.isNaN(sample.mProbes[mIndex]))
+				return null;
+			else
+				return mHeaterMeter.getNormalized(sample.mProbes[mIndex]);
+		}
+		else if (mIndex == kFanSpeed)
+		{
+			return (int) sample.mFanSpeed / 100.0;
+		}
+		else if (mIndex == kLidOpen)
+		{
+			return sample.mLidOpen;
+		}
+		else if (mIndex == kSetPoint)
+		{
+			return mHeaterMeter.getNormalized(sample.mSetPoint);
+		}
+
+		return null;
+	}
 }
