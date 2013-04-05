@@ -7,10 +7,10 @@ import android.os.Bundle;
 
 public class SettingsActivity extends SherlockPreferenceActivity
 {
-    @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
-        super.onCreate(savedInstanceState);
-        addPreferencesFromResource(R.xml.preferences);
-    }
+	@Override
+	public void onCreate(Bundle savedInstanceState)
+	{
+		super.onCreate(savedInstanceState);
+		addPreferencesFromResource(R.xml.preferences);
+	}
 }

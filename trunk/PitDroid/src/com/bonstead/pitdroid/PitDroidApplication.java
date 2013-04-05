@@ -4,5 +4,5 @@ import android.app.Application;
 
 public class PitDroidApplication extends Application
 {
-    public HeaterMeter mHeaterMeter = new HeaterMeter();
+	public HeaterMeter mHeaterMeter = new HeaterMeter();
 }
