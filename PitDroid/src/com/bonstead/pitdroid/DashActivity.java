@@ -191,7 +191,7 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
 
 				if (mProbeTimes[p] != null)
 				{
-					String timeUntilAlarm = mHeaterMeter.timeUntilAlarm(p);
+					String timeUntilAlarm = mHeaterMeter.getTemperatureChangeText(p);
 					if (timeUntilAlarm != null)
 						mProbeTimes[p].setText(timeUntilAlarm);
 					else

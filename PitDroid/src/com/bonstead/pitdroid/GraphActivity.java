@@ -50,12 +50,10 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
 	private PanZoomTracker mPZT;
 	private PointF mLastTouch;
 	private int mActivePointerId;
-	private float lastZooming;
-	private float lastPanning;
+	private float mLastZooming = 1.0f;
+	private float mLastPanning = 0.0f;
 
-	// max, min, default panning window sizes (seconds)
-	public final int MIN_DOMAIN_SPAN = 60;
-	public final int MAX_DOMAIN_SPAN = 48 * 60 * 60;
+	// Default panning window size (seconds)
 	public final int DEFAULT_DOMAIN_SPAN = 2 * 60 * 60;
 
 	@Override
@@ -72,7 +70,7 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
 
 		// Create a scaleGestureDetector to look for gesture events
 		scaleGestureDetector = new ScaleGestureDetector(view.getContext(), new ScaleListener());
-		mPZT = mHeaterMeter.getPanZoomTracker();
+		mPZT = ((PitDroidApplication) this.getActivity().getApplication()).mPanZoomTracker;
 
 		mFanSpeed = new SampleTimeSeries(mHeaterMeter, SampleTimeSeries.kFanSpeed);
 		mLidOpen = new SampleTimeSeries(mHeaterMeter, SampleTimeSeries.kLidOpen);
@@ -229,19 +227,17 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
 	private void redrawPlot()
 	{
 		// ToDo: Update Panning/Zoom visual indicator
-
 		mPlot.setDomainBoundaries(mPZT.domainWindow.min, mPZT.domainWindow.max, BoundaryMode.FIXED);
 		mPlot.redraw();
 	}
 
 	private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener
 	{
-
 		@Override
 		public boolean onScale(ScaleGestureDetector detector)
 		{
-			lastZooming = detector.getScaleFactor();
-			zoom(lastZooming);
+			mLastZooming = detector.getScaleFactor();
+			zoom(mLastZooming);
 			redrawPlot();
 			return true;
 		}
@@ -250,13 +246,11 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
 	@Override
 	public boolean onTouch(View arg0, MotionEvent event)
 	{
-
 		// Let the ScaleGestureDetector inspect all events
 		scaleGestureDetector.onTouchEvent(event);
 
 		switch (event.getAction() & MotionEvent.ACTION_MASK)
 		{
-
 		case MotionEvent.ACTION_DOWN:
 		{
 			mLastTouch = new PointF(event.getX(), event.getY());
@@ -280,12 +274,12 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
 				@Override
 				public void run()
 				{
-					if (Math.abs(lastPanning) > 1f || Math.abs(lastZooming - 1) > 0.00001f)
+					if (Math.abs(mLastPanning) > 1f || Math.abs(mLastZooming - 1) > 0.001f)
 					{
-						lastPanning *= .8;
-						pan((int) lastPanning);
-						lastZooming += (1 - lastZooming) * .1;
-						zoom(lastZooming);
+						mLastPanning *= .8;
+						pan((int) mLastPanning);
+						mLastZooming += (1 - mLastZooming) * .1;
+						zoom(mLastZooming);
 						redrawPlot();
 					}
 					else
@@ -311,12 +305,15 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
 				mLastTouch.set(event.getX(newPointerIndex), event.getY(newPointerIndex));
 				mActivePointerId = event.getPointerId(newPointerIndex);
 			}
-			Log.v(TAG, "action pointer up: " + lastPanning + "  lastZooming:" + lastZooming);
+
+			if (BuildConfig.DEBUG)
+				Log.v(TAG, "Action pointer up: " + mLastPanning + "  lastZooming:" + mLastZooming);
 
 			break;
 		}
 
 		case MotionEvent.ACTION_MOVE:
+		{
 			final int pointerIndex = event.findPointerIndex(mActivePointerId);
 			final float x = event.getX(pointerIndex);
 			final float y = event.getY(pointerIndex);
@@ -324,26 +321,16 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
 			// Only move if the ScaleGestureDetector isn't processing a gesture
 			if (!scaleGestureDetector.isInProgress())
 			{
-				lastPanning = mLastTouch.x - x;
-				pan((int) lastPanning);
+				mLastPanning = mLastTouch.x - x;
+				pan((int) mLastPanning);
 				mPZT.panning = isDomainWindowPanned();
 			}
 			mLastTouch.set(x, y);
 			redrawPlot();
 			break;
 		}
+		}
 		return true;
-	}
-
-	/*
-	 * Find the maximum sample value from all series assigned to the Plot
-	 * 
-	 * @param thisPlot
-	 */
-	private Range<Number> getSeriesSetMinMax(XYPlot thisPlot)
-	{
-		return new Range<Number>(mHeaterMeter.mSamples.get(0).mTime,
-				mHeaterMeter.mSamples.get(mHeaterMeter.mSamples.size() - 1).mTime);
 	}
 
 	/*
@@ -351,7 +338,7 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
 	 */
 	public float getScaleFactor()
 	{
-		return (float) (mPZT.domainWindow.intValue() / getSeriesSetMinMax(mPlot).intValue());
+		return (float) (mPZT.domainWindow.intValue() / mHeaterMeter.getTimeRange().intValue());
 	}
 
 	/*
@@ -365,17 +352,27 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
 		float step = mPZT.domainWindowSpan / mPlot.getWidth();
 		float offset = pan * step;
 
-		Range<Number> sampleRange = getSeriesSetMinMax(mPlot);
+		Range<Number> timeRange = mHeaterMeter.getTimeRange();
 
-		// If there are not enough samples to fill the current domainWindow, don't pan
-		if ((offset < 0) && (mPZT.domainWindow.min.intValue() <= sampleRange.min.intValue()))
-			return;
+		int newMin, newMax;
 
-		// Ensure max does not extend beyond sample set
-		mPZT.domainWindow.max = Math.min(sampleRange.max.intValue(),
-				mPZT.domainWindow.max.intValue() + (int) offset);
-		// Keeping domainWindowSpan constant, recalculate the min value
-		mPZT.domainWindow.min = mPZT.domainWindow.max.intValue() - mPZT.domainWindowSpan;
+		// Clamp to make sure we don't scroll past our first/last sample, then update the
+		// other value to match.
+		if (offset < 0)
+		{
+			newMin = Math.max(mPZT.domainWindow.min.intValue() + (int) offset,
+					timeRange.min.intValue());
+			newMax = newMin + mPZT.domainWindowSpan;
+		}
+		else
+		{
+			newMax = Math.min(mPZT.domainWindow.max.intValue() + (int) offset,
+					timeRange.max.intValue());
+			newMin = newMax - mPZT.domainWindowSpan;
+		}
+
+		mPZT.domainWindow.min = newMin;
+		mPZT.domainWindow.max = newMax;
 	}
 
 	/*
@@ -387,10 +384,23 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
 	{
 		mPZT.domainWindowSpan = (int) (mPZT.domainWindowSpan / deltaScaleFactor);
 
-		// Ensure the domainWindowSpan remains within reasonable bounds
-		mPZT.domainWindowSpan = Math.max(mPZT.domainWindowSpan, MIN_DOMAIN_SPAN);
-		mPZT.domainWindowSpan = Math.min(mPZT.domainWindowSpan, MAX_DOMAIN_SPAN);
-		mPZT.domainWindow.min = mPZT.domainWindow.max.intValue() - mPZT.domainWindowSpan;
+		Range<Number> timeRange = mHeaterMeter.getTimeRange();
+
+		// Don't let the time range go below 1 minute or above our total range
+		final int minTimeRange = 60;
+		final int maxTimeRange = timeRange.intValue();
+
+		mPZT.domainWindowSpan = Math.max(mPZT.domainWindowSpan, minTimeRange);
+		mPZT.domainWindowSpan = Math.min(mPZT.domainWindowSpan, maxTimeRange);
+
+		// Adjust the minimum value to match our new range
+		int newMin = mPZT.domainWindow.max.intValue() - mPZT.domainWindowSpan;
+		newMin = Math.max(newMin, timeRange.min.intValue());
+
+		int newMax = newMin + mPZT.domainWindowSpan;
+
+		mPZT.domainWindow.min = newMin;
+		mPZT.domainWindow.max = newMax;
 	}
 
 	/*
@@ -401,8 +411,7 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
 	{
 		if (mPZT.domainWindow == null)
 			return false;
-		int latestValue = getSeriesSetMinMax(mPlot).max.intValue();
+		int latestValue = mHeaterMeter.getTimeRange().max.intValue();
 		return (mPZT.domainWindow.max.intValue() < latestValue) ? true : false;
 	}
-
 }

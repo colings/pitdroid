@@ -24,12 +24,6 @@ public class PanZoomTracker
 		public T min;
 		public T max;
 
-		public Range()
-		{
-			min = null;
-			max = null;
-		}
-
 		public Range(T min, T max)
 		{
 			this.min = min;
