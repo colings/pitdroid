@@ -274,7 +274,7 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
 				@Override
 				public void run()
 				{
-					if (Math.abs(mLastPanning) > 1f || Math.abs(mLastZooming - 1) > 0.001f)
+					if (Math.abs(mLastPanning) > 1f || Math.abs(mLastZooming - 1) > 0.01f)
 					{
 						mLastPanning *= .8;
 						pan((int) mLastPanning);
