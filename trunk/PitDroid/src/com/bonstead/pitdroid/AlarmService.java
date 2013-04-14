@@ -101,13 +101,15 @@ public class AlarmService extends Service
 
 					if (contentText == null)
 						contentText = new String();
+					else
+						contentText += " / ";
 
-					contentText += latestSample.mProbeNames[p] + " - ";
+					contentText += latestSample.mProbeNames[p] + ": ";
 
 					if (Double.isNaN(latestSample.mProbes[p]))
 						contentText += "off";
 					else
-						contentText += heatermeter.formatTemperature(latestSample.mProbes[p]) + " ";
+						contentText += heatermeter.formatTemperature(latestSample.mProbes[p]);
 				}
 			}
 		}

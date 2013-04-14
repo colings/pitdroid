@@ -10,12 +10,14 @@ import java.net.UnknownHostException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.Locale;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
+
+import com.bonstead.pitdroid.PanZoomTracker.Range;
 
 import android.content.SharedPreferences;
 import android.util.Log;
@@ -53,9 +55,6 @@ public class HeaterMeter
 	private double mMaxTemperature = Double.MIN_VALUE;
 	private ArrayList<Listener> mListeners = new ArrayList<Listener>();
 	private DecimalFormat mOneDec = new DecimalFormat("0.0");
-
-	// Create PanZoomTracker to hold pan/zoom window details
-	private PanZoomTracker mPanZoomTracker = new PanZoomTracker();
 
 	class Sample
 	{
@@ -162,50 +161,80 @@ public class HeaterMeter
 		return alarmNaN || alarmLo || alarmHi;
 	}
 
-	public String timeUntilAlarm(int probeIndex)
+	public double getDegreesPerHour(int probeIndex)
 	{
-		// If we've got an alarm set and our most recent sample had a reading for this
-		// probe, see if we can calculate an estimated time to alarm.
-		if (mProbeHiAlarm[probeIndex] > 0 && mSamples.size() > 0
-				&& !Double.isNaN(mSamples.get(mSamples.size() - 1).mProbes[probeIndex]))
+		if (mSamples.size() > 0)
 		{
 			Sample lastSample = mSamples.get(mSamples.size() - 1);
-			double val = lastSample.mProbes[probeIndex];
-			int time = lastSample.mTime;
+			double currentTemp = lastSample.mProbes[probeIndex];
 
-			// Target is 59mins30secs ago, allows drawing with scale set to 1hr
-			final int targetTime = time - (60 * 60) + 30;
-
-			for (int i = mSamples.size() - 1; i >= 0; --i)
+			if (!Double.isNaN(currentTemp))
 			{
-				Sample sample = mSamples.get(i);
+				int time = lastSample.mTime;
 
-				if (sample.mTime <= targetTime && !Double.isNaN(sample.mProbes[probeIndex]))
+				// Target is 59mins30secs ago, allows drawing with scale set to 1hr
+				final int targetTime = time - (60 * 60) + 30;
+
+				for (int i = mSamples.size() - 1; i >= 0; --i)
 				{
-					double diffTemp = val - sample.mProbes[probeIndex];
-					double diffTime = time - sample.mTime;
-					diffTime /= 60.0 * 60.0;
-					double degreesPerHour = diffTemp / diffTime;
+					Sample sample = mSamples.get(i);
 
-					// Don't display if there isn't clear increase, prevents wild numbers
-					if (degreesPerHour < 1.0)
-						break;
+					if (sample.mTime <= targetTime && !Double.isNaN(sample.mProbes[probeIndex]))
+					{
+						double diffTemp = currentTemp - sample.mProbes[probeIndex];
+						double diffTime = time - sample.mTime;
+						diffTime /= 60.0 * 60.0;
+						double degreesPerHour = diffTemp / diffTime;
 
-					int minutesRemaining = (int) (((mProbeHiAlarm[probeIndex] - val) / degreesPerHour) * 60);
-					int hoursRemaining = minutesRemaining / 60;
-					minutesRemaining = minutesRemaining % 60;
-
-					if (hoursRemaining > 0)
-						return String.format("%d hours, %d minutes to %d°", hoursRemaining,
-								minutesRemaining, (int) mProbeHiAlarm[probeIndex]);
-					else
-						return String.format("%d minutes to %d°", minutesRemaining,
-								(int) mProbeHiAlarm[probeIndex]);
+						return degreesPerHour;
+					}
 				}
 			}
 		}
 
-		return null;
+		return 0.0;
+	}
+
+	public String getTemperatureChangeText(int probeIndex)
+	{
+		double degreesPerHour = getDegreesPerHour(probeIndex);
+
+		// Don't display if there isn't clear increase, prevents wild numbers
+		if (degreesPerHour < 1.0)
+			return null;
+
+		String timeStr = String.format(Locale.US, "%.1f°/hr", degreesPerHour);
+
+		Sample lastSample = mSamples.get(mSamples.size() - 1);
+		double currentTemp = lastSample.mProbes[probeIndex];
+
+		// If we've got an alarm set and our most recent sample had a reading for this
+		// probe, see if we can calculate an estimated time to alarm.
+		if (mProbeHiAlarm[probeIndex] > 0 && !Double.isNaN(currentTemp))
+		{
+			int minutesRemaining = (int) (((mProbeHiAlarm[probeIndex] - currentTemp) / degreesPerHour) * 60);
+			if (minutesRemaining > 0)
+			{
+				int hoursRemaining = minutesRemaining / 60;
+				minutesRemaining = minutesRemaining % 60;
+
+				timeStr += String.format(Locale.US, ", %d:%02d to %d°", hoursRemaining,
+						minutesRemaining, (int) mProbeHiAlarm[probeIndex]);
+			}
+		}
+
+		return timeStr;
+	}
+
+	/*
+	 * Return the minimum and maximum times from our samples
+	 */
+	public Range<Number> getTimeRange()
+	{
+		if (mSamples.size() > 0)
+			return new Range<Number>(mSamples.get(0).mTime, mSamples.get(mSamples.size() - 1).mTime);
+		else
+			return new Range<Number>(0, 0);
 	}
 
 	private void updateMinMax(double temp)
@@ -443,11 +472,6 @@ public class HeaterMeter
 			history.add(sample);
 		}
 		return history;
-	}
-
-	public PanZoomTracker getPanZoomTracker()
-	{
-		return mPanZoomTracker;
 	}
 
 	public ArrayList<Sample> parseHistory(Reader reader)
