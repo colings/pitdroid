@@ -204,21 +204,25 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
 	@Override
 	public void samplesUpdated(final NamedSample latestSample)
 	{
-		if (mPZT.domainWindow == null)
+		if (latestSample != null)
 		{
-			// Initialize panning window if uninitialized or confused
-			mPZT.domainWindow = new Range<Number>(latestSample.mTime - mPZT.domainWindowSpan,
-					latestSample.mTime);
-			mPZT.domainWindowSpan = DEFAULT_DOMAIN_SPAN;
+			if (mPZT.domainWindow == null)
+			{
+				// Initialize panning window if uninitialized or confused
+				mPZT.domainWindow = new Range<Number>(latestSample.mTime - mPZT.domainWindowSpan,
+						latestSample.mTime);
+				mPZT.domainWindowSpan = DEFAULT_DOMAIN_SPAN;
+			}
+			else if (!mPZT.panning)
+			{
+				// If most recent sample is visible in the current panning window,
+				// shift the panning window to show the updated sample.
+				mPZT.domainWindow.setMax(latestSample.mTime);
+				mPZT.domainWindow.min = mPZT.domainWindow.max.intValue() - mPZT.domainWindowSpan;
+			}
+
+			redrawPlot();
 		}
-		else if (!mPZT.panning)
-		{
-			// If most recent sample is visible in the current panning window,
-			// shift the panning window to show the updated sample.
-			mPZT.domainWindow.setMax(latestSample.mTime);
-			mPZT.domainWindow.min = mPZT.domainWindow.max.intValue() - mPZT.domainWindowSpan;
-		}
-		redrawPlot();
 	}
 
 	/*
