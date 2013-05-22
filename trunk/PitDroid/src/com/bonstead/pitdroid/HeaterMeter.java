@@ -1,11 +1,17 @@
 package com.bonstead.pitdroid;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -30,6 +36,8 @@ public class HeaterMeter
 	public final static int kNumProbes = 4;
 	private final static String kHistoryURL = "/luci/lm/hist";
 	private final static String kStatusURL = "/luci/lm/hmstatus";
+	private final static String kAuthURL = "/luci/admin/lm/home";
+
 	// No point in trying to sample faster than this, it's the update rate of the
 	// HeaterMeter hardware
 	public final static int kMinSampleTime = 1000;
@@ -40,6 +48,7 @@ public class HeaterMeter
 	private final static long kMaxUpdateDelta = 5000;
 
 	public String mServerAddress;
+	public String mAdminPassword;
 	public int mBackgroundUpdateTime;
 	public boolean mAlwaysSoundAlarm = true;
 	public int[] mProbeLoAlarm = new int[kNumProbes];
@@ -55,6 +64,10 @@ public class HeaterMeter
 	private double mMaxTemperature = Double.MIN_VALUE;
 	private ArrayList<Listener> mListeners = new ArrayList<Listener>();
 	private DecimalFormat mOneDec = new DecimalFormat("0.0");
+
+	// For authentication, the cookie that's passed, and the URL token
+	private String mAuthCookie;
+	private String mAuthToken;
 
 	class Sample
 	{
@@ -251,6 +264,7 @@ public class HeaterMeter
 	public void initPreferences(SharedPreferences prefs)
 	{
 		mServerAddress = prefs.getString("server", "");
+		mAdminPassword = prefs.getString("adminPassword", "");
 
 		mBackgroundUpdateTime = Integer.valueOf(prefs.getString("backgroundUpdateTime", "15"));
 
@@ -606,7 +620,7 @@ public class HeaterMeter
 				builder.append(line).append("\n");
 
 				// FIXME - http://code.google.com/p/android/issues/detail?id=14562
-				// For Android 2.x, reader gets closed and throws and exception
+				// For Android 2.x, reader gets closed and throws an exception
 				if (!reader.ready())
 				{
 					break;
@@ -621,5 +635,90 @@ public class HeaterMeter
 			e.printStackTrace();
 			return null;
 		}
+	}
+	
+	private void set()
+	{
+		String setAddr = "http://" + mServerAddress + "/luci/;stok=" + mAuthToken + "/admin/lm/set?";
+		setAddr += "sp=200";
+		
+		HttpURLConnection urlConnection = null;
+
+		try
+		{
+			URL url = new URL(setAddr);
+			urlConnection = (HttpURLConnection) url.openConnection();
+			urlConnection.setDoOutput(true);
+			urlConnection.setChunkedStreamingMode(0);
+			urlConnection.setRequestProperty("Cookie", "sysauth=" + mAuthCookie);
+
+			urlConnection.getInputStream();
+		}
+		catch (MalformedURLException e)
+		{
+			if (BuildConfig.DEBUG)
+				Log.e(TAG, "Bad server address");
+		}
+		catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		if (urlConnection != null)
+			urlConnection.disconnect();
+	}
+
+	private void authenticate()
+	{
+		HttpURLConnection urlConnection = null;
+
+		try
+		{
+			URL url = new URL("http://" + mServerAddress + kAuthURL);
+			urlConnection = (HttpURLConnection) url.openConnection();
+			urlConnection.setDoOutput(true);
+			urlConnection.setChunkedStreamingMode(0);
+
+			urlConnection.setDoInput(true);
+			urlConnection.setRequestMethod("POST");
+
+			DataOutputStream out = new DataOutputStream(urlConnection.getOutputStream());
+			out.writeBytes("username=root&");
+			out.writeBytes("password=" + URLEncoder.encode(mAdminPassword, "UTF-8"));
+			out.flush();
+			out.close();
+
+			String cookieHeader = urlConnection.getHeaderField("Set-Cookie");
+			String[] cookies = cookieHeader.split(";");
+
+			for(String cookie: cookies)
+			{
+				String[] cookieChunks = cookie.split("=");
+				String cookieKey = cookieChunks[0];
+				if (cookieKey.equals("sysauth"))
+					mAuthCookie = cookieChunks[1];
+				else if (cookieKey.equals("stok"))
+					mAuthToken = cookieChunks[1];
+			}
+		}
+		catch (MalformedURLException e)
+		{
+			if (BuildConfig.DEBUG)
+				Log.e(TAG, "Bad server address");
+		}
+		catch (ProtocolException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		if (urlConnection != null)
+			urlConnection.disconnect();
 	}
 }
