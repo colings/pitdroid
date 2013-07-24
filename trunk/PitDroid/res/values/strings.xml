@@ -32,8 +32,9 @@
         <string name="serverSummary">The address of the HeaterMeter</string>
         <string name="serverTitle">Server</string>
         <string name="alwaysSoundAlarmTitle">Always use alarm sound</string>
-        <string name="alwaysSoundAlarmSummaryOn">Always use alarm sounds, even when in vibrate or silent mode</string>
-        <string name="alwaysSoundAlarmSummaryOff">Don\'t play alarm sounds when in vibrate or silent mode.</string>
+        <string name="alwaysSoundAlarmSummary">Always use alarm sounds, even when in vibrate or silent mode</string>
         <string name="no_server">Unable to contact server</string>
+        <string name="alarmOnLostConnectionTitle">Alarm on lost connection</string>
+        <string name="alarmOnLostConnectionSummary">Sound an alarm when a connection to the server can\'t be established.</string>
 
 </resources>

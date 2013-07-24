@@ -1,10 +1,8 @@
 package com.bonstead.pitdroid;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.HttpURLConnection;
@@ -51,6 +49,7 @@ public class HeaterMeter
 	public String mAdminPassword;
 	public int mBackgroundUpdateTime;
 	public boolean mAlwaysSoundAlarm = true;
+	public boolean mAlarmOnLostConnection = true;
 	public int[] mProbeLoAlarm = new int[kNumProbes];
 	public int[] mProbeHiAlarm = new int[kNumProbes];
 
@@ -270,6 +269,7 @@ public class HeaterMeter
 		mBackgroundUpdateTime = Integer.valueOf(prefs.getString("backgroundUpdateTime", "15"));
 
 		mAlwaysSoundAlarm = prefs.getBoolean("alwaysSoundAlarm", true);
+		mAlarmOnLostConnection = prefs.getBoolean("alarmOnLostConnection", true);
 
 		for (int p = 0; p < kNumProbes; p++)
 		{
@@ -606,6 +606,11 @@ public class HeaterMeter
 		{
 			if (BuildConfig.DEBUG)
 				Log.e(TAG, "IO exception");
+		}
+		catch (IllegalArgumentException e)
+		{
+			if (BuildConfig.DEBUG)
+				Log.e(TAG, "Argument exception (probably bad port)");
 		}
 
 		return null;
