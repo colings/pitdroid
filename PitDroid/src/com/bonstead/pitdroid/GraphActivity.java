@@ -204,7 +204,14 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
 	@Override
 	public void samplesUpdated(final NamedSample latestSample)
 	{
-		if (latestSample != null)
+		if (latestSample == null)
+		{
+			// Use dummy time when no sample data is available
+			int dummyTime = 0;
+			mPZT.domainWindow = new Range<Number>(dummyTime - mPZT.domainWindowSpan, dummyTime);
+			mPZT.domainWindowSpan = DEFAULT_DOMAIN_SPAN;
+		}
+		else
 		{
 			if (mPZT.domainWindow == null)
 			{
@@ -221,8 +228,8 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
 				mPZT.domainWindow.min = mPZT.domainWindow.max.intValue() - mPZT.domainWindowSpan;
 			}
 
-			redrawPlot();
 		}
+		redrawPlot();
 	}
 
 	/*
