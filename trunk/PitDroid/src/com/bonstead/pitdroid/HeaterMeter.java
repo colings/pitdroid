@@ -252,8 +252,9 @@ public class HeaterMeter
 
 	private void updateMinMax(double temp)
 	{
-		// Round our numbers up/down to a multiple of 10, making sure it's increased at
-		// least 1. This gives us some visual headroom in the graph.
+		// Round our min and max temperatures up/down to a multiple of 10 degrees, and
+		// make sure they're increased/decreased by at least 1 degree. This gives us some
+		// visual headroom in the graph.
 		double roundedUp = Math.ceil((temp + 5.0) / 10.0) * 10.0;
 		double roundedDown = Math.floor((temp - 5.0) / 10.0) * 10.0;
 
@@ -636,12 +637,13 @@ public class HeaterMeter
 			return null;
 		}
 	}
-	
+
 	private void set()
 	{
-		String setAddr = "http://" + mServerAddress + "/luci/;stok=" + mAuthToken + "/admin/lm/set?";
+		String setAddr = "http://" + mServerAddress + "/luci/;stok=" + mAuthToken
+				+ "/admin/lm/set?";
 		setAddr += "sp=200";
-		
+
 		HttpURLConnection urlConnection = null;
 
 		try
@@ -664,7 +666,7 @@ public class HeaterMeter
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		if (urlConnection != null)
 			urlConnection.disconnect();
 	}
@@ -692,7 +694,7 @@ public class HeaterMeter
 			String cookieHeader = urlConnection.getHeaderField("Set-Cookie");
 			String[] cookies = cookieHeader.split(";");
 
-			for(String cookie: cookies)
+			for (String cookie : cookies)
 			{
 				String[] cookieChunks = cookie.split("=");
 				String cookieKey = cookieChunks[0];

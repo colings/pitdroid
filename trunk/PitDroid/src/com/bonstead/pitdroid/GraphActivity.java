@@ -20,13 +20,13 @@ import com.androidplot.Plot.BorderStyle;
 import com.androidplot.ui.AnchorPosition;
 import com.androidplot.ui.SizeLayoutType;
 import com.androidplot.ui.SizeMetrics;
+import com.androidplot.ui.XLayoutStyle;
+import com.androidplot.ui.YLayoutStyle;
 import com.androidplot.xy.BoundaryMode;
 import com.androidplot.xy.LineAndPointFormatter;
 import com.androidplot.xy.PointLabelFormatter;
-import com.androidplot.xy.XLayoutStyle;
 import com.androidplot.xy.XYPlot;
-import com.androidplot.xy.YLayoutStyle;
-
+ 
 import com.bonstead.pitdroid.HeaterMeter.NamedSample;
 import com.bonstead.pitdroid.PanZoomTracker;
 import com.bonstead.pitdroid.PanZoomTracker.Range;
@@ -117,7 +117,7 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
 		// lot of text to fit there
 		mPlot.getLegendWidget().setSize(
 				new SizeMetrics(20, SizeLayoutType.ABSOLUTE, 0, SizeLayoutType.FILL));
-		mPlot.position(mPlot.getLegendWidget(), 0, XLayoutStyle.ABSOLUTE_FROM_LEFT, 0,
+		mPlot.getLegendWidget().position(0, XLayoutStyle.ABSOLUTE_FROM_LEFT, 0,
 				YLayoutStyle.ABSOLUTE_FROM_BOTTOM, AnchorPosition.LEFT_BOTTOM);
 
 		// Turn off the borders
@@ -126,8 +126,8 @@ public class GraphActivity extends SherlockFragment implements HeaterMeter.Liste
 		// Max out the size of the graph widget, so it fills the screen
 		mPlot.getGraphWidget().setSize(
 				new SizeMetrics(0, SizeLayoutType.FILL, 0, SizeLayoutType.FILL));
-		mPlot.getLayoutManager().position(mPlot.getGraphWidget(), 0,
-				XLayoutStyle.ABSOLUTE_FROM_LEFT, 0, YLayoutStyle.ABSOLUTE_FROM_TOP);
+		mPlot.getGraphWidget().position(0, XLayoutStyle.ABSOLUTE_FROM_LEFT, 0,
+				YLayoutStyle.ABSOLUTE_FROM_TOP);
 
 		// Set all the background colors to the same value
 		mPlot.getBackgroundPaint().setColor(kGraphBackground);

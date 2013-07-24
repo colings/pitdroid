@@ -1,6 +1,6 @@
 package com.bonstead.pitdroid;
 
-import com.androidplot.series.XYSeries;
+import com.androidplot.xy.XYSeries;
 import com.bonstead.pitdroid.HeaterMeter.Sample;
 
 public class SampleTimeSeries implements XYSeries
