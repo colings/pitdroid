@@ -4,7 +4,8 @@
                 android:summary="@string/serverSummary"
                 android:title="@string/serverTitle"
                 android:key="server" />
-        <EditTextPreference android:key="adminPassword" android:inputType="textPassword" android:summary="The admin password" android:title="Admin password" /><ListPreference android:entries="@array/backgroundUpdateText" android:entryValues="@array/backgroundUpdateValues" android:key="backgroundUpdateTime" android:summary="@string/backgroundUpdateTimeSummary" android:title="@string/backgroundUpdateTimeTitle" android:defaultValue="15"/>
-        <CheckBoxPreference android:key="alwaysSoundAlarm" android:title="@string/alwaysSoundAlarmTitle" android:summaryOff="@string/alwaysSoundAlarmSummaryOff" android:summaryOn="@string/alwaysSoundAlarmSummaryOn"/>
+        <EditTextPreference android:key="adminPassword" android:inputType="textPassword" android:summary="The admin password" android:title="Admin password" android:selectable="false"/><ListPreference android:entries="@array/backgroundUpdateText" android:entryValues="@array/backgroundUpdateValues" android:key="backgroundUpdateTime" android:summary="@string/backgroundUpdateTimeSummary" android:title="@string/backgroundUpdateTimeTitle" android:defaultValue="15"/>
+        <CheckBoxPreference android:key="alwaysSoundAlarm" android:title="@string/alwaysSoundAlarmTitle" android:summary="@string/alwaysSoundAlarmSummary" android:defaultValue="true"/>
+        <CheckBoxPreference android:key="alarmOnLostConnection" android:summary="@string/alarmOnLostConnectionSummary" android:title="@string/alarmOnLostConnectionTitle" android:defaultValue="true"/>
         
 </PreferenceScreen>

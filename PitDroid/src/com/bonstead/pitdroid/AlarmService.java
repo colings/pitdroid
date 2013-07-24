@@ -116,7 +116,8 @@ public class AlarmService extends Service
 		else
 		{
 			// If we didn't get a sample, that's an alarm in itself
-			hasAlarms = true;
+			if (heatermeter.mAlarmOnLostConnection)
+				hasAlarms = true;
 			contentText = getText(R.string.no_server).toString();
 		}
 
