@@ -53,15 +53,12 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
 
 		mPitDelta = (TextView) view.findViewById(R.id.probe0Delta);
 
-		setAlarmClickListener(view, R.id.probe0Alarm, 0);
-		setAlarmClickListener(view, R.id.probe1Alarm, 1);
-		setAlarmClickListener(view, R.id.probe2Alarm, 2);
-		setAlarmClickListener(view, R.id.probe3Alarm, 3);
-
-		updateAlarmButtonImage(view, R.id.probe0Alarm, 0);
-		updateAlarmButtonImage(view, R.id.probe1Alarm, 1);
-		updateAlarmButtonImage(view, R.id.probe2Alarm, 2);
-		updateAlarmButtonImage(view, R.id.probe3Alarm, 3);
+		int[] probeIds = { R.id.probe0Alarm, R.id.probe1Alarm, R.id.probe2Alarm, R.id.probe3Alarm };
+		for (int p = 0; p < HeaterMeter.kNumProbes; p++)
+		{
+			setAlarmClickListener(view, probeIds[p], p);
+			updateAlarmButtonImage(view, probeIds[p], p);
+		}
 
 		setDefaults();
 

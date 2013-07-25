@@ -8,8 +8,10 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import android.app.AlarmManager;
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
@@ -46,6 +48,7 @@ public class MainActivity extends SherlockFragmentActivity implements
 	private ScheduledFuture<?> mUpdateTimer = null;
 	private HeaterMeter mHeaterMeter = null;
 	private PendingIntent mServiceAlarm = null;
+	private boolean mAllowServiceShutdown = false;
 
 	// Custom ViewPager to disable Fragment scrolling on swipe
 	private class NoScrollViewPager extends ViewPager
@@ -145,7 +148,8 @@ public class MainActivity extends SherlockFragmentActivity implements
 		if (BuildConfig.DEBUG)
 			Log.v(TAG, "onDestroy");
 
-		stopAlarmService();
+		if (mAllowServiceShutdown)
+			stopAlarmService();
 	}
 
 	public void updateAlarmService()
@@ -248,6 +252,35 @@ public class MainActivity extends SherlockFragmentActivity implements
 		{
 		case R.id.menu_settings:
 			startActivity(new Intent(this, SettingsActivity.class));
+			return true;
+		case R.id.menu_exit:
+			if (mHeaterMeter.hasAlarms())
+			{
+				AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+				builder.setTitle("Confirm");
+				builder.setMessage("You have alarms set, are you sure you want to exit?");
+
+				builder.setPositiveButton("Yes", new DialogInterface.OnClickListener()
+				{
+					public void onClick(DialogInterface dialog, int which)
+					{
+						mAllowServiceShutdown = true;
+						dialog.dismiss();
+						finish();
+					}
+
+				});
+
+				builder.setNegativeButton("No", null);
+
+				AlertDialog alert = builder.create();
+				alert.show();
+			}
+			else
+			{
+				finish();
+			}
 			return true;
 		default:
 			return super.onOptionsItemSelected(item);
