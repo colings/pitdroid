@@ -45,6 +45,7 @@ public class HeaterMeter
 	// full history refresh, so we don't have too much data missing.
 	private final static long kMaxUpdateDelta = 5000;
 
+	// User settings
 	public String mServerAddress;
 	public String mAdminPassword;
 	public int mBackgroundUpdateTime;
@@ -55,6 +56,8 @@ public class HeaterMeter
 
 	public ArrayList<Sample> mSamples = new ArrayList<Sample>();
 	public String[] mProbeNames = new String[kNumProbes];
+
+	public String mLastStatusMessage = null;
 
 	private long mLastUpdateTime = 0;
 	private long mLastHistoryTime = 0;
@@ -352,6 +355,12 @@ public class HeaterMeter
 		if (ret != null)
 		{
 			mLastUpdateTime = currentTime;
+
+			// We got a valid result, so we assume we connected to the server ok. If we've
+			// got a password and we haven't successfully authenticated yet, give it a
+			// try.
+			if (mAdminPassword != null && mAdminPassword.length() > 0 && !isAuthenticated())
+				authenticate();
 		}
 
 		return ret;
@@ -643,11 +652,11 @@ public class HeaterMeter
 		}
 	}
 
-	private void set()
+	public void changePitSetTemp(int newTemp)
 	{
 		String setAddr = "http://" + mServerAddress + "/luci/;stok=" + mAuthToken
 				+ "/admin/lm/set?";
-		setAddr += "sp=200";
+		setAddr += "sp=" + newTemp;
 
 		HttpURLConnection urlConnection = null;
 
@@ -676,8 +685,16 @@ public class HeaterMeter
 			urlConnection.disconnect();
 	}
 
+	public boolean isAuthenticated()
+	{
+		return mAuthCookie != null && mAuthToken != null;
+	}
+
 	private void authenticate()
 	{
+		if (BuildConfig.DEBUG)
+			Log.v(TAG, "Attempting authentication");
+
 		HttpURLConnection urlConnection = null;
 
 		try
@@ -697,35 +714,42 @@ public class HeaterMeter
 			out.close();
 
 			String cookieHeader = urlConnection.getHeaderField("Set-Cookie");
-			String[] cookies = cookieHeader.split(";");
 
-			for (String cookie : cookies)
+			// The cookieHeader will be null if we used the wrong password
+			if (cookieHeader != null)
 			{
-				String[] cookieChunks = cookie.split("=");
-				String cookieKey = cookieChunks[0];
-				if (cookieKey.equals("sysauth"))
-					mAuthCookie = cookieChunks[1];
-				else if (cookieKey.equals("stok"))
-					mAuthToken = cookieChunks[1];
+				String[] cookies = cookieHeader.split(";");
+
+				for (String cookie : cookies)
+				{
+					String[] cookieChunks = cookie.split("=");
+					String cookieKey = cookieChunks[0];
+					if (cookieKey.equals("sysauth"))
+						mAuthCookie = cookieChunks[1];
+					else if (cookieKey.equals("stok"))
+						mAuthToken = cookieChunks[1];
+				}
+			}
+			else
+			{
+				// If we fail to authenticate null out the password, so we won't keep
+				// trying. It'll automatically get filled in again if the user changes it
+				// in the settings.
+				mAdminPassword = null;
 			}
 		}
-		catch (MalformedURLException e)
+		catch (Exception e)
 		{
 			if (BuildConfig.DEBUG)
-				Log.e(TAG, "Bad server address");
-		}
-		catch (ProtocolException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		catch (IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+				e.printStackTrace();
 		}
 
 		if (urlConnection != null)
 			urlConnection.disconnect();
+
+		if (isAuthenticated())
+			mLastStatusMessage = "Authentication succeeded";
+		else
+			mLastStatusMessage = "Authentication failed";
 	}
 }

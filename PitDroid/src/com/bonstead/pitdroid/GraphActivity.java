@@ -26,7 +26,7 @@ import com.androidplot.xy.BoundaryMode;
 import com.androidplot.xy.LineAndPointFormatter;
 import com.androidplot.xy.PointLabelFormatter;
 import com.androidplot.xy.XYPlot;
- 
+
 import com.bonstead.pitdroid.HeaterMeter.NamedSample;
 import com.bonstead.pitdroid.PanZoomTracker;
 import com.bonstead.pitdroid.PanZoomTracker.Range;

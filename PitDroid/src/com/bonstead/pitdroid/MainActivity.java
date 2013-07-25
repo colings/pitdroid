@@ -26,6 +26,7 @@ import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
@@ -126,6 +127,18 @@ public class MainActivity extends SherlockFragmentActivity implements
 			if (activity != null)
 			{
 				activity.mHeaterMeter.updateMain(msg.obj);
+
+				if (activity.mHeaterMeter.mLastStatusMessage != null)
+				{
+					Context context = activity.getApplicationContext();
+					CharSequence text = activity.mHeaterMeter.mLastStatusMessage;
+					int duration = Toast.LENGTH_SHORT;
+
+					Toast toast = Toast.makeText(context, text, duration);
+					toast.show();
+
+					activity.mHeaterMeter.mLastStatusMessage = null;
+				}
 			}
 		}
 	}
@@ -134,6 +147,7 @@ public class MainActivity extends SherlockFragmentActivity implements
 
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
 	{
+		// If any preferences change, have the HeaterMeter re-read them all
 		mHeaterMeter.initPreferences(sharedPreferences);
 	}
 

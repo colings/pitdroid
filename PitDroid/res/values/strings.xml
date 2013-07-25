@@ -36,5 +36,7 @@
         <string name="no_server">Unable to contact server</string>
         <string name="alarmOnLostConnectionTitle">Alarm on lost connection</string>
         <string name="alarmOnLostConnectionSummary">Sound an alarm when a connection to the server can\'t be established.</string>
+        <string name="pitSetTempSummary">Change the pit set temp.  Only works when the admin password is set and you are connected to the HeaterMeter.</string>
+        <string name="pitSetTempTitle">Pit set temp</string>
 
 </resources>
