@@ -109,8 +109,8 @@ public class MainActivity extends SherlockFragmentActivity implements
 		mHeaterMeter.initPreferences(prefs);
 		prefs.registerOnSharedPreferenceChangeListener(this);
 
-	    changeScreenOn();
-	    
+		changeScreenOn();
+
 		updateAlarmService();
 	}
 
@@ -148,20 +148,22 @@ public class MainActivity extends SherlockFragmentActivity implements
 
 	private final IncomingHandler mHandler = new IncomingHandler(this);
 
-    /**
-     * Change screen on setting
-     */
-    private void changeScreenOn()
-    {
-      // keep screen on
-      if (mHeaterMeter.mKeepScreenOn) {
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-      }
-      else {
-        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-      }
-    }
-	
+	/**
+	 * Change screen on setting
+	 */
+	private void changeScreenOn()
+	{
+		// keep screen on
+		if (mHeaterMeter.mKeepScreenOn)
+		{
+			getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+		}
+		else
+		{
+			getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+		}
+	}
+
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
 	{
 		// If any preferences change, have the HeaterMeter re-read them all

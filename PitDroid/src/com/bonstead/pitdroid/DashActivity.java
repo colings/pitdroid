@@ -26,9 +26,9 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
 	private TextView mPitDelta;
 
 	private HeaterMeter mHeaterMeter;
-    private TextView mLastUpdate;
-    private int mServerTime = 0;
-    private Time mTime = new Time();
+	private TextView mLastUpdate;
+	private int mServerTime = 0;
+	private Time mTime = new Time();
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
@@ -54,7 +54,7 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
 		mProbeTimes[3] = (TextView) view.findViewById(R.id.probe3Time);
 
 		mPitDelta = (TextView) view.findViewById(R.id.probe0Delta);
-		
+
 		mLastUpdate = (TextView) view.findViewById(R.id.lastUpdate);
 
 		int[] probeIds = { R.id.probe0Alarm, R.id.probe1Alarm, R.id.probe2Alarm, R.id.probe3Alarm };
@@ -212,12 +212,14 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
 				else
 					mPitDelta.setText(mHeaterMeter.formatTemperature(-delta) + " below set temp");
 			}
-		}
-		// TODO: Quick hack to show last update time
-		if (mServerTime  < latestSample.mTime) {
-    		mTime.setToNow();
-    		mLastUpdate.setText(mTime.format("%T"));
-    		mServerTime = latestSample.mTime;
+			
+			// Update the last update time
+			if (mServerTime < latestSample.mTime)
+			{
+				mTime.setToNow();
+				mLastUpdate.setText(mTime.format("%r"));
+				mServerTime = latestSample.mTime;
+			}
 		}
 	}
 }
