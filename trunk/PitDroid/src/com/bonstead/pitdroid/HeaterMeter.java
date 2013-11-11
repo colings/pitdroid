@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
@@ -277,8 +276,8 @@ public class HeaterMeter
 		mAlwaysSoundAlarm = prefs.getBoolean("alwaysSoundAlarm", true);
 		mAlarmOnLostConnection = prefs.getBoolean("alarmOnLostConnection", true);
 
-	    mKeepScreenOn = prefs.getBoolean("keepScreenOn", false);
-	    
+		mKeepScreenOn = prefs.getBoolean("keepScreenOn", false);
+
 		for (int p = 0; p < kNumProbes; p++)
 		{
 			String loName = "alarm" + p + "Lo";
@@ -512,47 +511,48 @@ public class HeaterMeter
 			CSVReader csvReader = new CSVReader(reader);
 
 			String[] nextLine;
-			Sample sample;
 			while ((nextLine = csvReader.readNext()) != null)
 			{
-	            // Without a valid set point the graph doesn't work
-			    if (!Double.isNaN((parseDouble(nextLine[1])))) {
-			        sample = new Sample();
-    				// First parameter is the time
-    				sample.mTime = Integer.parseInt(nextLine[0]);
+				// Without a valid set point the graph doesn't work
+				if (!Double.isNaN((parseDouble(nextLine[1]))))
+				{
+					Sample sample = new Sample();
 
-    				// Second is the set point
-   				    sample.mSetPoint = parseDouble(nextLine[1]);
-    				
-    				// Third through sixth are the probe temps
-    				for (int i = 0; i < kNumProbes; i++)
-    				{
-   						sample.mProbes[i] = parseDouble(nextLine[i + 2]);
-    				}
-    
-    				// Seventh is the fan speed/lid open
-    				sample.mFanSpeed = parseDouble(nextLine[6]);
-    				if (sample.mFanSpeed < 0)
-    				{
-    					sample.mLidOpen = 1.0;
-    					sample.mFanSpeed = 0.0;
-    				}
-    				else
-    				{
-    					sample.mLidOpen = 0.0;
-    					sample.mFanSpeed = sample.mFanSpeed;
-    				}
-    
-    				history.add(sample);
-			    }
+					// First parameter is the time
+					sample.mTime = Integer.parseInt(nextLine[0]);
+
+					// Second is the set point
+					sample.mSetPoint = parseDouble(nextLine[1]);
+
+					// Third through sixth are the probe temps
+					for (int i = 0; i < kNumProbes; i++)
+					{
+						sample.mProbes[i] = parseDouble(nextLine[i + 2]);
+					}
+
+					// Seventh is the fan speed/lid open
+					sample.mFanSpeed = parseDouble(nextLine[6]);
+					if (sample.mFanSpeed < 0)
+					{
+						sample.mLidOpen = 1.0;
+						sample.mFanSpeed = 0.0;
+					}
+					else
+					{
+						sample.mLidOpen = 0.0;
+						sample.mFanSpeed = sample.mFanSpeed;
+					}
+
+					history.add(sample);
+				}
 			}
 
 			return history;
 		}
 		catch (IOException e)
 		{
-		    if (BuildConfig.DEBUG)
-		        Log.e(TAG, "IO exception", e);
+			if (BuildConfig.DEBUG)
+				Log.e(TAG, "IO exception", e);
 			return null;
 		}
 	}
@@ -626,14 +626,18 @@ public class HeaterMeter
 		return null;
 	}
 
-	private Double parseDouble(String value) {
-	    try {
-	        return Double.parseDouble(value);
-	    } catch (NumberFormatException e) {
-	        return Double.NaN;
-	    }
+	private Double parseDouble(String value)
+	{
+		try
+		{
+			return Double.parseDouble(value);
+		}
+		catch (NumberFormatException e)
+		{
+			return Double.NaN;
+		}
 	}
-	
+
 	private String readerToString(BufferedReader reader)
 	{
 		try
