@@ -21,10 +21,9 @@
             android:layout_height="wrap_content"
             android:paddingLeft="10sp"/> 
     </LinearLayout>     
-    <android.support.v7.widget.GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <com.gridlayout.GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res/com.bonstead.pitdroid"
         android:id="@+id/GridLayout1"
-        android:layout_above="@id/footer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:columnCount="3" >
@@ -117,7 +116,7 @@
             android:text="0:00 to 0"
             android:textAppearance="?android:attr/textAppearanceSmall" />
     
-        <android.support.v7.widget.Space
+        <com.gridlayout.Space
             android:id="@+id/space2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
@@ -133,6 +132,6 @@
             android:textAppearance="?android:attr/textAppearanceLarge" />
     
     
-    </android.support.v7.widget.GridLayout>
+    </com.gridlayout.GridLayout>
   
 </RelativeLayout>
