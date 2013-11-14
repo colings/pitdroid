@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
@@ -52,7 +53,6 @@ public class HeaterMeter
 	public boolean mAlarmOnLostConnection = true;
 	public int[] mProbeLoAlarm = new int[kNumProbes];
 	public int[] mProbeHiAlarm = new int[kNumProbes];
-	public boolean mKeepScreenOn;
 
 	public ArrayList<Sample> mSamples = new ArrayList<Sample>();
 	public String[] mProbeNames = new String[kNumProbes];
@@ -267,16 +267,12 @@ public class HeaterMeter
 	public void initPreferences(SharedPreferences prefs)
 	{
 		mServerAddress = prefs.getString("server", "");
-		mServerAddress = mServerAddress.matches("^(https?)://.*$") ? mServerAddress : "http://"
-				+ mServerAddress;
 		mAdminPassword = prefs.getString("adminPassword", "");
 
 		mBackgroundUpdateTime = Integer.valueOf(prefs.getString("backgroundUpdateTime", "15"));
 
 		mAlwaysSoundAlarm = prefs.getBoolean("alwaysSoundAlarm", true);
 		mAlarmOnLostConnection = prefs.getBoolean("alarmOnLostConnection", true);
-
-		mKeepScreenOn = prefs.getBoolean("keepScreenOn", false);
 
 		for (int p = 0; p < kNumProbes; p++)
 		{
@@ -306,7 +302,7 @@ public class HeaterMeter
 
 	public NamedSample getSample()
 	{
-		BufferedReader reader = getUrlReader(mServerAddress + kStatusURL);
+		BufferedReader reader = getUrlReader("http://" + mServerAddress + kStatusURL);
 		if (reader != null)
 		{
 			return parseStatus(readerToString(reader));
@@ -344,14 +340,14 @@ public class HeaterMeter
 			}
 			else
 			{
-				BufferedReader reader = getUrlReader(mServerAddress + kHistoryURL);
+				BufferedReader reader = getUrlReader("http://" + mServerAddress + kHistoryURL);
 				if (reader != null)
 					ret = parseHistory(reader);
 			}
 		}
 		else
 		{
-			BufferedReader reader = getUrlReader(mServerAddress + kStatusURL);
+			BufferedReader reader = getUrlReader("http://" + mServerAddress + kStatusURL);
 			if (reader != null)
 				ret = parseStatus(readerToString(reader));
 		}
@@ -513,46 +509,49 @@ public class HeaterMeter
 			String[] nextLine;
 			while ((nextLine = csvReader.readNext()) != null)
 			{
-				// Without a valid set point the graph doesn't work
-				if (!Double.isNaN((parseDouble(nextLine[1]))))
+				Sample sample = new Sample();
+
+				// First parameter is the time
+				sample.mTime = Integer.parseInt(nextLine[0]);
+
+				// Second is the set point
+				sample.mSetPoint = Double.parseDouble(nextLine[1]);
+
+				// Third through sixth are the probe temps
+				for (int i = 0; i < kNumProbes; i++)
 				{
-					Sample sample = new Sample();
-
-					// First parameter is the time
-					sample.mTime = Integer.parseInt(nextLine[0]);
-
-					// Second is the set point
-					sample.mSetPoint = parseDouble(nextLine[1]);
-
-					// Third through sixth are the probe temps
-					for (int i = 0; i < kNumProbes; i++)
+					if (!nextLine[i + 2].equals("nan"))
 					{
-						sample.mProbes[i] = parseDouble(nextLine[i + 2]);
-					}
-
-					// Seventh is the fan speed/lid open
-					sample.mFanSpeed = parseDouble(nextLine[6]);
-					if (sample.mFanSpeed < 0)
-					{
-						sample.mLidOpen = 1.0;
-						sample.mFanSpeed = 0.0;
+						sample.mProbes[i] = Double.parseDouble(nextLine[i + 2]);
 					}
 					else
 					{
-						sample.mLidOpen = 0.0;
-						sample.mFanSpeed = sample.mFanSpeed;
+						sample.mProbes[i] = Double.NaN;
 					}
-
-					history.add(sample);
 				}
+
+				// Seventh is the fan speed/lid open
+				sample.mFanSpeed = Double.parseDouble(nextLine[6]);
+				if (sample.mFanSpeed < 0)
+				{
+					sample.mLidOpen = 1.0;
+					sample.mFanSpeed = 0.0;
+				}
+				else
+				{
+					sample.mLidOpen = 0.0;
+					sample.mFanSpeed = sample.mFanSpeed;
+				}
+
+				history.add(sample);
 			}
 
 			return history;
 		}
 		catch (IOException e)
 		{
-			if (BuildConfig.DEBUG)
-				Log.e(TAG, "IO exception", e);
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 			return null;
 		}
 	}
@@ -626,18 +625,6 @@ public class HeaterMeter
 		return null;
 	}
 
-	private Double parseDouble(String value)
-	{
-		try
-		{
-			return Double.parseDouble(value);
-		}
-		catch (NumberFormatException e)
-		{
-			return Double.NaN;
-		}
-	}
-
 	private String readerToString(BufferedReader reader)
 	{
 		try
@@ -667,7 +654,8 @@ public class HeaterMeter
 
 	public void changePitSetTemp(int newTemp)
 	{
-		String setAddr = mServerAddress + "/luci/;stok=" + mAuthToken + "/admin/lm/set?";
+		String setAddr = "http://" + mServerAddress + "/luci/;stok=" + mAuthToken
+				+ "/admin/lm/set?";
 		setAddr += "sp=" + newTemp;
 
 		HttpURLConnection urlConnection = null;
@@ -711,7 +699,7 @@ public class HeaterMeter
 
 		try
 		{
-			URL url = new URL(mServerAddress + kAuthURL);
+			URL url = new URL("http://" + mServerAddress + kAuthURL);
 			urlConnection = (HttpURLConnection) url.openConnection();
 			urlConnection.setDoOutput(true);
 			urlConnection.setChunkedStreamingMode(0);

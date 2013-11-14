@@ -4,7 +4,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.text.format.Time;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -15,6 +15,7 @@ import android.widget.TextView;
 import com.actionbarsherlock.app.SherlockFragment;
 import com.bonstead.pitdroid.AlarmSettingsDialog.AlarmDialogListener;
 import com.bonstead.pitdroid.HeaterMeter.NamedSample;
+import com.bonstead.pitdroid.R;
 
 public class DashActivity extends SherlockFragment implements HeaterMeter.Listener,
 		AlarmDialogListener
@@ -26,9 +27,6 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
 	private TextView mPitDelta;
 
 	private HeaterMeter mHeaterMeter;
-	private TextView mLastUpdate;
-	private int mServerTime = 0;
-	private Time mTime = new Time();
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
@@ -54,8 +52,6 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
 		mProbeTimes[3] = (TextView) view.findViewById(R.id.probe3Time);
 
 		mPitDelta = (TextView) view.findViewById(R.id.probe0Delta);
-
-		mLastUpdate = (TextView) view.findViewById(R.id.lastUpdate);
 
 		int[] probeIds = { R.id.probe0Alarm, R.id.probe1Alarm, R.id.probe2Alarm, R.id.probe3Alarm };
 		for (int p = 0; p < HeaterMeter.kNumProbes; p++)
@@ -211,14 +207,6 @@ public class DashActivity extends SherlockFragment implements HeaterMeter.Listen
 					mPitDelta.setText(mHeaterMeter.formatTemperature(delta) + " above set temp");
 				else
 					mPitDelta.setText(mHeaterMeter.formatTemperature(-delta) + " below set temp");
-			}
-			
-			// Update the last update time
-			if (mServerTime < latestSample.mTime)
-			{
-				mTime.setToNow();
-				mLastUpdate.setText(mTime.format("%r"));
-				mServerTime = latestSample.mTime;
 			}
 		}
 	}

@@ -25,7 +25,6 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.MotionEvent;
-import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -109,8 +108,6 @@ public class MainActivity extends SherlockFragmentActivity implements
 		mHeaterMeter.initPreferences(prefs);
 		prefs.registerOnSharedPreferenceChangeListener(this);
 
-		changeScreenOn();
-
 		updateAlarmService();
 	}
 
@@ -148,27 +145,10 @@ public class MainActivity extends SherlockFragmentActivity implements
 
 	private final IncomingHandler mHandler = new IncomingHandler(this);
 
-	/**
-	 * Change screen on setting
-	 */
-	private void changeScreenOn()
-	{
-		// keep screen on
-		if (mHeaterMeter.mKeepScreenOn)
-		{
-			getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-		}
-		else
-		{
-			getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-		}
-	}
-
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
 	{
 		// If any preferences change, have the HeaterMeter re-read them all
 		mHeaterMeter.initPreferences(sharedPreferences);
-		changeScreenOn();
 	}
 
 	@Override

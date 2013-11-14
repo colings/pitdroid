@@ -30,12 +30,7 @@
         android:key="alarmOnLostConnection"
         android:summary="@string/alarmOnLostConnectionSummary"
         android:title="@string/alarmOnLostConnectionTitle" />
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="keepScreenOn"
-        android:summary="@string/keepScreenOnSummary"
-        android:title="@string/keepScreenOnTitle" />
-    
+
     <PreferenceCategory android:title="Admin Settings" >
         <EditTextPreference
             android:inputType="numberDecimal"

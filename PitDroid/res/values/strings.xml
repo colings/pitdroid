@@ -11,7 +11,6 @@
     <string name="alarm_service_info">Monitoring probe alarms</string>
     <string name="backgroundUpdateTimeSummary">Interval in minutes for background updates</string>
     <string name="backgroundUpdateTimeTitle">Background update time</string>
-    <string name="lastUpdate">Last update:</string>
     <string-array name="backgroundUpdateText">
         <item >1 minute</item>
         <item >5 minutes</item>
@@ -39,7 +38,5 @@
         <string name="alarmOnLostConnectionSummary">Sound an alarm when a connection to the server can\'t be established.</string>
         <string name="pitSetTempSummary">Change the pit set temp.  Only works when the admin password is set and you are connected to the HeaterMeter.</string>
         <string name="pitSetTempTitle">Pit set temp</string>
-        <string name="keepScreenOnSummary">Keep the screen on while PitDroid is running.</string>
-        <string name="keepScreenOnTitle">Keep screen on</string>
-        
+
 </resources>
