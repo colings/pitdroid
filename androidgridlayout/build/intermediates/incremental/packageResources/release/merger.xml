@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merger version="3"><dataSet config="main"><source path="C:\Users\Weston\Desktop\PitDroid1\androidgridlayout\src\main\res"><file path="C:\Users\Weston\Desktop\PitDroid1\androidgridlayout\src\main\res\values\attrs.xml" qualifiers=""><declare-styleable name="ViewGroup_MarginLayout">
+        <attr name="android:layout_margin"/>
+        <attr name="android:layout_marginLeft"/>
+        <attr name="android:layout_marginTop"/>
+        <attr name="android:layout_marginRight"/>
+        <attr name="android:layout_marginBottom"/>
+    </declare-styleable><declare-styleable name="GridLayout_Layout">
+        <!-- The row boundary delimiting the top of the group of cells
+        occupied by this view. -->
+        <attr format="integer" name="layout_row"/>
+        <!-- The row span: the difference between the bottom and top
+        boundaries delimiting the group of cells occupied by this view.
+        The default is one.
+        See {@link android.widget.GridLayout.Spec}. -->
+        <attr format="integer" min="1" name="layout_rowSpan"/>
+        <!-- The column boundary delimiting the left of the group of cells
+        occupied by this view. -->
+        <attr name="android:layout_column"/>
+        <!-- The column span: the difference between the right and left
+        boundaries delimiting the group of cells occupied by this view.
+        The default is one.
+        See {@link android.widget.GridLayout.Spec}. -->
+        <attr format="integer" min="1" name="layout_columnSpan"/>
+        <!-- Gravity specifies how a component should be placed in its group of cells.
+        The default is LEFT | BASELINE.
+        See {@link android.widget.GridLayout.LayoutParams#setGravity(int)}. -->
+        <attr name="android:layout_gravity"/>
+    </declare-styleable><declare-styleable name="GridLayout">
+        <!-- The orientation property is not used during layout. It is only used to
+        allocate row and column parameters when they are not specified by its children's
+        layout paramters. GridLayout works like LinearLayout in this case;
+        putting all the components either in a single row or in a single column -
+        depending on the value of this flag. In the horizontal case, a columnCount
+        property may be additionally supplied to force new rows to be created when a
+        row is full. The rowCount attribute may be used similarly in the vertical case.
+        The default is horizontal. -->
+        <attr name="android:orientation"/>
+        <!-- The maxmimum number of rows to create when automatically positioning children. -->
+        <attr format="integer" name="rowCount"/>
+        <!-- The maxmimum number of columns to create when automatically positioning children. -->
+        <attr format="integer" name="columnCount"/>
+        <!-- When set to true, tells GridLayout to use default margins when none are specified
+        in a view's layout parameters.
+        The default value is false.
+        See {@link android.widget.GridLayout#setUseDefaultMargins(boolean)}.-->
+        <attr format="boolean" name="useDefaultMargins"/>
+        <!-- When set to alignMargins, causes alignment to take place between the outer
+        boundary of a view, as defined by its margins. When set to alignBounds,
+        causes alignment to take place between the edges of the view.
+        The default is alignMargins.
+        See {@link android.widget.GridLayout#setAlignmentMode(int)}.-->
+        <attr name="alignmentMode"/>
+        <!-- When set to true, forces row boundaries to appear in the same order
+        as row indices.
+        The default is true.
+        See {@link android.widget.GridLayout#setRowOrderPreserved(boolean)}.-->
+        <attr format="boolean" name="rowOrderPreserved"/>
+        <!-- When set to true, forces column boundaries to appear in the same order
+        as column indices.
+        The default is true.
+        See {@link android.widget.GridLayout#setColumnOrderPreserved(boolean)}.-->
+        <attr format="boolean" name="columnOrderPreserved"/>
+    </declare-styleable><attr name="alignmentMode">
+        <!-- Align the bounds of the children.
+        See {@link android.widget.GridLayout#ALIGN_BOUNDS}. -->
+        <enum name="alignBounds" value="0"/>
+        <!-- Align the margins of the children.
+        See {@link android.widget.GridLayout#ALIGN_MARGINS}. -->
+        <enum name="alignMargins" value="1"/>
+    </attr></file><file path="C:\Users\Weston\Desktop\PitDroid1\androidgridlayout\src\main\res\values\dimens.xml" qualifiers=""><dimen name="default_gap">16dip</dimen></file></source><source path="C:\Users\Weston\Desktop\PitDroid1\androidgridlayout\build\generated\res\rs\release"/><source path="C:\Users\Weston\Desktop\PitDroid1\androidgridlayout\build\generated\res\generated\release"/></dataSet><dataSet config="release"><source path="C:\Users\Weston\Desktop\PitDroid1\androidgridlayout\src\release\res"/></dataSet><mergedItems><configuration qualifiers=""><declare-styleable name="ViewGroup_MarginLayout"><attr name="android:layout_margin"/><attr name="android:layout_marginLeft"/><attr name="android:layout_marginTop"/><attr name="android:layout_marginRight"/><attr name="android:layout_marginBottom"/></declare-styleable><declare-styleable name="GridLayout_Layout"><attr format="integer" name="layout_row"/><attr format="integer" min="1" name="layout_rowSpan"/><attr name="android:layout_column"/><attr format="integer" min="1" name="layout_columnSpan"/><attr name="android:layout_gravity"/></declare-styleable><declare-styleable name="GridLayout"><attr name="android:orientation"/><attr format="integer" name="rowCount"/><attr format="integer" name="columnCount"/><attr format="boolean" name="useDefaultMargins"/><attr name="alignmentMode"/><attr format="boolean" name="rowOrderPreserved"/><attr format="boolean" name="columnOrderPreserved"/></declare-styleable></configuration></mergedItems></merger>

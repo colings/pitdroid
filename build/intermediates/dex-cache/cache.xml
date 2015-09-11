@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        jar="C:\Users\Weston\Desktop\PitDroid1\pitDroid\build\intermediates\exploded-aar\com.actionbarsherlock\actionbarsherlock\4.4.0\jars\classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="af64527b748983a75de9c0756e9768b56b240a49">
+        <dex dex="C:\Users\Weston\Desktop\PitDroid1\pitDroid\build\intermediates\pre-dexed\release\classes-6010ee400633b03034a6ce7bb4a835ab3805486f.jar" />
+    </item>
+    <item
+        jar="C:\Users\Weston\AppData\Local\Android\sdk\extras\android\m2repository\com\android\support\support-v4\19.1.0\support-v4-19.1.0.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="85f201b380937e61a9dce6ca90ccf6872abbfb67">
+        <dex dex="C:\Users\Weston\Desktop\PitDroid1\pitDroid\build\intermediates\pre-dexed\release\support-v4-19.1.0-8cdb675c0bf56a8abdad728a779b831d5c1a2b77.jar" />
+    </item>
+    <item
+        jar="C:\Users\Weston\Desktop\PitDroid1\pitDroid\libs\androidplot-core-0.6.0.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="f748797c749973ce1364ea8cc640744b64f78709">
+        <dex dex="C:\Users\Weston\Desktop\PitDroid1\pitDroid\build\intermediates\pre-dexed\release\androidplot-core-0.6.0-8f80f20f1910a616f2061e94e041546a74d00054.jar" />
+    </item>
+    <item
+        jar="C:\Users\Weston\Desktop\PitDroid1\pitDroid\build\intermediates\exploded-aar\PitDroid1\androidgridlayout\unspecified\jars\classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="a14d717de4771a89942a572128915466c7441bc2">
+        <dex dex="C:\Users\Weston\Desktop\PitDroid1\pitDroid\build\intermediates\pre-dexed\release\classes-8debe3085ed9d8b1b951debb70770f587b9a87b8.jar" />
+    </item>
+
+</items>

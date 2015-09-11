@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- From: file:/C:/Users/Weston/Desktop/PitDroid1/androidgridlayout/build/intermediates/bundles/debug/res/values/values.xml -->
+    <eat-comment/>
+    <attr name="alignmentMode">
+        <!-- Align the bounds of the children.
+        See {@link android.widget.GridLayout#ALIGN_BOUNDS}. -->
+        <enum name="alignBounds" value="0"/>
+        <!-- Align the margins of the children.
+        See {@link android.widget.GridLayout#ALIGN_MARGINS}. -->
+        <enum name="alignMargins" value="1"/>
+    </attr>
+    <declare-styleable name="GridLayout"><attr name="android:orientation"/><attr format="integer" name="rowCount"/><attr format="integer" name="columnCount"/><attr format="boolean" name="useDefaultMargins"/><attr name="alignmentMode"/><attr format="boolean" name="rowOrderPreserved"/><attr format="boolean" name="columnOrderPreserved"/></declare-styleable>
+    <declare-styleable name="GridLayout_Layout"><attr format="integer" name="layout_row"/><attr format="integer" min="1" name="layout_rowSpan"/><attr name="android:layout_column"/><attr format="integer" min="1" name="layout_columnSpan"/><attr name="android:layout_gravity"/></declare-styleable>
+    <declare-styleable name="ViewGroup_MarginLayout"><attr name="android:layout_margin"/><attr name="android:layout_marginLeft"/><attr name="android:layout_marginTop"/><attr name="android:layout_marginRight"/><attr name="android:layout_marginBottom"/></declare-styleable>
+    <dimen name="default_gap">16dip</dimen>
+</resources>

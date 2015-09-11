@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/PitDroid1.iml" filepath="$PROJECT_DIR$/PitDroid1.iml" />
+      <module fileurl="file://$PROJECT_DIR$/androidgridlayout/androidgridlayout.iml" filepath="$PROJECT_DIR$/androidgridlayout/androidgridlayout.iml" />
+      <module fileurl="file://$PROJECT_DIR$/pitDroid/pitDroid.iml" filepath="$PROJECT_DIR$/pitDroid/pitDroid.iml" />
+    </modules>
+  </component>
+</project>

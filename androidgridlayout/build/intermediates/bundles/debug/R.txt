@@ -1,0 +1,32 @@
+int attr alignmentMode 0x7f010000
+int attr columnCount 0x7f010002
+int attr columnOrderPreserved 0x7f010005
+int attr layout_columnSpan 0x7f010008
+int attr layout_row 0x7f010006
+int attr layout_rowSpan 0x7f010007
+int attr rowCount 0x7f010001
+int attr rowOrderPreserved 0x7f010004
+int attr useDefaultMargins 0x7f010003
+int dimen default_gap 0x7f020000
+int id alignBounds 0x7f030000
+int id alignMargins 0x7f030001
+int[] styleable GridLayout { 0x010100c4, 0x7f010000, 0x7f010001, 0x7f010002, 0x7f010003, 0x7f010004, 0x7f010005 }
+int styleable GridLayout_alignmentMode 1
+int styleable GridLayout_android_orientation 0
+int styleable GridLayout_columnCount 3
+int styleable GridLayout_columnOrderPreserved 6
+int styleable GridLayout_rowCount 2
+int styleable GridLayout_rowOrderPreserved 5
+int styleable GridLayout_useDefaultMargins 4
+int[] styleable GridLayout_Layout { 0x010100b3, 0x0101014c, 0x7f010006, 0x7f010007, 0x7f010008 }
+int styleable GridLayout_Layout_android_layout_column 1
+int styleable GridLayout_Layout_android_layout_gravity 0
+int styleable GridLayout_Layout_layout_columnSpan 4
+int styleable GridLayout_Layout_layout_row 2
+int styleable GridLayout_Layout_layout_rowSpan 3
+int[] styleable ViewGroup_MarginLayout { 0x010100f6, 0x010100f7, 0x010100f8, 0x010100f9, 0x010100fa }
+int styleable ViewGroup_MarginLayout_android_layout_margin 0
+int styleable ViewGroup_MarginLayout_android_layout_marginBottom 4
+int styleable ViewGroup_MarginLayout_android_layout_marginLeft 1
+int styleable ViewGroup_MarginLayout_android_layout_marginRight 3
+int styleable ViewGroup_MarginLayout_android_layout_marginTop 2
