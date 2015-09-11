@@ -1,0 +1,37 @@
+Activity Resolver Table:
+  Non-Data Actions:
+      android.intent.action.MAIN:
+        18d19eb4 com.bonstead.pitdroid/.MainActivity
+
+Key Set Manager:
+  [com.bonstead.pitdroid]
+      Signing KeySets: 1886
+
+Packages:
+  Package [com.bonstead.pitdroid] (22d39add):
+    userId=10253 gids=[3003]
+    pkg=Package{31367652 com.bonstead.pitdroid}
+    codePath=/data/app/com.bonstead.pitdroid-1
+    resourcePath=/data/app/com.bonstead.pitdroid-1
+    legacyNativeLibraryDir=/data/app/com.bonstead.pitdroid-1/lib
+    primaryCpuAbi=null
+    secondaryCpuAbi=null
+    versionCode=9 targetSdk=19
+    versionName=1.21
+    splits=[base]
+    applicationInfo=ApplicationInfo{21a98d23 com.bonstead.pitdroid}
+    flags=[ DEBUGGABLE HAS_CODE ALLOW_CLEAR_USER_DATA ALLOW_BACKUP ]
+    dataDir=/data/data/com.bonstead.pitdroid
+    supportsScreens=[small, medium, large, xlarge, resizeable, anyDensity]
+    timeStamp=2015-09-11 11:04:25
+    firstInstallTime=2015-09-11 11:04:25
+    lastUpdateTime=2015-09-11 11:04:25
+    signatures=PackageSignatures{a43f220 [377407d9]}
+    permissionsFixed=true haveGids=true installStatus=1
+    pkgFlags=[ DEBUGGABLE HAS_CODE ALLOW_CLEAR_USER_DATA ALLOW_BACKUP ]
+    User 0:  installed=true hidden=false stopped=false notLaunched=false enabled=0
+    grantedPermissions:
+      android.permission.INTERNET
+      android.permission.READ_PHONE_STATE
+      android.permission.VIBRATE
+      android.permission.WAKE_LOCK
