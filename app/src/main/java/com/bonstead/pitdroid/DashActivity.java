@@ -188,7 +188,7 @@ public class DashActivity extends Fragment implements HeaterMeter.Listener,
 				}
 				else
 				{
-					mProbeVals[p].setTextColor(Color.WHITE);
+					mProbeVals[p].setTextColor(Color.BLACK);
 				}
 
 				if (mProbeTimes[p] != null)
