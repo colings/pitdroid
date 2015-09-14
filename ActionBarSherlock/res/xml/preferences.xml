@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
-        <EditTextPreference
-                android:summary="The address of the HeaterMeter"
-                android:title="Server"
-                android:key="server" />
-        <!--  <EditTextPreference android:key="backgroundUpdateTime" android:title="Background Update Time" android:summary="Interval in seconds for background updates" android:defaultValue="10"/> -->
-</PreferenceScreen>

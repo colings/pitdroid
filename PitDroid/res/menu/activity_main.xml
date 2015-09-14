@@ -1,9 +1,0 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android" >
-
-    <item
-        android:id="@+id/menu_settings"
-        android:showAsAction="ifRoom"
-        android:title="@string/menu_settings"/><item android:id="@+id/menu_exit" android:showAsAction="ifRoom" android:title="Exit"></item>
-    
-
-</menu>
