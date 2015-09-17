@@ -33,7 +33,7 @@ public class HeaterMeter
 	public final static int kNumProbes = 4;
 	private final static String kHistoryURL = "/luci/lm/hist";
 	private final static String kStatusURL = "/luci/lm/hmstatus";
-	private final static String kAuthURL = "/luci/admin/lm/home";
+	private final static String kAuthURL = "/luci/admin/lm";
 
 	// No point in trying to sample faster than this, it's the update rate of the
 	// HeaterMeter hardware
@@ -56,6 +56,7 @@ public class HeaterMeter
 
 	public ArrayList<Sample> mSamples = new ArrayList<Sample>();
 	public String[] mProbeNames = new String[kNumProbes];
+	public double[] mDegreesPerHour = new double[kNumProbes];
 
 	public String mLastStatusMessage = null;
 
@@ -103,15 +104,22 @@ public class HeaterMeter
 	class NamedSample extends Sample
 	{
 		String[] mProbeNames = new String[kNumProbes];
+		double[] mDegreesPerHour = new double[kNumProbes];
 
 		NamedSample()
 		{
 			super();
+
+			for (int p = 0; p < kNumProbes; p++)
+				mDegreesPerHour[p] = 0.0;
 		}
 
 		NamedSample(Sample otherSample)
 		{
 			super(otherSample);
+
+			for (int p = 0; p < kNumProbes; p++)
+				mDegreesPerHour[p] = 0.0;
 		}
 	}
 
@@ -178,36 +186,7 @@ public class HeaterMeter
 
 	public double getDegreesPerHour(int probeIndex)
 	{
-		if (mSamples.size() > 0)
-		{
-			Sample lastSample = mSamples.get(mSamples.size() - 1);
-			double currentTemp = lastSample.mProbes[probeIndex];
-
-			if (!Double.isNaN(currentTemp))
-			{
-				int time = lastSample.mTime;
-
-				// Target is 59mins30secs ago, allows drawing with scale set to 1hr
-				final int targetTime = time - (60 * 60) + 30;
-
-				for (int i = mSamples.size() - 1; i >= 0; --i)
-				{
-					Sample sample = mSamples.get(i);
-
-					if (sample.mTime <= targetTime && !Double.isNaN(sample.mProbes[probeIndex]))
-					{
-						double diffTemp = currentTemp - sample.mProbes[probeIndex];
-						double diffTime = time - sample.mTime;
-						diffTime /= 60.0 * 60.0;
-						double degreesPerHour = diffTemp / diffTime;
-
-						return degreesPerHour;
-					}
-				}
-			}
-		}
-
-		return 0.0;
+		return mDegreesPerHour[probeIndex];
 	}
 
 	public String getTemperatureChangeText(int probeIndex)
@@ -421,6 +400,15 @@ public class HeaterMeter
 				{
 					sample.mProbes[i] = Double.NaN;
 				}
+
+				if (!row.isNull("dph"))
+				{
+					sample.mDegreesPerHour[i] = row.getDouble("dph");
+				}
+				else
+				{
+					sample.mDegreesPerHour[i] = 0.0;
+				}
 			}
 
 			return sample;
@@ -440,7 +428,10 @@ public class HeaterMeter
 			mNewestTime = sample.mTime;
 
 			for (int p = 0; p < kNumProbes; p++)
+			{
 				mProbeNames[p] = sample.mProbeNames[p];
+				mDegreesPerHour[p] = sample.mDegreesPerHour[p];
+			}
 
 			updateMinMax(sample.mSetPoint);
 
