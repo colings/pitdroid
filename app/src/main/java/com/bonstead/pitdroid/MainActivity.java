@@ -34,12 +34,6 @@ import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
-//import com.actionbarsherlock.app.ActionBar;
-//import com.actionbarsherlock.app.SherlockFragmentActivity;
-//import com.actionbarsherlock.app.ActionBar.Tab;
-//import com.actionbarsherlock.view.Menu;
-//import com.actionbarsherlock.view.MenuItem;
-
 import com.bonstead.pitdroid.R;
 
 public class MainActivity extends AppCompatActivity implements

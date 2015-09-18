@@ -1,6 +1,5 @@
 package com.bonstead.pitdroid;
 
-//import com.actionbarsherlock.app.SherlockPreferenceActivity;
 import com.bonstead.pitdroid.R;
 
 import android.os.Bundle;

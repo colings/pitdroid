@@ -13,7 +13,6 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-//import com.actionbarsherlock.app.SherlockFragment;
 import com.bonstead.pitdroid.AlarmSettingsDialog.AlarmDialogListener;
 import com.bonstead.pitdroid.HeaterMeter.NamedSample;
 
