@@ -7,6 +7,11 @@
         android:summary="@string/serverSummary"
         android:title="@string/serverTitle" />
     <EditTextPreference
+        android:inputType="textUri"
+        android:key="altServer"
+        android:summary="@string/altServerSummary"
+        android:title="@string/altServerTitle" />
+    <EditTextPreference
         android:inputType="textPassword"
         android:key="adminPassword"
         android:summary="The admin password"

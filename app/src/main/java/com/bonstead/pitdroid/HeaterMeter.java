@@ -8,6 +8,7 @@ import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.text.DecimalFormat;
@@ -45,7 +46,8 @@ public class HeaterMeter
 	private final static long kMaxUpdateDelta = 5000;
 
 	// User settings
-	public String mServerAddress;
+	public String[] mServerAddress = new String[2];
+	int mCurrentServer = 0;
 	public String mAdminPassword;
 	public int mBackgroundUpdateTime;
 	public boolean mAlwaysSoundAlarm = true;
@@ -245,9 +247,15 @@ public class HeaterMeter
 
 	public void initPreferences(SharedPreferences prefs)
 	{
-		mServerAddress = prefs.getString("server", "");
-		mServerAddress = mServerAddress.matches("^(https?)://.*$") ? mServerAddress : "http://"
-				+ mServerAddress;
+		mServerAddress[0] = prefs.getString("server", "");
+		mServerAddress[1] = prefs.getString("altServer", "");
+
+		for (int i = 0; i < 2; i++)
+		{
+			if (!mServerAddress[i].matches("^(https?)://.*$"))
+				mServerAddress[i] = "http://" + mServerAddress[i];
+		}
+
 		mAdminPassword = prefs.getString("adminPassword", "");
 
 		mBackgroundUpdateTime = Integer.valueOf(prefs.getString("backgroundUpdateTime", "15"));
@@ -285,7 +293,7 @@ public class HeaterMeter
 
 	public NamedSample getSample()
 	{
-		BufferedReader reader = getUrlReader(mServerAddress + kStatusURL);
+		BufferedReader reader = getUrlReader(kStatusURL);
 		if (reader != null)
 		{
 			return parseStatus(readerToString(reader));
@@ -323,14 +331,14 @@ public class HeaterMeter
 			}
 			else
 			{
-				BufferedReader reader = getUrlReader(mServerAddress + kHistoryURL);
+				BufferedReader reader = getUrlReader(kHistoryURL);
 				if (reader != null)
 					ret = parseHistory(reader);
 			}
 		}
 		else
 		{
-			BufferedReader reader = getUrlReader(mServerAddress + kStatusURL);
+			BufferedReader reader = getUrlReader(kStatusURL);
 			if (reader != null)
 				ret = parseStatus(readerToString(reader));
 		}
@@ -588,30 +596,56 @@ public class HeaterMeter
 
 	private BufferedReader getUrlReader(String urlName)
 	{
-		try
+		int currentServer = mCurrentServer;
+
+		for (int i = 0; i < 2; i++)
 		{
-			URL url = new URL(urlName);
-			return new BufferedReader(new InputStreamReader(url.openStream()));
-		}
-		catch (MalformedURLException e)
-		{
+			try
+			{
+				URL url = new URL(mServerAddress[currentServer] + urlName);
+
+				URLConnection connection = url.openConnection();
+
+				// Set a 5 second timeout, otherwise we can end up waiting minutes for an
+				// unreachable server to resolve.
+				connection.setConnectTimeout(5000);
+				connection.setReadTimeout(5000);
+
+				BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+
+				// If we made it here then the connection must have succeeded, so make sure the
+				// current server matches the one we used
+				if (mCurrentServer != currentServer)
+					mCurrentServer = currentServer;
+
+				return reader;
+
+			}
+			catch (MalformedURLException e)
+			{
+				if (BuildConfig.DEBUG)
+					Log.e(TAG, "Bad server address");
+			}
+			catch (UnknownHostException e)
+			{
+				if (BuildConfig.DEBUG)
+					Log.e(TAG, "Unknown host: " + e.getLocalizedMessage());
+			}
+			catch (IOException e)
+			{
+				if (BuildConfig.DEBUG)
+					Log.e(TAG, "IO exception");
+			}
+			catch (IllegalArgumentException e)
+			{
+				if (BuildConfig.DEBUG)
+					Log.e(TAG, "Argument exception (probably bad port)");
+			}
+
+			currentServer = (currentServer + 1) % 2;
+
 			if (BuildConfig.DEBUG)
-				Log.e(TAG, "Bad server address");
-		}
-		catch (UnknownHostException e)
-		{
-			if (BuildConfig.DEBUG)
-				Log.e(TAG, "Unknown host: " + e.getLocalizedMessage());
-		}
-		catch (IOException e)
-		{
-			if (BuildConfig.DEBUG)
-				Log.e(TAG, "IO exception");
-		}
-		catch (IllegalArgumentException e)
-		{
-			if (BuildConfig.DEBUG)
-				Log.e(TAG, "Argument exception (probably bad port)");
+				Log.e(TAG, "Connection failed, switching to server " + currentServer);
 		}
 
 		return null;
@@ -658,7 +692,7 @@ public class HeaterMeter
 
 	public void changePitSetTemp(int newTemp)
 	{
-		String setAddr = mServerAddress + "/luci/;stok=" + mAuthToken + "/admin/lm/set?";
+		String setAddr = mServerAddress[mCurrentServer] + "/luci/;stok=" + mAuthToken + "/admin/lm/set?";
 		setAddr += "sp=" + newTemp;
 
 		HttpURLConnection urlConnection = null;
@@ -702,7 +736,7 @@ public class HeaterMeter
 
 		try
 		{
-			URL url = new URL(mServerAddress + kAuthURL);
+			URL url = new URL(mServerAddress[mCurrentServer] + kAuthURL);
 			urlConnection = (HttpURLConnection) url.openConnection();
 			urlConnection.setDoOutput(true);
 			urlConnection.setChunkedStreamingMode(0);
