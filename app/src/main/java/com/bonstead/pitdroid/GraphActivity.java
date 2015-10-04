@@ -102,7 +102,7 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 		lpf = new LineAndPointFormatter(kSetPoint, null, null, plf);
 		mPlot.addSeries(mSetPoint, lpf);
 
-		for (int p = HeaterMeter.kNumProbes - 1; p >= 0; p--)
+		for (int p = 0; p < HeaterMeter.kNumProbes; p++)
 		{
 			lpf = new LineAndPointFormatter(kProbes[p], null, null, plf);
 			lpf.getLinePaint().setShadowLayer(2, 1, 1, Color.BLACK);
@@ -129,7 +129,7 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 		XYLegendWidget legend = mPlot.getLegendWidget();
 		float defaultHeight = legend.getHeightMetric().getValue();
 		legend.setSize(new SizeMetrics(defaultHeight, SizeLayoutType.ABSOLUTE, 0, SizeLayoutType.FILL));
-		legend.position(0, XLayoutStyle.ABSOLUTE_FROM_LEFT, 0,
+		legend.position(0, XLayoutStyle.ABSOLUTE_FROM_LEFT, defaultHeight * 0.5f,
 				YLayoutStyle.ABSOLUTE_FROM_BOTTOM, AnchorPosition.LEFT_BOTTOM);
 
 		// Set all the background colors to the same value
@@ -139,10 +139,10 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 
 		// Boost up the top margin a bit, so the text for the highest value doesn't get
 		// cut off
-		graphWidget.setMarginTop(10);
-		graphWidget.setMarginRight(10);
+		graphWidget.setMarginTop(defaultHeight);
+		graphWidget.setMarginRight(defaultHeight);
 		// Add some extra room on the bottom, so the legend doesn't overlap
-		graphWidget.setMarginBottom(20);
+		graphWidget.setMarginBottom(defaultHeight * 1.5f);
 
 		// Force the range (temperature) to always be from 0-1, since we normalize them
 		// so we can display fan speed on the same graph.
