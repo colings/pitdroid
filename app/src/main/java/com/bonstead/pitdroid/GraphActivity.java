@@ -21,6 +21,7 @@ import com.androidplot.ui.SizeLayoutType;
 import com.androidplot.ui.SizeMetrics;
 import com.androidplot.ui.XLayoutStyle;
 import com.androidplot.ui.YLayoutStyle;
+import com.androidplot.util.PixelUtils;
 import com.androidplot.xy.BoundaryMode;
 import com.androidplot.xy.LineAndPointFormatter;
 import com.androidplot.xy.PointLabelFormatter;
@@ -109,40 +110,42 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 			mPlot.addSeries(mProbes[p], lpf);
 		}
 
-		// Remove the title, domain, and range labels
-		mPlot.getLayoutManager().remove(mPlot.getTitleWidget());
-		mPlot.getLayoutManager().remove(mPlot.getDomainLabelWidget());
-		mPlot.getLayoutManager().remove(mPlot.getRangeLabelWidget());
+		XYGraphWidget graphWidget = mPlot.getGraphWidget();
+		XYLegendWidget legendWidget = mPlot.getLegendWidget();
+
+		float textHeight = PixelUtils.dpToPix(10);
+
+		graphWidget.getDomainLabelPaint().setTextSize(textHeight);
+		graphWidget.getRangeLabelPaint().setTextSize(textHeight);
+		legendWidget.getTextPaint().setTextSize(textHeight);
+
+		float leftBorder = graphWidget.getDomainLabelPaint().measureText("999°");
+		float rightBorder = graphWidget.getRangeLabelPaint().measureText("99:99") * 0.6f;
+
+		// Boost up the top margin a bit, so the text for the highest value doesn't get
+		// cut off
+		graphWidget.setMarginTop(textHeight * 1.5f);
+		graphWidget.setMarginLeft(leftBorder);
+		graphWidget.setMarginRight(rightBorder);
+		// Add some extra room on the bottom, so the legend doesn't overlap
+		graphWidget.setMarginBottom(textHeight * 3.f);
 
 		// Turn off the borders
 		mPlot.setBorderStyle(BorderStyle.NONE, null, null);
 
 		// Max out the size of the graph widget, so it fills the screen
-		XYGraphWidget graphWidget = mPlot.getGraphWidget();
-		graphWidget.setSize(
-				new SizeMetrics(0, SizeLayoutType.FILL, 0, SizeLayoutType.FILL));
-		graphWidget.position(0, XLayoutStyle.ABSOLUTE_FROM_LEFT, 0,
-				YLayoutStyle.ABSOLUTE_FROM_TOP);
+		graphWidget.setSize(new SizeMetrics(0, SizeLayoutType.FILL, 0, SizeLayoutType.FILL));
+		graphWidget.position(0, XLayoutStyle.ABSOLUTE_FROM_LEFT, 0,	YLayoutStyle.ABSOLUTE_FROM_TOP);
 
 		// Adjust the legend so it stretches across the entire screen, since we've got a
 		// lot of text to fit there
-		XYLegendWidget legend = mPlot.getLegendWidget();
-		float defaultHeight = legend.getHeightMetric().getValue();
-		legend.setSize(new SizeMetrics(defaultHeight, SizeLayoutType.ABSOLUTE, 0, SizeLayoutType.FILL));
-		legend.position(0, XLayoutStyle.ABSOLUTE_FROM_LEFT, defaultHeight * 0.5f,
-				YLayoutStyle.ABSOLUTE_FROM_BOTTOM, AnchorPosition.LEFT_BOTTOM);
+		legendWidget.setSize(new SizeMetrics(textHeight * 1.5f, SizeLayoutType.ABSOLUTE, 0, SizeLayoutType.FILL));
+		legendWidget.position(0, XLayoutStyle.ABSOLUTE_FROM_LEFT, textHeight * 0.5f, YLayoutStyle.ABSOLUTE_FROM_BOTTOM, AnchorPosition.LEFT_BOTTOM);
 
 		// Set all the background colors to the same value
 		mPlot.getBackgroundPaint().setColor(kGraphBackground);
 		graphWidget.getBackgroundPaint().setColor(kGraphBackground);
 		graphWidget.getGridBackgroundPaint().setColor(kGraphBackground);
-
-		// Boost up the top margin a bit, so the text for the highest value doesn't get
-		// cut off
-		graphWidget.setMarginTop(defaultHeight);
-		graphWidget.setMarginRight(defaultHeight);
-		// Add some extra room on the bottom, so the legend doesn't overlap
-		graphWidget.setMarginBottom(defaultHeight * 1.5f);
 
 		// Force the range (temperature) to always be from 0-1, since we normalize them
 		// so we can display fan speed on the same graph.
