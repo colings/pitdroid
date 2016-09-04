@@ -288,7 +288,7 @@ public class HeaterMeter
 			editor.putInt(hiName, mProbeHiAlarm[p]);
 		}
 
-		editor.commit();
+		editor.apply();
 	}
 
 	public NamedSample getSample()

@@ -16,16 +16,18 @@ import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 
 import com.androidplot.Plot.BorderStyle;
-import com.androidplot.ui.AnchorPosition;
-import com.androidplot.ui.SizeLayoutType;
-import com.androidplot.ui.SizeMetrics;
-import com.androidplot.ui.XLayoutStyle;
-import com.androidplot.ui.YLayoutStyle;
+import com.androidplot.ui.Anchor;
+import com.androidplot.ui.DynamicTableModel;
+import com.androidplot.ui.HorizontalPositioning;
+import com.androidplot.ui.Size;
+import com.androidplot.ui.SizeMode;
+import com.androidplot.ui.VerticalPositioning;
 import com.androidplot.util.PixelUtils;
 import com.androidplot.xy.BoundaryMode;
 import com.androidplot.xy.LineAndPointFormatter;
 import com.androidplot.xy.PointLabelFormatter;
 import com.androidplot.xy.XYGraphWidget;
+import com.androidplot.xy.XYGraphWidget.LineLabelStyle;
 import com.androidplot.xy.XYLegendWidget;
 import com.androidplot.xy.XYPlot;
 
@@ -89,58 +91,34 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 				Color.rgb(34, 153, 119), Color.rgb(119, 136, 153) };
 		final int kGraphBackground = Color.rgb(34, 68, 102);
 
-		PointLabelFormatter plf = null;
-		LineAndPointFormatter lpf = null;
+		LineAndPointFormatter lpf;
 
-		lpf = new LineAndPointFormatter(kFanSpeed, null, kFanSpeed, plf);
+		lpf = new LineAndPointFormatter(kFanSpeed, null, kFanSpeed, null);
 		lpf.getFillPaint().setAlpha(80);
 		mPlot.addSeries(mFanSpeed, lpf);
 
-		lpf = new LineAndPointFormatter(kLidOpen, null, kLidOpen, plf);
+		lpf = new LineAndPointFormatter(kLidOpen, null, kLidOpen, null);
 		lpf.getFillPaint().setAlpha(80);
 		mPlot.addSeries(mLidOpen, lpf);
 
-		lpf = new LineAndPointFormatter(kSetPoint, null, null, plf);
+		lpf = new LineAndPointFormatter(kSetPoint, null, null, null);
 		mPlot.addSeries(mSetPoint, lpf);
 
 		for (int p = 0; p < HeaterMeter.kNumProbes; p++)
 		{
-			lpf = new LineAndPointFormatter(kProbes[p], null, null, plf);
+			lpf = new LineAndPointFormatter(kProbes[p], null, null, null);
 			lpf.getLinePaint().setShadowLayer(2, 1, 1, Color.BLACK);
 			mPlot.addSeries(mProbes[p], lpf);
 		}
 
-		XYGraphWidget graphWidget = mPlot.getGraphWidget();
-		XYLegendWidget legendWidget = mPlot.getLegendWidget();
+		XYGraphWidget graphWidget = mPlot.getGraph();
+		XYLegendWidget legendWidget = mPlot.getLegend();
 
-		float textHeight = PixelUtils.dpToPix(10);
+		LineLabelStyle timeStyle = graphWidget.getLineLabelStyle(XYGraphWidget.Edge.BOTTOM);
+		LineLabelStyle tempStyle = graphWidget.getLineLabelStyle(XYGraphWidget.Edge.LEFT);
 
-		graphWidget.getDomainLabelPaint().setTextSize(textHeight);
-		graphWidget.getRangeLabelPaint().setTextSize(textHeight);
-		legendWidget.getTextPaint().setTextSize(textHeight);
-
-		float leftBorder = graphWidget.getDomainLabelPaint().measureText("999°");
-		float rightBorder = graphWidget.getRangeLabelPaint().measureText("99:99") * 0.6f;
-
-		// Boost up the top margin a bit, so the text for the highest value doesn't get
-		// cut off
-		graphWidget.setMarginTop(textHeight * 1.5f);
-		graphWidget.setMarginLeft(leftBorder);
-		graphWidget.setMarginRight(rightBorder);
-		// Add some extra room on the bottom, so the legend doesn't overlap
-		graphWidget.setMarginBottom(textHeight * 3.f);
-
-		// Turn off the borders
-		mPlot.setBorderStyle(BorderStyle.NONE, null, null);
-
-		// Max out the size of the graph widget, so it fills the screen
-		graphWidget.setSize(new SizeMetrics(0, SizeLayoutType.FILL, 0, SizeLayoutType.FILL));
-		graphWidget.position(0, XLayoutStyle.ABSOLUTE_FROM_LEFT, 0,	YLayoutStyle.ABSOLUTE_FROM_TOP);
-
-		// Adjust the legend so it stretches across the entire screen, since we've got a
-		// lot of text to fit there
-		legendWidget.setSize(new SizeMetrics(textHeight * 1.5f, SizeLayoutType.ABSOLUTE, 0, SizeLayoutType.FILL));
-		legendWidget.position(0, XLayoutStyle.ABSOLUTE_FROM_LEFT, textHeight * 0.5f, YLayoutStyle.ABSOLUTE_FROM_BOTTOM, AnchorPosition.LEFT_BOTTOM);
+		// Set up the legend as a vertical stack instead of horizontal, since it ends up too wide otherwise
+		legendWidget.setTableModel(new DynamicTableModel(1, mPlot.getSeriesRegistry().size()));
 
 		// Set all the background colors to the same value
 		mPlot.getBackgroundPaint().setColor(kGraphBackground);
@@ -151,11 +129,11 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 		// so we can display fan speed on the same graph.
 		mPlot.setRangeBoundaries(0.0, 1.0, BoundaryMode.FIXED);
 
-		mPlot.setDomainValueFormat(new java.text.Format()
+		timeStyle.setFormat(new java.text.Format()
 		{
 			private static final long serialVersionUID = 1L;
 
-			private java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("HH:mm");// "hh:mm a");
+			private java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("h:mm a");
 
 			@Override
 			public StringBuffer format(Object obj, StringBuffer toAppendTo,
@@ -175,7 +153,7 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 			}
 		});
 
-		mPlot.setRangeValueFormat(new java.text.Format()
+		tempStyle.setFormat(new java.text.Format()
 		{
 			private static final long serialVersionUID = 1L;
 
