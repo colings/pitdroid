@@ -195,7 +195,7 @@ public class DashActivity extends Fragment implements HeaterMeter.Listener,
 					mProbeVals[p].setText(mHeaterMeter.formatTemperature(latestSample.mProbes[p]));
 				}
 
-				if (mHeaterMeter.isAlarmed(p, latestSample.mProbes[p]))
+				if (mHeaterMeter.formatAlarm(p, latestSample.mProbes[p]).length() > 0)
 				{
 					mProbeVals[p].setTextColor(Color.RED);
 				}

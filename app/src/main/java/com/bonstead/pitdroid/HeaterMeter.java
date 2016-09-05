@@ -13,7 +13,6 @@ import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Locale;
 
 import org.json.JSONArray;
@@ -176,16 +175,26 @@ public class HeaterMeter
 		return false;
 	}
 
-	public boolean isAlarmed(int probeIndex, double temperature)
+	// Returns the text to display for a triggered alarm, or an empty string if the alarm isn't triggered.
+	public String formatAlarm(int probeIndex, double temperature)
 	{
 		boolean hasLo = mProbeLoAlarm[probeIndex] > 0;
 		boolean hasHi = mProbeHiAlarm[probeIndex] > 0;
 
-		boolean alarmNaN = (hasLo || hasHi) && Double.isNaN(temperature);
-		boolean alarmLo = (hasLo && temperature < mProbeLoAlarm[probeIndex]);
-		boolean alarmHi = (hasHi && temperature > mProbeHiAlarm[probeIndex]);
+		if ((hasLo || hasHi) && Double.isNaN(temperature))
+		{
+			return "off";
+		}
+		else if (hasLo && temperature < mProbeLoAlarm[probeIndex])
+		{
+			return formatTemperature(mProbeLoAlarm[probeIndex] - temperature) + " below alarm point";
+		}
+		else if ((hasHi && temperature > mProbeHiAlarm[probeIndex]))
+		{
+			return formatTemperature(temperature - mProbeHiAlarm[probeIndex]) + " above alarm point";
+		}
 
-		return alarmNaN || alarmLo || alarmHi;
+		return "";
 	}
 
 	public double getDegreesPerHour(int probeIndex)

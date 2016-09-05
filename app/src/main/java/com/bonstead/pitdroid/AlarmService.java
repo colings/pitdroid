@@ -14,15 +14,16 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
 public class AlarmService extends Service
 {
 	static final String TAG = "AlarmService";
-	// Unique Identification Number for the Notification.
-	// We use it on Notification start, and to cancel it.
-	private int NOTIFICATION = 1;
 	static final String NAME = "com.bonstead.pitdroid.AlarmService";
+
+	static final int kStatusNotificationId = 1;
+	static final int kAlarmNotificationId = 2;
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId)
@@ -36,7 +37,7 @@ public class AlarmService extends Service
 			Log.v(TAG, "onStartCommand");
 		}
 
-		// showNotification(null, null);
+		updateStatusNotification(null, null);
 
 		Runnable NameOfRunnable = new Runnable()
 		{
@@ -63,7 +64,8 @@ public class AlarmService extends Service
 					}
 				}
 
-				showNotification(sample, heatermeter);
+				updateStatusNotification(sample, heatermeter);
+				updateAlarmNotification(sample, heatermeter);
 
 				lock.release();
 			}
@@ -72,8 +74,7 @@ public class AlarmService extends Service
 		Thread name = new Thread(NameOfRunnable);
 		name.start();
 
-		// We want this service to continue running until it is explicitly
-		// stopped, so return sticky.
+		// We want this service to continue running until it is explicitly stopped, so return sticky.
 		return START_STICKY;
 	}
 
@@ -94,7 +95,53 @@ public class AlarmService extends Service
 	/**
 	 * Show a notification while this service is running.
 	 */
-	private void showNotification(final NamedSample latestSample, final HeaterMeter heatermeter)
+	private void updateStatusNotification(final NamedSample latestSample, final HeaterMeter heatermeter)
+	{
+		if (BuildConfig.DEBUG)
+		{
+			Log.v(TAG, "Info notification");
+		}
+
+		String contentText = "";
+
+		if (latestSample != null)
+		{
+			// If we've got a sample, check if any of the alarms are triggered
+			for (int p = 0; p < HeaterMeter.kNumProbes; p++)
+			{
+				if (!Double.isNaN(latestSample.mProbes[p]))
+				{
+					if (contentText.length() > 0)
+					{
+						contentText += " ";
+					}
+
+					contentText += latestSample.mProbeNames[p] + ": ";
+
+					contentText += heatermeter.formatTemperature(latestSample.mProbes[p]);
+				}
+			}
+		}
+		else
+		{
+			contentText = getString(R.string.alarm_service_info);
+		}
+
+		Intent notificationIntent = new Intent(this, MainActivity.class);
+		PendingIntent notificationPendingIntent = PendingIntent.getActivity(this, 0, notificationIntent,
+				PendingIntent.FLAG_UPDATE_CURRENT);
+
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+				.setSmallIcon(R.mipmap.ic_status)
+				.setContentTitle("PitDroid Monitor")
+				.setContentText(contentText)
+				.setOngoing(true)
+				.setContentIntent(notificationPendingIntent);
+
+		startForeground(kStatusNotificationId, builder.build());
+	}
+
+	private void updateAlarmNotification(final NamedSample latestSample, final HeaterMeter heatermeter)
 	{
 		String contentText = "";
 
@@ -105,25 +152,17 @@ public class AlarmService extends Service
 			// If we've got a sample, check if any of the alarms are triggered
 			for (int p = 0; p < HeaterMeter.kNumProbes; p++)
 			{
-				if (heatermeter.isAlarmed(p, latestSample.mProbes[p]))
+				String alarmText = heatermeter.formatAlarm(p, latestSample.mProbes[p]);
+				if (alarmText.length() > 0)
 				{
 					hasAlarms = true;
 
 					if (contentText.length() > 0)
 					{
-						contentText += " / ";
+						contentText += "\n";
 					}
 
-					contentText += latestSample.mProbeNames[p] + ": ";
-
-					if (Double.isNaN(latestSample.mProbes[p]))
-					{
-						contentText += "off";
-					}
-					else
-					{
-						contentText += heatermeter.formatTemperature(latestSample.mProbes[p]);
-					}
+					contentText += latestSample.mProbeNames[p] +" " + alarmText;
 				}
 			}
 		}
@@ -137,13 +176,6 @@ public class AlarmService extends Service
 			contentText = getText(R.string.no_server).toString();
 		}
 
-		NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
-				.setSmallIcon(R.mipmap.ic_status)
-				.setContentTitle(getText(R.string.app_name))
-				.setContentText(
-						contentText.length() > 0 ? contentText : getString(R.string.alarm_service_info))
-				.setOngoing(true);
-
 		if (hasAlarms)
 		{
 			if (BuildConfig.DEBUG)
@@ -151,7 +183,15 @@ public class AlarmService extends Service
 				Log.v(TAG, "Alarm notification:" + contentText);
 			}
 
-			builder.setDefaults(Notification.DEFAULT_VIBRATE | Notification.DEFAULT_LIGHTS);
+			Intent alarmIntent = new Intent(this, MainActivity.class);
+			PendingIntent alarmPendingIntent = PendingIntent.getActivity(this, 0, alarmIntent, 0);
+
+			NotificationCompat.Builder alarmBuilder = new NotificationCompat.Builder(this)
+					.setSmallIcon(R.mipmap.ic_status)
+					.setContentTitle("PitDroid Alarm")
+					.setContentText(contentText)
+					.setContentIntent(alarmPendingIntent)
+					.setDefaults(Notification.DEFAULT_VIBRATE | Notification.DEFAULT_LIGHTS);
 
 			AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 			boolean isSilentMode = (am.getRingerMode() != AudioManager.RINGER_MODE_NORMAL);
@@ -169,7 +209,7 @@ public class AlarmService extends Service
 				}
 
 				Uri alert = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-				builder.setSound(alert, AudioManager.STREAM_ALARM);
+				alarmBuilder.setSound(alert, AudioManager.STREAM_ALARM);
 			}
 			else
 			{
@@ -178,23 +218,12 @@ public class AlarmService extends Service
 					Log.v(TAG, "Not using alarm sound");
 				}
 			}
+
+			NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+
+			// Build the notification and issues it with notification manager.
+			notificationManager.notify(kAlarmNotificationId, alarmBuilder.build());
 		}
-		else
-		{
-			if (BuildConfig.DEBUG)
-			{
-				Log.v(TAG, "Info notification");
-			}
-
-			builder.setOnlyAlertOnce(true);
-		}
-
-		Intent notificationIntent = new Intent(this, MainActivity.class);
-		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent,
-				PendingIntent.FLAG_UPDATE_CURRENT);
-		builder.setContentIntent(contentIntent);
-
-		startForeground(NOTIFICATION, builder.build());
 	}
 
 	@Override
