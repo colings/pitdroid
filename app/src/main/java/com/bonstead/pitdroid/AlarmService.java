@@ -32,7 +32,9 @@ public class AlarmService extends Service
 		lock.acquire();
 
 		if (BuildConfig.DEBUG)
+		{
 			Log.v(TAG, "onStartCommand");
+		}
 
 		// showNotification(null, null);
 
@@ -42,7 +44,9 @@ public class AlarmService extends Service
 			public void run()
 			{
 				if (BuildConfig.DEBUG)
+				{
 					Log.v(TAG, "Getting sample from HeaterMeter...");
+				}
 
 				HeaterMeter heatermeter = ((PitDroidApplication) getApplication()).mHeaterMeter;
 				NamedSample sample = heatermeter.getSample();
@@ -50,9 +54,13 @@ public class AlarmService extends Service
 				if (BuildConfig.DEBUG)
 				{
 					if (sample != null)
+					{
 						Log.v(TAG, "Got sample");
+					}
 					else
+					{
 						Log.v(TAG, "Sample was null");
+					}
 				}
 
 				showNotification(sample, heatermeter);
@@ -75,7 +83,9 @@ public class AlarmService extends Service
 		super.onDestroy();
 
 		if (BuildConfig.DEBUG)
+		{
 			Log.v(TAG, "onDestroy");
+		}
 
 		// Cancel the persistent notification.
 		stopForeground(true);
@@ -86,7 +96,7 @@ public class AlarmService extends Service
 	 */
 	private void showNotification(final NamedSample latestSample, final HeaterMeter heatermeter)
 	{
-		String contentText = null;
+		String contentText = "";
 
 		boolean hasAlarms = false;
 
@@ -99,17 +109,21 @@ public class AlarmService extends Service
 				{
 					hasAlarms = true;
 
-					if (contentText == null)
-						contentText = new String();
-					else
+					if (contentText.length() > 0)
+					{
 						contentText += " / ";
+					}
 
 					contentText += latestSample.mProbeNames[p] + ": ";
 
 					if (Double.isNaN(latestSample.mProbes[p]))
+					{
 						contentText += "off";
+					}
 					else
+					{
 						contentText += heatermeter.formatTemperature(latestSample.mProbes[p]);
+					}
 				}
 			}
 		}
@@ -117,7 +131,9 @@ public class AlarmService extends Service
 		{
 			// If we didn't get a sample, that's an alarm in itself
 			if (heatermeter.mAlarmOnLostConnection)
+			{
 				hasAlarms = true;
+			}
 			contentText = getText(R.string.no_server).toString();
 		}
 
@@ -125,13 +141,15 @@ public class AlarmService extends Service
 				.setSmallIcon(R.mipmap.ic_status)
 				.setContentTitle(getText(R.string.app_name))
 				.setContentText(
-						contentText != null ? contentText : getString(R.string.alarm_service_info))
+						contentText.length() > 0 ? contentText : getString(R.string.alarm_service_info))
 				.setOngoing(true);
 
 		if (hasAlarms)
 		{
 			if (BuildConfig.DEBUG)
+			{
 				Log.v(TAG, "Alarm notification:" + contentText);
+			}
 
 			builder.setDefaults(Notification.DEFAULT_VIBRATE | Notification.DEFAULT_LIGHTS);
 
@@ -139,12 +157,16 @@ public class AlarmService extends Service
 			boolean isSilentMode = (am.getRingerMode() != AudioManager.RINGER_MODE_NORMAL);
 
 			if (BuildConfig.DEBUG)
+			{
 				Log.v(TAG, "Silent mode:" + (isSilentMode ? "on" : "off"));
+			}
 
 			if (!isSilentMode || heatermeter.mAlwaysSoundAlarm)
 			{
 				if (BuildConfig.DEBUG)
+				{
 					Log.v(TAG, "Using alarm sound");
+				}
 
 				Uri alert = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
 				builder.setSound(alert, AudioManager.STREAM_ALARM);
@@ -152,13 +174,17 @@ public class AlarmService extends Service
 			else
 			{
 				if (BuildConfig.DEBUG)
+				{
 					Log.v(TAG, "Not using alarm sound");
+				}
 			}
 		}
 		else
 		{
 			if (BuildConfig.DEBUG)
+			{
 				Log.v(TAG, "Info notification");
+			}
 
 			builder.setOnlyAlertOnce(true);
 		}

@@ -9,7 +9,6 @@ package com.bonstead.pitdroid;
  */
 public class PanZoomTracker
 {
-
 	public int domainWindowSpan = 0;
 	public Range<Number> domainWindow = null;
 

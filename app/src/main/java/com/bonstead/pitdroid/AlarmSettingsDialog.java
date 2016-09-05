@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,8 +20,8 @@ public class AlarmSettingsDialog extends DialogFragment
 		void onFinishAlarmDialog(int probeIndex);
 	}
 
-	@Override
-	public Dialog onCreateDialog(Bundle savedInstanceState)
+	@Override @NonNull
+	public Dialog onCreateDialog( Bundle savedInstanceState)
 	{
 		Bundle bundle = this.getArguments();
 		final int probeIndex = bundle.getInt("probeIndex", 0);
@@ -48,7 +49,9 @@ public class AlarmSettingsDialog extends DialogFragment
 				// If the alarm isn't enabled, negate the value
 				CheckBox check = (CheckBox) view.findViewById(R.id.belowCheck);
 				if (!check.isChecked())
+				{
 					loValue *= -1;
+				}
 
 				// Same with the high temperature
 				text = (EditText) view.findViewById(R.id.aboveTemp);
@@ -56,7 +59,9 @@ public class AlarmSettingsDialog extends DialogFragment
 
 				check = (CheckBox) view.findViewById(R.id.aboveCheck);
 				if (!check.isChecked())
+				{
 					hiValue *= -1;
+				}
 
 				// Set the new settings on the HeaterMeter and tell it to save them
 				heaterMeter.mProbeLoAlarm[probeIndex] = loValue;

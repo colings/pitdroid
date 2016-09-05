@@ -1,11 +1,13 @@
 package com.bonstead.pitdroid;
 
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import android.graphics.Color;
 import android.graphics.PointF;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -87,8 +89,8 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 		final int kFanSpeed = Color.rgb(102, 204, 255);
 		final int kLidOpen = Color.rgb(255, 221, 153);
 		final int kSetPoint = Color.rgb(255, 0, 0);
-		final int[] kProbes = { Color.rgb(238, 119, 51), Color.rgb(102, 204, 51),
-				Color.rgb(34, 153, 119), Color.rgb(119, 136, 153) };
+		final int[] kProbes = {Color.rgb(238, 119, 51), Color.rgb(102, 204, 51),
+				Color.rgb(34, 153, 119), Color.rgb(119, 136, 153)};
 		final int kGraphBackground = Color.rgb(34, 68, 102);
 
 		LineAndPointFormatter lpf;
@@ -133,11 +135,11 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 		{
 			private static final long serialVersionUID = 1L;
 
-			private java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("h:mm a");
+			private java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("h:mm a", Locale.US);
 
 			@Override
-			public StringBuffer format(Object obj, StringBuffer toAppendTo,
-					java.text.FieldPosition pos)
+			public StringBuffer format(Object obj, @NonNull StringBuffer toAppendTo,
+									   @NonNull java.text.FieldPosition pos)
 			{
 				// Because our timestamps are in seconds and SimpleDateFormat expects
 				// milliseconds we multiply our timestamp by 1000:
@@ -147,7 +149,7 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 			}
 
 			@Override
-			public Object parseObject(String source, java.text.ParsePosition pos)
+			public Object parseObject(String source, @NonNull java.text.ParsePosition pos)
 			{
 				return null;
 			}
@@ -158,8 +160,8 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public StringBuffer format(Object obj, StringBuffer toAppendTo,
-					java.text.FieldPosition pos)
+			public StringBuffer format(Object obj, @NonNull StringBuffer toAppendTo,
+									   @NonNull java.text.FieldPosition pos)
 			{
 				double normalizedTemp = ((Number) obj).doubleValue();
 				double temp = mHeaterMeter.getOriginal(normalizedTemp);
@@ -168,7 +170,7 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 			}
 
 			@Override
-			public Object parseObject(String source, java.text.ParsePosition pos)
+			public Object parseObject(String source, @NonNull java.text.ParsePosition pos)
 			{
 				return null;
 			}
@@ -302,7 +304,9 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 			}
 
 			if (BuildConfig.DEBUG)
+			{
 				Log.v(TAG, "Action pointer up: " + mLastPanning + "  lastZooming:" + mLastZooming);
+			}
 
 			break;
 		}
@@ -405,8 +409,10 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 	private boolean isDomainWindowPanned()
 	{
 		if (mPZT.domainWindow == null)
+		{
 			return false;
+		}
 		int latestValue = mHeaterMeter.getTimeRange().max.intValue();
-		return (mPZT.domainWindow.max.intValue() < latestValue) ? true : false;
+		return (mPZT.domainWindow.max.intValue() < latestValue);
 	}
 }

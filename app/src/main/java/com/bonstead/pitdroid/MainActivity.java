@@ -87,7 +87,9 @@ public class MainActivity extends AppCompatActivity implements
 		super.onCreate(savedInstanceState);
 
 		if (BuildConfig.DEBUG)
+		{
 			Log.v(TAG, "onCreate");
+		}
 
 		mViewPager = new NoScrollViewPager(this);
 		mViewPager.setId(R.id.pager);
@@ -179,10 +181,14 @@ public class MainActivity extends AppCompatActivity implements
 		prefs.unregisterOnSharedPreferenceChangeListener(this);
 
 		if (BuildConfig.DEBUG)
+		{
 			Log.v(TAG, "onDestroy");
+		}
 
 		if (mAllowServiceShutdown)
+		{
 			stopAlarmService();
+		}
 	}
 
 	public void updateAlarmService()
@@ -203,7 +209,9 @@ public class MainActivity extends AppCompatActivity implements
 		if (mServiceAlarm == null)
 		{
 			if (BuildConfig.DEBUG)
+			{
 				Log.v(TAG, "Start alarm service");
+			}
 
 			Intent alarmIntent = new Intent(this, AlarmService.class);
 			mServiceAlarm = PendingIntent.getService(this, 0, alarmIntent, 0);
@@ -218,7 +226,9 @@ public class MainActivity extends AppCompatActivity implements
 		if (mServiceAlarm != null)
 		{
 			if (BuildConfig.DEBUG)
+			{
 				Log.v(TAG, "Stop alarm service");
+			}
 
 			AlarmManager alarm = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 			alarm.cancel(mServiceAlarm);
@@ -234,12 +244,16 @@ public class MainActivity extends AppCompatActivity implements
 		super.onPause();
 
 		if (BuildConfig.DEBUG)
+		{
 			Log.v(TAG, "onPause");
+		}
 
 		if (mUpdateTimer != null)
 		{
 			if (BuildConfig.DEBUG)
+			{
 				Log.v(TAG, "Canceling update timer");
+			}
 
 			mUpdateTimer.cancel(false);
 			mUpdateTimer = null;
@@ -252,12 +266,16 @@ public class MainActivity extends AppCompatActivity implements
 		super.onPostResume();
 
 		if (BuildConfig.DEBUG)
+		{
 			Log.v(TAG, "onPostResume");
+		}
 
 		if (mUpdateTimer == null)
 		{
 			if (BuildConfig.DEBUG)
+			{
 				Log.v(TAG, "Starting update timer");
+			}
 
 			mUpdateTimer = mScheduler.scheduleAtFixedRate(mUpdate, 0, HeaterMeter.kMinSampleTime,
 					TimeUnit.MILLISECONDS);
@@ -265,7 +283,9 @@ public class MainActivity extends AppCompatActivity implements
 		else
 		{
 			if (BuildConfig.DEBUG)
+			{
 				Log.v(TAG, "Update timer already set, skipping");
+			}
 		}
 	}
 

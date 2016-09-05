@@ -25,6 +25,7 @@ import com.bonstead.pitdroid.PanZoomTracker.Range;
 
 import android.content.SharedPreferences;
 import android.util.Log;
+
 import au.com.bytecode.opencsv.CSVReader;
 
 public class HeaterMeter
@@ -98,8 +99,7 @@ public class HeaterMeter
 			mFanSpeed = otherSample.mFanSpeed;
 			mLidOpen = otherSample.mLidOpen;
 			mSetPoint = otherSample.mSetPoint;
-			for (int p = 0; p < kNumProbes; p++)
-				mProbes[p] = otherSample.mProbes[p];
+			System.arraycopy(otherSample.mProbes, 0, mProbes, 0, kNumProbes);
 		}
 	}
 
@@ -168,7 +168,9 @@ public class HeaterMeter
 		for (int p = 0; p < kNumProbes; p++)
 		{
 			if (mProbeLoAlarm[p] > 0 || mProbeHiAlarm[p] > 0)
+			{
 				return true;
+			}
 		}
 
 		return false;
@@ -197,7 +199,9 @@ public class HeaterMeter
 
 		// Don't display if there isn't clear increase, prevents wild numbers
 		if (degreesPerHour < 1.0)
+		{
 			return null;
+		}
 
 		String timeStr = String.format(Locale.US, "%.1f°/hr", degreesPerHour);
 
@@ -228,9 +232,13 @@ public class HeaterMeter
 	public Range<Number> getTimeRange()
 	{
 		if (mSamples.size() > 0)
+		{
 			return new Range<Number>(mSamples.get(0).mTime, mSamples.get(mSamples.size() - 1).mTime);
+		}
 		else
+		{
 			return new Range<Number>(0, 0);
+		}
 	}
 
 	private void updateMinMax(double temp)
@@ -253,7 +261,9 @@ public class HeaterMeter
 		for (int i = 0; i < 2; i++)
 		{
 			if (!mServerAddress[i].matches("^(https?)://.*$"))
+			{
 				mServerAddress[i] = "http://" + mServerAddress[i];
+			}
 		}
 
 		mAdminPassword = prefs.getString("adminPassword", "");
@@ -322,7 +332,9 @@ public class HeaterMeter
 			mLastHistoryTime = currentTime;
 
 			if (BuildConfig.DEBUG)
+			{
 				Log.v(TAG, "Getting history");
+			}
 
 			if (false)
 			{
@@ -333,14 +345,18 @@ public class HeaterMeter
 			{
 				BufferedReader reader = getUrlReader(kHistoryURL);
 				if (reader != null)
+				{
 					ret = parseHistory(reader);
+				}
 			}
 		}
 		else
 		{
 			BufferedReader reader = getUrlReader(kStatusURL);
 			if (reader != null)
+			{
 				ret = parseStatus(readerToString(reader));
+			}
 		}
 
 		if (ret != null)
@@ -351,7 +367,9 @@ public class HeaterMeter
 			// got a password and we haven't successfully authenticated yet, give it a
 			// try.
 			if (mAdminPassword != null && mAdminPassword.length() > 0 && !isAuthenticated())
+			{
 				authenticate();
+			}
 		}
 
 		return ret;
@@ -551,7 +569,9 @@ public class HeaterMeter
 		catch (IOException e)
 		{
 			if (BuildConfig.DEBUG)
+			{
 				Log.e(TAG, "IO exception", e);
+			}
 			return null;
 		}
 	}
@@ -563,11 +583,8 @@ public class HeaterMeter
 		mMinTemperature = Double.MAX_VALUE;
 		mMaxTemperature = Double.MIN_VALUE;
 
-		Iterator<Sample> it = mSamples.iterator();
-		while (it.hasNext())
+		for (Sample sample : mSamples)
 		{
-			Sample sample = it.next();
-
 			mNewestTime = Math.max(mNewestTime, sample.mTime);
 
 			updateMinMax(sample.mSetPoint);
@@ -585,10 +602,7 @@ public class HeaterMeter
 		if (mSamples.size() > 0)
 		{
 			latestSample = new NamedSample(mSamples.get(mSamples.size() - 1));
-			for (int p = 0; p < kNumProbes; p++)
-			{
-				latestSample.mProbeNames[p] = mProbeNames[p];
-			}
+			System.arraycopy(mProbeNames, 0, latestSample.mProbeNames, 0, kNumProbes);
 		}
 
 		return latestSample;
@@ -616,7 +630,9 @@ public class HeaterMeter
 				// If we made it here then the connection must have succeeded, so make sure the
 				// current server matches the one we used
 				if (mCurrentServer != currentServer)
+				{
 					mCurrentServer = currentServer;
+				}
 
 				return reader;
 
@@ -624,28 +640,38 @@ public class HeaterMeter
 			catch (MalformedURLException e)
 			{
 				if (BuildConfig.DEBUG)
+				{
 					Log.e(TAG, "Bad server address");
+				}
 			}
 			catch (UnknownHostException e)
 			{
 				if (BuildConfig.DEBUG)
+				{
 					Log.e(TAG, "Unknown host: " + e.getLocalizedMessage());
+				}
 			}
 			catch (IOException e)
 			{
 				if (BuildConfig.DEBUG)
+				{
 					Log.e(TAG, "IO exception");
+				}
 			}
 			catch (IllegalArgumentException e)
 			{
 				if (BuildConfig.DEBUG)
+				{
 					Log.e(TAG, "Argument exception (probably bad port)");
+				}
 			}
 
 			currentServer = (currentServer + 1) % 2;
 
 			if (BuildConfig.DEBUG)
+			{
 				Log.e(TAG, "Connection failed, switching to server " + currentServer);
+			}
 		}
 
 		return null;
@@ -668,7 +694,7 @@ public class HeaterMeter
 		try
 		{
 			StringBuilder builder = new StringBuilder();
-			for (String line = null; (line = reader.readLine()) != null;)
+			for (String line = null; (line = reader.readLine()) != null; )
 			{
 				builder.append(line).append("\n");
 
@@ -710,7 +736,9 @@ public class HeaterMeter
 		catch (MalformedURLException e)
 		{
 			if (BuildConfig.DEBUG)
+			{
 				Log.e(TAG, "Bad server address");
+			}
 		}
 		catch (IOException e)
 		{
@@ -719,7 +747,9 @@ public class HeaterMeter
 		}
 
 		if (urlConnection != null)
+		{
 			urlConnection.disconnect();
+		}
 	}
 
 	public boolean isAuthenticated()
@@ -730,7 +760,9 @@ public class HeaterMeter
 	private void authenticate()
 	{
 		if (BuildConfig.DEBUG)
+		{
 			Log.v(TAG, "Attempting authentication");
+		}
 
 		HttpURLConnection urlConnection = null;
 
@@ -762,9 +794,13 @@ public class HeaterMeter
 					String[] cookieChunks = cookie.split("=");
 					String cookieKey = cookieChunks[0];
 					if (cookieKey.equals("sysauth"))
+					{
 						mAuthCookie = cookieChunks[1];
+					}
 					else if (cookieKey.equals("stok"))
+					{
 						mAuthToken = cookieChunks[1];
+					}
 				}
 			}
 			else
@@ -778,15 +814,23 @@ public class HeaterMeter
 		catch (Exception e)
 		{
 			if (BuildConfig.DEBUG)
+			{
 				e.printStackTrace();
+			}
 		}
 
 		if (urlConnection != null)
+		{
 			urlConnection.disconnect();
+		}
 
 		if (isAuthenticated())
+		{
 			mLastStatusMessage = "Authentication succeeded";
+		}
 		else
+		{
 			mLastStatusMessage = "Authentication failed";
+		}
 	}
 }

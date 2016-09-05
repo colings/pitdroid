@@ -61,9 +61,13 @@ public class SampleTimeSeries implements XYSeries
 		if (mIndex < HeaterMeter.kNumProbes)
 		{
 			if (Double.isNaN(sample.mProbes[mIndex]))
+			{
 				return null;
+			}
 			else
+			{
 				return mHeaterMeter.getNormalized(sample.mProbes[mIndex]);
+			}
 		}
 		else if (mIndex == kFanSpeed)
 		{

@@ -57,7 +57,7 @@ public class DashActivity extends Fragment implements HeaterMeter.Listener,
 
 		mLastUpdate = (TextView) view.findViewById(R.id.lastUpdate);
 
-		int[] probeIds = { R.id.probe0Alarm, R.id.probe1Alarm, R.id.probe2Alarm, R.id.probe3Alarm };
+		int[] probeIds = {R.id.probe0Alarm, R.id.probe1Alarm, R.id.probe2Alarm, R.id.probe3Alarm};
 		for (int p = 0; p < HeaterMeter.kNumProbes; p++)
 		{
 			setAlarmClickListener(view, probeIds[p], p);
@@ -130,9 +130,13 @@ public class DashActivity extends Fragment implements HeaterMeter.Listener,
 		ImageButton button = (ImageButton) view.findViewById(id);
 
 		if (mHeaterMeter.mProbeLoAlarm[index] > 0 || mHeaterMeter.mProbeHiAlarm[index] > 0)
+		{
 			button.setImageResource(R.mipmap.ic_alarm_set);
+		}
 		else
+		{
 			button.setImageResource(R.mipmap.ic_alarm_unset);
+		}
 	}
 
 	private void setDefaults()
@@ -144,7 +148,9 @@ public class DashActivity extends Fragment implements HeaterMeter.Listener,
 			mProbeNames[p].setText("-");
 			mProbeVals[p].setText("-");
 			if (mProbeTimes[p] != null)
+			{
 				mProbeTimes[p].setText("");
+			}
 		}
 		mPitDelta.setText("");
 	}
@@ -172,14 +178,22 @@ public class DashActivity extends Fragment implements HeaterMeter.Listener,
 			for (int p = 0; p < HeaterMeter.kNumProbes; p++)
 			{
 				if (latestSample.mProbeNames[p] == null)
+				{
 					mProbeNames[p].setText("-");
+				}
 				else
+				{
 					mProbeNames[p].setText(latestSample.mProbeNames[p] + ": ");
+				}
 
 				if (Double.isNaN(latestSample.mProbes[p]))
+				{
 					mProbeVals[p].setText("-");
+				}
 				else
+				{
 					mProbeVals[p].setText(mHeaterMeter.formatTemperature(latestSample.mProbes[p]));
+				}
 
 				if (mHeaterMeter.isAlarmed(p, latestSample.mProbes[p]))
 				{
@@ -194,9 +208,13 @@ public class DashActivity extends Fragment implements HeaterMeter.Listener,
 				{
 					String timeUntilAlarm = mHeaterMeter.getTemperatureChangeText(p);
 					if (timeUntilAlarm != null)
+					{
 						mProbeTimes[p].setText(timeUntilAlarm);
+					}
 					else
+					{
 						mProbeTimes[p].setText("");
+					}
 				}
 			}
 
@@ -208,11 +226,15 @@ public class DashActivity extends Fragment implements HeaterMeter.Listener,
 			{
 				double delta = latestSample.mProbes[0] - latestSample.mSetPoint;
 				if (delta > 0)
+				{
 					mPitDelta.setText(mHeaterMeter.formatTemperature(delta) + " above set temp");
+				}
 				else
+				{
 					mPitDelta.setText(mHeaterMeter.formatTemperature(-delta) + " below set temp");
+				}
 			}
-			
+
 			// Update the last update time
 			if (mServerTime < latestSample.mTime)
 			{
