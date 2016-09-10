@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="GaugeView">
+        <attr name="scaleColor" format="color" />
+        <attr name="minValue" format="integer" />
+        <attr name="maxValue" format="integer" />
+        <attr name="tickValue" format="integer" />
+        <attr name="openTicks" format="integer" />
+        <attr name="subTicks" format="integer" />
+        <attr name="backgroundColor1" format="color" />
+        <attr name="backgroundColor2" format="color" />
+        <attr name="handColor" format="color" />
+        <attr name="scaleFontSize" format="float" />
+        <attr name="scaleThickness" format="float" />
+        <attr name="scaleOffset" format="float" />
+        <attr name="rimSize" format="float" />
+    </declare-styleable>
+</resources>
