@@ -9,10 +9,14 @@
         <attr name="subTicks" format="integer" />
         <attr name="backgroundColor1" format="color" />
         <attr name="backgroundColor2" format="color" />
-        <attr name="handColor" format="color" />
         <attr name="scaleFontSize" format="float" />
         <attr name="scaleThickness" format="float" />
         <attr name="scaleOffset" format="float" />
         <attr name="rimSize" format="float" />
+    </declare-styleable>
+    <declare-styleable name="GaugeHandView">
+        <attr name="handColor" format="color" />
+        <attr name="handLength" format="float" />
+        <attr name="handWidth" format="float" />
     </declare-styleable>
 </resources>

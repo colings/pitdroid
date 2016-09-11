@@ -86,12 +86,17 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 		mProbes[2] = new SampleTimeSeries(mHeaterMeter, 2);
 		mProbes[3] = new SampleTimeSeries(mHeaterMeter, 3);
 
-		final int kFanSpeed = Color.rgb(102, 204, 255);
-		final int kLidOpen = Color.rgb(255, 221, 153);
-		final int kSetPoint = Color.rgb(255, 0, 0);
-		final int[] kProbes = {Color.rgb(238, 119, 51), Color.rgb(102, 204, 51),
-				Color.rgb(34, 153, 119), Color.rgb(119, 136, 153)};
-		final int kGraphBackground = Color.rgb(34, 68, 102);
+		final int kFanSpeed = getResources().getColor(R.color.fanSpeed);
+		final int kLidOpen = getResources().getColor(R.color.lidOpen);
+		final int kSetPoint = getResources().getColor(R.color.setPoint);
+		final int[] kProbes =
+		{
+				getResources().getColor(R.color.probe0),
+				getResources().getColor(R.color.probe1),
+				getResources().getColor(R.color.probe2),
+				getResources().getColor(R.color.probe3)
+		};
+		final int kGraphBackground = getResources().getColor(R.color.graphBackground);
 
 		LineAndPointFormatter lpf;
 

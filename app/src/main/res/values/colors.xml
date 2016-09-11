@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="probe0">#ee7733</color>
+    <color name="probe1">#66cc33</color>
+    <color name="probe2">#229977</color>
+    <color name="probe3">#778899</color>
+    <color name="fanSpeed">#66ccff</color>
+    <color name="lidOpen">#ffdd99</color>
+    <color name="setPoint">#ff0000</color>
+    <color name="graphBackground">#224466</color>
+    <color name="scaleColor">#0f0f0f</color>
+</resources>

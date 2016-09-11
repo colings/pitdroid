@@ -7,19 +7,16 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
-import android.graphics.Path;
 import android.graphics.RadialGradient;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.Typeface;
-import android.os.Bundle;
-import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 
 // Based on http://mindtherobot.com/blog/272/android-custom-ui-making-a-vintage-thermometer/
-public final class GaugeView extends View
+public final class GaugeView extends GaugeBaseView
 {
 	private static final String TAG = GaugeView.class.getSimpleName();
 
@@ -34,10 +31,6 @@ public final class GaugeView extends View
 	private Paint mScalePaint;
 	private Paint mScaleTextPaint;
 	private RectF mScaleRect;
-
-	private Paint mHandPaint;
-	private Path mHandPath;
-	private Paint mHandScrewPaint;
 
 	private Paint mCachedBackgroundPaint;
 	// end drawing tools
@@ -54,19 +47,10 @@ public final class GaugeView extends View
 	private int mTotalTicks;
 	private int mBackgroundColor1 = Color.rgb(0xf0, 0xf5, 0xf0);
 	private int mBackgroundColor2 = Color.rgb(0x30, 0x31, 0x30);
-	private int mHandColor = Color.rgb(0x39, 0x2f, 0x2c);
 	private float mScaleFontSize = 6.0f;
 	private float mScaleThickness = 0.5f;
 	private float mScaleOffset = 10.f;
 	private float mRimSize = 2.f;
-
-	// hand dynamics -- all are angular expressed in gauge values
-	private boolean mHandInitialized = false;
-	private float mHandPosition = 0.0f;
-	private float mHandTarget = 0.0f;
-	private float mHandVelocity = 0.0f;
-	private float mHandAcceleration = 0.0f;
-	private long mLastHandMoveTime = -1L;
 
 	public GaugeView(Context context)
 	{
@@ -87,7 +71,6 @@ public final class GaugeView extends View
 		mSubTicks = a.getInteger(R.styleable.GaugeView_subTicks, mSubTicks);
 		mBackgroundColor1 = a.getColor(R.styleable.GaugeView_backgroundColor1, mBackgroundColor1);
 		mBackgroundColor2 = a.getColor(R.styleable.GaugeView_backgroundColor2, mBackgroundColor2);
-		mHandColor = a.getColor(R.styleable.GaugeView_handColor, mHandColor);
 		mScaleFontSize = a.getFloat(R.styleable.GaugeView_scaleFontSize, mScaleFontSize);
 		mScaleThickness = a.getFloat(R.styleable.GaugeView_scaleThickness, mScaleThickness);
 		mScaleOffset = a.getFloat(R.styleable.GaugeView_scaleOffset, mScaleOffset);
@@ -95,58 +78,6 @@ public final class GaugeView extends View
 		a.recycle();
 
 		init();
-	}
-
-	public GaugeView(Context context, AttributeSet attrs, int defStyle)
-	{
-		super(context, attrs, defStyle);
-		init();
-	}
-
-	@Override
-	protected void onRestoreInstanceState(Parcelable state)
-	{
-		Bundle bundle = (Bundle) state;
-		Parcelable superState = bundle.getParcelable("superState");
-		super.onRestoreInstanceState(superState);
-
-		mHandInitialized = bundle.getBoolean("handInitialized");
-		mHandPosition = bundle.getFloat("handPosition");
-		mHandTarget = bundle.getFloat("handTarget");
-		mHandVelocity = bundle.getFloat("handVelocity");
-		mHandAcceleration = bundle.getFloat("handAcceleration");
-		mLastHandMoveTime = bundle.getLong("lastHandMoveTime");
-	}
-
-	@Override
-	protected Parcelable onSaveInstanceState()
-	{
-		Parcelable superState = super.onSaveInstanceState();
-
-		Bundle state = new Bundle();
-		state.putParcelable("superState", superState);
-		state.putBoolean("handInitialized", mHandInitialized);
-		state.putFloat("handPosition", mHandPosition);
-		state.putFloat("handTarget", mHandTarget);
-		state.putFloat("handVelocity", mHandVelocity);
-		state.putFloat("handAcceleration", mHandAcceleration);
-		state.putLong("lastHandMoveTime", mLastHandMoveTime);
-		return state;
-	}
-
-	@Override
-	protected void onAttachedToWindow()
-	{
-		super.onAttachedToWindow();
-
-		// TEMP
-		setHandTarget(mMaxValue - mMinValue * 0.3f);
-	}
-
-	@Override
-	protected void onDetachedFromWindow()
-	{
-		super.onDetachedFromWindow();
 	}
 
 	private void init()
@@ -161,7 +92,7 @@ public final class GaugeView extends View
 
 		mTotalTicks = ((mMaxValue - mMinValue) / mTickValue) + mOpenTicks;
 
-		mHandTarget = mMinValue;
+		//mHandTarget = mMinValue;
 	}
 
 	private int roundToTick(int value)
@@ -169,12 +100,13 @@ public final class GaugeView extends View
 		return (int) Math.ceil(value / mTickValue) * mTickValue;
 	}
 
-	private void initDrawingTools()
+	@Override
+	protected void initDrawingTools()
 	{
 		float scale = getWidth();
 		float relativeScale = scale / 100.f;
 
-		mGaugeRect = new RectF(scale * 0.1f, scale * 0.1f, scale * 0.9f, scale * 0.9f);
+		mGaugeRect = new RectF(0.f, 0.f, scale, scale);
 
 		// the linear gradient is a bit skewed for realism
 		mBackgroundPaint = new Paint();
@@ -196,7 +128,7 @@ public final class GaugeView extends View
 		mRimPaint.setAntiAlias(true);
 		mRimPaint.setStyle(Paint.Style.STROKE);
 		mRimPaint.setColor(Color.argb(0x4f, 0x33, 0x36, 0x33));
-		mRimPaint.setStrokeWidth(mScaleThickness * relativeScale);//(0.005f);
+		mRimPaint.setStrokeWidth(mScaleThickness * relativeScale);
 
 		float rimSize = (mRimSize * relativeScale);
 		mFaceRect = new RectF();
@@ -229,69 +161,10 @@ public final class GaugeView extends View
 		mScaleRect.set(mFaceRect.left + scalePosition, mFaceRect.top + scalePosition,
 				mFaceRect.right - scalePosition, mFaceRect.bottom - scalePosition);
 
-		mHandPaint = new Paint();
-		mHandPaint.setAntiAlias(true);
-		mHandPaint.setColor(mHandColor);
-		if (!isInEditMode())
-		{
-			mHandPaint.setShadowLayer(0.01f, -0.005f, -0.005f, 0x7f000000);
-		}
-		mHandPaint.setStyle(Paint.Style.FILL);
-
-		mHandPath = new Path();
-		mHandPath.moveTo(0.5f * scale, (0.5f + 0.2f) * scale);
-		mHandPath.lineTo((0.5f - 0.010f) * scale, (0.5f + 0.2f - 0.007f) * scale);
-		mHandPath.lineTo((0.5f - 0.002f) * scale, (0.5f - 0.32f) * scale);
-		mHandPath.lineTo((0.5f + 0.002f) * scale, (0.5f - 0.32f) * scale);
-		mHandPath.lineTo((0.5f + 0.010f) * scale, (0.5f + 0.2f - 0.007f) * scale);
-		mHandPath.lineTo(0.5f * scale, (0.5f + 0.2f) * scale);
-		mHandPath.addCircle(0.5f * scale, 0.5f * scale, 0.025f * scale, Path.Direction.CW);
-
-		mHandScrewPaint = new Paint();
-		mHandScrewPaint.setAntiAlias(true);
-		mHandScrewPaint.setColor(0xff493f3c);
-		mHandScrewPaint.setStyle(Paint.Style.FILL);
-
 		mCachedBackgroundPaint = new Paint();
 		mCachedBackgroundPaint.setFilterBitmap(true);
-	}
 
-	@Override
-	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
-	{
-		Log.d(TAG, "Width spec: " + MeasureSpec.toString(widthMeasureSpec));
-		Log.d(TAG, "Height spec: " + MeasureSpec.toString(heightMeasureSpec));
-
-		int widthMode = MeasureSpec.getMode(widthMeasureSpec);
-		int widthSize = MeasureSpec.getSize(widthMeasureSpec);
-
-		int heightMode = MeasureSpec.getMode(heightMeasureSpec);
-		int heightSize = MeasureSpec.getSize(heightMeasureSpec);
-
-		int chosenWidth = chooseDimension(widthMode, widthSize);
-		int chosenHeight = chooseDimension(heightMode, heightSize);
-
-		int chosenDimension = Math.min(chosenWidth, chosenHeight);
-
-		setMeasuredDimension(chosenDimension, chosenDimension);
-	}
-
-	private int chooseDimension(int mode, int size)
-	{
-		if (mode == MeasureSpec.AT_MOST || mode == MeasureSpec.EXACTLY)
-		{
-			return size;
-		}
-		else
-		{ // (mode == MeasureSpec.UNSPECIFIED)
-			return getPreferredSize();
-		}
-	}
-
-	// in case there is no size specified
-	private int getPreferredSize()
-	{
-		return 300;
+		regenerateBackground();
 	}
 
 	private void drawRim(Canvas canvas)
@@ -359,28 +232,8 @@ public final class GaugeView extends View
 		canvas.restore();
 	}
 
-	private float valueToAngle(float value)
-	{
-		return 180.f + (value / (mTickValue * (mTotalTicks + mOpenTicks))) * 360.f;
-	}
-
-	private void drawHand(Canvas canvas)
-	{
-		float scale = getWidth();
-
-		if (mHandInitialized)
-		{
-			float handAngle = valueToAngle(mHandPosition);
-			canvas.save(Canvas.MATRIX_SAVE_FLAG);
-			canvas.rotate(handAngle, 0.5f * scale, 0.5f * scale);
-			canvas.drawPath(mHandPath, mHandPaint);
-			canvas.restore();
-
-			canvas.drawCircle(0.5f * scale, 0.5f * scale, 0.01f * scale, mHandScrewPaint);
-		}
-	}
-
-	private void drawBackground(Canvas canvas)
+	@Override
+	protected void onDraw(Canvas canvas)
 	{
 		if (mCachedBackground == null)
 		{
@@ -390,27 +243,6 @@ public final class GaugeView extends View
 		{
 			canvas.drawBitmap(mCachedBackground, 0, 0, mCachedBackgroundPaint);
 		}
-	}
-
-	@Override
-	protected void onDraw(Canvas canvas)
-	{
-		drawBackground(canvas);
-
-		drawHand(canvas);
-
-		if (handNeedsToMove())
-		{
-			moveHand();
-		}
-	}
-
-	@Override
-	protected void onSizeChanged(int w, int h, int oldw, int oldh)
-	{
-		Log.d(TAG, "Size changed to " + w + "x" + h);
-		initDrawingTools();
-		regenerateBackground();
 	}
 
 	private void regenerateBackground()
@@ -429,66 +261,18 @@ public final class GaugeView extends View
 		drawScale(backgroundCanvas);
 	}
 
-	private boolean handNeedsToMove()
+	public float clampValue(float value)
 	{
-		return Math.abs(mHandPosition - mHandTarget) > 0.01f;
+		return Math.max(mMinValue, Math.min(mMaxValue, value));
 	}
 
-	private void moveHand()
+	public float valueToAngle(float value)
 	{
-		if (!handNeedsToMove())
-		{
-			return;
-		}
+		float clampedVal = Math.max(mMinValue, Math.min(mMaxValue, value));
 
-		if (mLastHandMoveTime != -1L)
-		{
-			long currentTime = System.currentTimeMillis();
-			float delta = (currentTime - mLastHandMoveTime) / 1000.0f;
-
-			float direction = Math.signum(mHandVelocity);
-			if (Math.abs(mHandVelocity) < 90.0f)
-			{
-				mHandAcceleration = 5.0f * (mHandTarget - mHandPosition);
-			}
-			else
-			{
-				mHandAcceleration = 0.0f;
-			}
-			mHandPosition += mHandVelocity * delta;
-			mHandVelocity += mHandAcceleration * delta;
-			if ((mHandTarget - mHandPosition) * direction < 0.01f * direction)
-			{
-				mHandPosition = mHandTarget;
-				mHandVelocity = 0.0f;
-				mHandAcceleration = 0.0f;
-				mLastHandMoveTime = -1L;
-			}
-			else
-			{
-				mLastHandMoveTime = System.currentTimeMillis();
-			}
-			invalidate();
-		}
-		else
-		{
-			mLastHandMoveTime = System.currentTimeMillis();
-			moveHand();
-		}
-	}
-
-	private void setHandTarget(float value)
-	{
-		if (value < mMinValue)
-		{
-			value = mMinValue;
-		}
-		else if (value > mMaxValue)
-		{
-			value = mMaxValue;
-		}
-		mHandTarget = value;
-		mHandInitialized = true;
-		invalidate();
+		float actualMin = mMinValue - (mOpenTicks * mTickValue * 0.5f);
+		float actualMax = mMaxValue + (mOpenTicks * mTickValue * 0.5f);
+		float scalar = (clampedVal - actualMin) / (actualMax - actualMin);
+		return 180.f + (scalar * 360.f);
 	}
 }
