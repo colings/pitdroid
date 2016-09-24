@@ -1,7 +1,6 @@
 package com.bonstead.pitdroid;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -19,58 +18,26 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.ViewPager;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
+import android.view.View;
 import android.view.WindowManager;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bonstead.pitdroid.R;
-
-public class MainActivity extends AppCompatActivity implements
+public class MainActivity extends FragmentActivity implements
 		OnSharedPreferenceChangeListener
 {
 	static final String TAG = "MainActivity";
 
-	NoScrollViewPager mViewPager;
-	TabsAdapter mTabsAdapter;
-	TextView tabCenter;
-	TextView tabText;
 	private final ScheduledExecutorService mScheduler = Executors.newScheduledThreadPool(1);
 	private ScheduledFuture<?> mUpdateTimer = null;
 	private HeaterMeter mHeaterMeter = null;
 	private PendingIntent mServiceAlarm = null;
 	private boolean mAllowServiceShutdown = false;
-
-	// Custom ViewPager to disable Fragment scrolling on swipe
-	private class NoScrollViewPager extends ViewPager
-	{
-		public NoScrollViewPager(Context context)
-		{
-			super(context);
-		}
-
-		@Override
-		public boolean onTouchEvent(MotionEvent event)
-		{
-			return false;
-		}
-
-		@Override
-		public boolean onInterceptTouchEvent(MotionEvent event)
-		{
-			return false;
-		}
-	};
 
 	private final Runnable mUpdate = new Runnable()
 	{
@@ -91,19 +58,15 @@ public class MainActivity extends AppCompatActivity implements
 			Log.v(TAG, "onCreate");
 		}
 
-		mViewPager = new NoScrollViewPager(this);
-		mViewPager.setId(R.id.pager);
+		setContentView(R.layout.activity_main);
 
-		setContentView(mViewPager);
-		ActionBar bar = getSupportActionBar();
-		bar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
-
-		mTabsAdapter = new TabsAdapter(this, mViewPager);
-
-		mTabsAdapter.addTab(bar.newTab().setText("Dash"), DashActivity.class, null);
-
-		mTabsAdapter.addTab(bar.newTab().setText("Graph"), GraphActivity.class, null);
-
+		// Display the fragment as the main content.
+/*		FragmentManager fragmentManager = getSupportFragmentManager();
+		FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+		fragmentTransaction.replace(R.id.dash, new GraphActivity());
+		fragmentTransaction.addToBackStack(null);
+		fragmentTransaction.commit();
+*/
 		mHeaterMeter = ((PitDroidApplication) this.getApplication()).mHeaterMeter;
 
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
@@ -113,6 +76,33 @@ public class MainActivity extends AppCompatActivity implements
 		changeScreenOn();
 
 		updateAlarmService();
+	}
+
+	public void onSettingsClick(View v)
+	{
+		FragmentManager fragmentManager = getSupportFragmentManager();
+		FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+		fragmentTransaction.replace(R.id.main, new SettingsActivity());
+		fragmentTransaction.addToBackStack(null);
+		fragmentTransaction.commit();
+	}
+
+	public void onGraphClick(View v)
+	{
+		FragmentManager fragmentManager = getSupportFragmentManager();
+		FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+		fragmentTransaction.replace(R.id.main, new GraphActivity());
+		fragmentTransaction.addToBackStack(null);
+		fragmentTransaction.commit();
+	}
+
+	public void onDashClick(View v)
+	{
+		FragmentManager fragmentManager = getSupportFragmentManager();
+		FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+		fragmentTransaction.replace(R.id.main, new DashActivity());
+		fragmentTransaction.addToBackStack(null);
+		fragmentTransaction.commit();
 	}
 
 	static class IncomingHandler extends Handler
@@ -289,14 +279,15 @@ public class MainActivity extends AppCompatActivity implements
 		}
 	}
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu)
-	{
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.activity_main, menu);
-		return true;
-	}
-
+//	@Override
+//	public boolean onCreateOptionsMenu(Menu menu)
+//	{
+//		// Inflate the menu; this adds items to the action bar if it is present.
+//		getMenuInflater().inflate(R.menu.activity_main, menu);
+//		super.onCreateOptionsMenu(menu);
+//		return true;
+//	}
+/*
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item)
 	{
@@ -339,98 +330,5 @@ public class MainActivity extends AppCompatActivity implements
 			return super.onOptionsItemSelected(item);
 		}
 	}
-
-	// From http://bitbucket.org/owentech/abstabsviewpager/
-	public static class TabsAdapter extends FragmentPagerAdapter implements ActionBar.TabListener,
-			ViewPager.OnPageChangeListener
-	{
-		private final Context mContext;
-		private final ActionBar mActionBar;
-		private final ViewPager mViewPager;
-		private final ArrayList<TabInfo> mTabs = new ArrayList<TabInfo>();
-
-		static final class TabInfo
-		{
-			private final Class<?> clss;
-			private final Bundle args;
-
-			TabInfo(Class<?> _class, Bundle _args)
-			{
-				clss = _class;
-				args = _args;
-			}
-		}
-
-		public TabsAdapter(AppCompatActivity activity, ViewPager pager)
-		{
-			super(activity.getSupportFragmentManager());
-			mContext = activity;
-			mActionBar = activity.getSupportActionBar();
-			mViewPager = pager;
-			mViewPager.setAdapter(this);
-			mViewPager.setOnPageChangeListener(this);
-		}
-
-		public void addTab(ActionBar.Tab tab, Class<?> clss, Bundle args)
-		{
-			TabInfo info = new TabInfo(clss, args);
-			tab.setTag(info);
-			tab.setTabListener(this);
-			mTabs.add(info);
-			mActionBar.addTab(tab);
-			notifyDataSetChanged();
-		}
-
-		@Override
-		public int getCount()
-		{
-			return mTabs.size();
-		}
-
-		@Override
-		public Fragment getItem(int position)
-		{
-			TabInfo info = mTabs.get(position);
-			return Fragment.instantiate(mContext, info.clss.getName(), info.args);
-		}
-
-		@Override
-		public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels)
-		{
-		}
-
-		@Override
-		public void onPageSelected(int position)
-		{
-			mActionBar.setSelectedNavigationItem(position);
-		}
-
-		@Override
-		public void onPageScrollStateChanged(int state)
-		{
-		}
-
-		@Override
-		public void onTabSelected(ActionBar.Tab tab, FragmentTransaction ft)
-		{
-			Object tag = tab.getTag();
-			for (int i = 0; i < mTabs.size(); i++)
-			{
-				if (mTabs.get(i) == tag)
-				{
-					mViewPager.setCurrentItem(i);
-				}
-			}
-		}
-
-		@Override
-		public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction ft)
-		{
-		}
-
-		@Override
-		public void onTabReselected(ActionBar.Tab tab, FragmentTransaction ft)
-		{
-		}
-	}
+	*/
 }

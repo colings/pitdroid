@@ -275,4 +275,9 @@ public final class GaugeView extends GaugeBaseView
 		float scalar = (clampedVal - actualMin) / (actualMax - actualMin);
 		return 180.f + (scalar * 360.f);
 	}
+
+	public float getScaleDiameter()
+	{
+		return mScaleRect.width();
+	}
 }

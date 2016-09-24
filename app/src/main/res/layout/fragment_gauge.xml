@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <com.bonstead.pitdroid.GaugeView
+            android:id="@+id/thermometer"
+            app:scaleColor="@color/scaleColor"
+            app:minValue="0"
+            app:maxValue="100"
+            app:tickValue="10"
+            app:openTicks="2"
+            app:subTicks="9"
+            app:backgroundColor2="#999a99"
+            app:scaleFontSize="5"
+            app:scaleOffset="13"
+            app:rimSize="5"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+        <com.bonstead.pitdroid.GaugeHandView
+            android:id="@+id/pitHand"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+        <com.bonstead.pitdroid.GaugeHandView
+            android:id="@+id/probe1Hand"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:handColor="@color/probe1"/>
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/lastUpdate"/>
+        <TextView
+            android:id="@+id/lastUpdate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="10sp"/>
+    </LinearLayout>
+
+    <Button
+        android:text="Settings"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/settingsButton"
+        android:onClick="onSettingsClick"/>
+    <Button
+        android:text="Dash"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/dashButton"
+        android:onClick="onDashClick"/>
+    <Button
+        android:text="Graph"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/graphButton"
+        android:onClick="onGraphClick"/>
+
+</LinearLayout>

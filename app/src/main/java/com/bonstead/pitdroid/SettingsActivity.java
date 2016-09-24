@@ -1,19 +1,21 @@
 package com.bonstead.pitdroid;
 
-import com.bonstead.pitdroid.R;
-
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.support.v7.preference.PreferenceFragmentCompat;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
-public class SettingsActivity extends PreferenceActivity
+public class SettingsActivity extends PreferenceFragmentCompat
 {
 	@Override
-	public void onCreate(Bundle savedInstanceState)
+	public void onCreatePreferences(Bundle savedInstanceState, String rootKey)
 	{
-		super.onCreate(savedInstanceState);
-		addPreferencesFromResource(R.xml.preferences);
-
+		// Load the preferences from an XML resource
+		setPreferencesFromResource(R.xml.preferences, rootKey);
+/*
 		final HeaterMeter heaterMeter = ((PitDroidApplication) this.getApplication()).mHeaterMeter;
 
 		// The pit set temp is a special setting that we don't actually care about
@@ -48,5 +50,14 @@ public class SettingsActivity extends PreferenceActivity
 			setTemp.setSelectable(false);
 			setTemp.setEnabled(false);
 		}
+		*/
+	}
+
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+	{
+		View view = super.onCreateView(inflater, container, savedInstanceState);
+		view.setBackgroundColor(getResources().getColor(android.R.color.white));
+		return view;
 	}
 }

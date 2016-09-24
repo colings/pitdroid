@@ -31,8 +31,8 @@ public class GaugeHandView extends GaugeBaseView
 	private long mLastHandMoveTime = -1L;
 
 	private int mHandColor = Color.rgb(0x39, 0x2f, 0x02c);
-	private float mHandWidth = 5.f;
-	private float mHandLength = 60.f;
+	private float mHandWidth = 15.f;
+	private float mHandLength = 95.f;
 
 	public GaugeHandView(Context context)
 	{
@@ -102,7 +102,7 @@ public class GaugeHandView extends GaugeBaseView
 	@Override
 	protected void initDrawingTools()
 	{
-		float scale = getWidth();
+		final float scale = getWidth();
 
 		mHandPaint = new Paint();
 		mHandPaint.setAntiAlias(true);
@@ -113,13 +113,15 @@ public class GaugeHandView extends GaugeBaseView
 		}
 		mHandPaint.setStyle(Paint.Style.FILL);
 
-		final float frontLength = mHandLength * 0.01f * 0.65f;
-		final float backLength = mHandLength * 0.01f * 0.35f;
-		final float halfWidth = mHandWidth * 0.01f * 0.5f;
+		// Converts a 0-100 value to a 0-1 value where one represents the distance from the hand pivot to the scale
+		final float handLengthScalar = (mGauge.getScaleDiameter() / scale) * 0.5f * 0.01f;
+		final float frontLength = mHandLength * handLengthScalar;
+		final float backLength = frontLength * 0.5f;
+		final float halfWidth = mHandWidth * handLengthScalar * 0.5f;
 
 		mHandPath = new Path();
-		mHandPath.moveTo((0.5f - halfWidth * 0.1f) * scale, (0.5f - frontLength) * scale);
-		mHandPath.lineTo((0.5f + halfWidth * 0.1f) * scale, (0.5f - frontLength) * scale);
+		mHandPath.moveTo((0.5f - halfWidth * 0.2f) * scale, (0.5f - frontLength) * scale);
+		mHandPath.lineTo((0.5f + halfWidth * 0.2f) * scale, (0.5f - frontLength) * scale);
 		mHandPath.lineTo((0.5f + halfWidth) * scale, (0.5f + backLength) * scale);
 		mHandPath.lineTo((0.5f - halfWidth) * scale, (0.5f + backLength) * scale);
 		mHandPath.close();
