@@ -16,7 +16,7 @@ import android.widget.TextView;
 import com.bonstead.pitdroid.AlarmSettingsDialog.AlarmDialogListener;
 import com.bonstead.pitdroid.HeaterMeter.NamedSample;
 
-public class DashActivity extends Fragment implements HeaterMeter.Listener,
+public class DashFragment extends Fragment implements HeaterMeter.Listener,
 		AlarmDialogListener
 {
 	private TextView mFanSpeed;
@@ -33,7 +33,7 @@ public class DashActivity extends Fragment implements HeaterMeter.Listener,
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 	{
-		View view = inflater.inflate(R.layout.activity_dash, container, false);
+		View view = inflater.inflate(R.layout.fragment_dash, container, false);
 
 		mHeaterMeter = ((PitDroidApplication) this.getActivity().getApplication()).mHeaterMeter;
 
@@ -84,7 +84,7 @@ public class DashActivity extends Fragment implements HeaterMeter.Listener,
 				bundle.putInt("probeIndex", index);
 				dialog.setArguments(bundle);
 
-				dialog.mListener = DashActivity.this;
+				dialog.mListener = DashFragment.this;
 
 				dialog.show(getFragmentManager(), "AlarmDialog");
 			}

@@ -7,10 +7,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import android.app.AlarmManager;
-import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
@@ -22,8 +20,6 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -58,12 +54,12 @@ public class MainActivity extends FragmentActivity implements
 			Log.v(TAG, "onCreate");
 		}
 
-		setContentView(R.layout.activity_main);
+		setContentView(R.layout.fragment_main);
 
 		// Display the fragment as the main content.
 /*		FragmentManager fragmentManager = getSupportFragmentManager();
 		FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-		fragmentTransaction.replace(R.id.dash, new GraphActivity());
+		fragmentTransaction.replace(R.id.dash, new GraphFragment());
 		fragmentTransaction.addToBackStack(null);
 		fragmentTransaction.commit();
 */
@@ -82,7 +78,7 @@ public class MainActivity extends FragmentActivity implements
 	{
 		FragmentManager fragmentManager = getSupportFragmentManager();
 		FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-		fragmentTransaction.replace(R.id.main, new SettingsActivity());
+		fragmentTransaction.replace(R.id.main, new SettingsFragment());
 		fragmentTransaction.addToBackStack(null);
 		fragmentTransaction.commit();
 	}
@@ -91,7 +87,7 @@ public class MainActivity extends FragmentActivity implements
 	{
 		FragmentManager fragmentManager = getSupportFragmentManager();
 		FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-		fragmentTransaction.replace(R.id.main, new GraphActivity());
+		fragmentTransaction.replace(R.id.main, new GraphFragment());
 		fragmentTransaction.addToBackStack(null);
 		fragmentTransaction.commit();
 	}
@@ -100,7 +96,7 @@ public class MainActivity extends FragmentActivity implements
 	{
 		FragmentManager fragmentManager = getSupportFragmentManager();
 		FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-		fragmentTransaction.replace(R.id.main, new DashActivity());
+		fragmentTransaction.replace(R.id.main, new DashFragment());
 		fragmentTransaction.addToBackStack(null);
 		fragmentTransaction.commit();
 	}
@@ -283,7 +279,7 @@ public class MainActivity extends FragmentActivity implements
 //	public boolean onCreateOptionsMenu(Menu menu)
 //	{
 //		// Inflate the menu; this adds items to the action bar if it is present.
-//		getMenuInflater().inflate(R.menu.activity_main, menu);
+//		getMenuInflater().inflate(R.menu.fragment_main, menu);
 //		super.onCreateOptionsMenu(menu);
 //		return true;
 //	}
@@ -295,7 +291,7 @@ public class MainActivity extends FragmentActivity implements
 		switch (item.getItemId())
 		{
 		case R.id.menu_settings:
-			startActivity(new Intent(this, SettingsActivity.class));
+			startActivity(new Intent(this, SettingsFragment.class));
 			return true;
 		case R.id.menu_exit:
 			if (mHeaterMeter.hasAlarms())

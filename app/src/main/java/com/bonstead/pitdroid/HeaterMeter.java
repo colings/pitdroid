@@ -20,8 +20,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
-import com.bonstead.pitdroid.PanZoomTracker.Range;
-
 import android.content.SharedPreferences;
 import android.util.Log;
 
@@ -238,16 +236,20 @@ public class HeaterMeter
 	/*
 	 * Return the minimum and maximum times from our samples
 	 */
-	public Range<Number> getTimeRange()
+	public int getMinTime()
 	{
 		if (mSamples.size() > 0)
-		{
-			return new Range<Number>(mSamples.get(0).mTime, mSamples.get(mSamples.size() - 1).mTime);
-		}
+			return mSamples.get(0).mTime;
 		else
-		{
-			return new Range<Number>(0, 0);
-		}
+			return 0;
+	}
+
+	public int getMaxTime()
+	{
+		if (mSamples.size() > 0)
+			return mSamples.get(mSamples.size() - 1).mTime;
+		else
+			return 0;
 	}
 
 	private void updateMinMax(double temp)

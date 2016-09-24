@@ -17,30 +17,20 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 
-import com.androidplot.Plot.BorderStyle;
-import com.androidplot.ui.Anchor;
 import com.androidplot.ui.DynamicTableModel;
-import com.androidplot.ui.HorizontalPositioning;
-import com.androidplot.ui.Size;
-import com.androidplot.ui.SizeMode;
-import com.androidplot.ui.VerticalPositioning;
-import com.androidplot.util.PixelUtils;
 import com.androidplot.xy.BoundaryMode;
 import com.androidplot.xy.LineAndPointFormatter;
-import com.androidplot.xy.PointLabelFormatter;
 import com.androidplot.xy.XYGraphWidget;
 import com.androidplot.xy.XYGraphWidget.LineLabelStyle;
 import com.androidplot.xy.XYLegendWidget;
 import com.androidplot.xy.XYPlot;
 
 import com.bonstead.pitdroid.HeaterMeter.NamedSample;
-import com.bonstead.pitdroid.PanZoomTracker;
-import com.bonstead.pitdroid.PanZoomTracker.Range;
 
-public class GraphActivity extends Fragment implements HeaterMeter.Listener,
+public class GraphFragment extends Fragment implements HeaterMeter.Listener,
 		OnTouchListener
 {
-	static final String TAG = "GraphActivity";
+	static final String TAG = "GraphFragment";
 
 	private XYPlot mPlot;
 	private SampleTimeSeries mFanSpeed;
@@ -53,7 +43,6 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 	private ScaleGestureDetector scaleGestureDetector;
 
 	static final int INVALID_POINTER_ID = -1;
-	private PanZoomTracker mPZT;
 	private PointF mLastTouch;
 	private int mActivePointerId;
 	private float mLastZooming = 1.0f;
@@ -61,6 +50,15 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 
 	// Default panning window size (seconds)
 	public final int DEFAULT_DOMAIN_SPAN = 2 * 60 * 60;
+	private int mDomainWindowSpan = DEFAULT_DOMAIN_SPAN;
+	private int mDomainWindowMin = 0;
+	private int mDomainWindowMax = 0;
+	private boolean mIsPanning = false;
+
+	static final String DOMAIN_WINDOW_SPAN = "domainSpan";
+	static final String DOMAIN_WINDOW_MIN = "domainMin";
+	static final String DOMAIN_WINDOW_MAX = "domainMax";
+	static final String IS_PANNING = "isPanning";
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
@@ -68,7 +66,7 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 		mHeaterMeter = ((PitDroidApplication) this.getActivity().getApplication()).mHeaterMeter;
 		mHeaterMeter.addListener(this);
 
-		View view = inflater.inflate(R.layout.activity_graph, container, false);
+		View view = inflater.inflate(R.layout.fragment_graph, container, false);
 
 		// initialize our XYPlot reference:
 		mPlot = (XYPlot) view.findViewById(R.id.plot);
@@ -76,7 +74,14 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 
 		// Create a scaleGestureDetector to look for gesture events
 		scaleGestureDetector = new ScaleGestureDetector(view.getContext(), new ScaleListener());
-		mPZT = ((PitDroidApplication) this.getActivity().getApplication()).mPanZoomTracker;
+
+		if (savedInstanceState != null)
+		{
+			mDomainWindowSpan = savedInstanceState.getInt(DOMAIN_WINDOW_SPAN);
+			mDomainWindowMin = savedInstanceState.getInt(DOMAIN_WINDOW_MIN);
+			mDomainWindowMax = savedInstanceState.getInt(DOMAIN_WINDOW_MAX);
+			mIsPanning = savedInstanceState.getBoolean(IS_PANNING);
+		}
 
 		mFanSpeed = new SampleTimeSeries(mHeaterMeter, SampleTimeSeries.kFanSpeed);
 		mLidOpen = new SampleTimeSeries(mHeaterMeter, SampleTimeSeries.kLidOpen);
@@ -193,30 +198,34 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 	}
 
 	@Override
+	public void onSaveInstanceState(Bundle savedInstanceState)
+	{
+		savedInstanceState.putInt(DOMAIN_WINDOW_SPAN, mDomainWindowSpan);
+		savedInstanceState.putInt(DOMAIN_WINDOW_MIN, mDomainWindowMin);
+		savedInstanceState.putInt(DOMAIN_WINDOW_MAX, mDomainWindowMax);
+		savedInstanceState.putBoolean(IS_PANNING, mIsPanning);
+
+		super.onSaveInstanceState(savedInstanceState);
+	}
+
+	@Override
 	public void samplesUpdated(final NamedSample latestSample)
 	{
 		if (latestSample == null)
 		{
 			// Use dummy time when no sample data is available
-			int dummyTime = 0;
-			mPZT.domainWindow = new Range<Number>(dummyTime - mPZT.domainWindowSpan, dummyTime);
-			mPZT.domainWindowSpan = DEFAULT_DOMAIN_SPAN;
+			mDomainWindowMin = 0;
+			mDomainWindowMax = DEFAULT_DOMAIN_SPAN;
+			mDomainWindowSpan = DEFAULT_DOMAIN_SPAN;
 		}
 		else
 		{
-			if (mPZT.domainWindow == null)
-			{
-				// Initialize panning window if uninitialized or confused
-				mPZT.domainWindow = new Range<Number>(latestSample.mTime - mPZT.domainWindowSpan,
-						latestSample.mTime);
-				mPZT.domainWindowSpan = DEFAULT_DOMAIN_SPAN;
-			}
-			else if (!mPZT.panning)
+			if (!mIsPanning)
 			{
 				// If most recent sample is visible in the current panning window,
 				// shift the panning window to show the updated sample.
-				mPZT.domainWindow.setMax(latestSample.mTime);
-				mPZT.domainWindow.min = mPZT.domainWindow.max.intValue() - mPZT.domainWindowSpan;
+				mDomainWindowMin = latestSample.mTime - mDomainWindowSpan;
+				mDomainWindowMax = latestSample.mTime;
 			}
 
 		}
@@ -228,8 +237,7 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 	 */
 	private void redrawPlot()
 	{
-		// ToDo: Update Panning/Zoom visual indicator
-		mPlot.setDomainBoundaries(mPZT.domainWindow.min, mPZT.domainWindow.max, BoundaryMode.FIXED);
+		mPlot.setDomainBoundaries(mDomainWindowMin, mDomainWindowMax, BoundaryMode.FIXED);
 		mPlot.redraw();
 	}
 
@@ -327,7 +335,7 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 			{
 				mLastPanning = mLastTouch.x - x;
 				pan((int) mLastPanning);
-				mPZT.panning = isDomainWindowPanned();
+				mIsPanning = isDomainWindowPanned();
 			}
 			mLastTouch.set(x, y);
 			redrawPlot();
@@ -342,7 +350,7 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 	 */
 	public float getScaleFactor()
 	{
-		return (float) (mPZT.domainWindow.intValue() / mHeaterMeter.getTimeRange().intValue());
+		return (float) ((mDomainWindowMax - mDomainWindowMin) / (mHeaterMeter.getMaxTime() - mHeaterMeter.getMinTime()));
 	}
 
 	/*
@@ -353,10 +361,8 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 	 */
 	private void pan(int pan)
 	{
-		float step = mPZT.domainWindowSpan / mPlot.getWidth();
+		float step = mDomainWindowSpan / mPlot.getWidth();
 		float offset = pan * step;
-
-		Range<Number> timeRange = mHeaterMeter.getTimeRange();
 
 		int newMin, newMax;
 
@@ -364,19 +370,17 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 		// other value to match.
 		if (offset < 0)
 		{
-			newMin = Math.max(mPZT.domainWindow.min.intValue() + (int) offset,
-					timeRange.min.intValue());
-			newMax = newMin + mPZT.domainWindowSpan;
+			newMin = Math.max(mDomainWindowMin + (int) offset, mHeaterMeter.getMinTime());
+			newMax = newMin + mDomainWindowSpan;
 		}
 		else
 		{
-			newMax = Math.min(mPZT.domainWindow.max.intValue() + (int) offset,
-					timeRange.max.intValue());
-			newMin = newMax - mPZT.domainWindowSpan;
+			newMax = Math.min(mDomainWindowMax + (int) offset, mHeaterMeter.getMaxTime());
+			newMin = newMax - mDomainWindowSpan;
 		}
 
-		mPZT.domainWindow.min = newMin;
-		mPZT.domainWindow.max = newMax;
+		mDomainWindowMin = newMin;
+		mDomainWindowMax = newMax;
 	}
 
 	/*
@@ -386,25 +390,26 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 	 */
 	private void zoom(float deltaScaleFactor)
 	{
-		mPZT.domainWindowSpan = (int) (mPZT.domainWindowSpan / deltaScaleFactor);
+		mDomainWindowSpan = (int) (mDomainWindowSpan / deltaScaleFactor);
 
-		Range<Number> timeRange = mHeaterMeter.getTimeRange();
+		int minTime = mHeaterMeter.getMinTime();
+		int maxTime = mHeaterMeter.getMaxTime();
 
 		// Don't let the time range go below 1 minute or above our total range
 		final int minTimeRange = 60;
-		final int maxTimeRange = timeRange.intValue();
+		final int maxTimeRange = maxTime - minTime;
 
-		mPZT.domainWindowSpan = Math.max(mPZT.domainWindowSpan, minTimeRange);
-		mPZT.domainWindowSpan = Math.min(mPZT.domainWindowSpan, maxTimeRange);
+		mDomainWindowSpan = Math.max(mDomainWindowSpan, minTimeRange);
+		mDomainWindowSpan = Math.min(mDomainWindowSpan, maxTimeRange);
 
 		// Adjust the minimum value to match our new range
-		int newMin = mPZT.domainWindow.max.intValue() - mPZT.domainWindowSpan;
-		newMin = Math.max(newMin, timeRange.min.intValue());
+		int newMin = mDomainWindowMax - mDomainWindowSpan;
+		newMin = Math.max(newMin, minTime);
 
-		int newMax = newMin + mPZT.domainWindowSpan;
+		int newMax = newMin + mDomainWindowSpan;
 
-		mPZT.domainWindow.min = newMin;
-		mPZT.domainWindow.max = newMax;
+		mDomainWindowMin = newMin;
+		mDomainWindowMax = newMax;
 	}
 
 	/*
@@ -413,11 +418,7 @@ public class GraphActivity extends Fragment implements HeaterMeter.Listener,
 	 */
 	private boolean isDomainWindowPanned()
 	{
-		if (mPZT.domainWindow == null)
-		{
-			return false;
-		}
-		int latestValue = mHeaterMeter.getTimeRange().max.intValue();
-		return (mPZT.domainWindow.max.intValue() < latestValue);
+		int latestValue = mHeaterMeter.getMaxTime();
+		return (mDomainWindowMax < latestValue);
 	}
 }
