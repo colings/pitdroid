@@ -33,6 +33,7 @@ public class GaugeHandView extends GaugeBaseView
 	private int mHandColor = Color.rgb(0x39, 0x2f, 0x02c);
 	private float mHandWidth = 15.f;
 	private float mHandLength = 95.f;
+	private int mHandStyle = 0;
 
 	public GaugeHandView(Context context)
 	{
@@ -47,6 +48,7 @@ public class GaugeHandView extends GaugeBaseView
 		mHandColor = a.getColor(R.styleable.GaugeHandView_handColor, mHandColor);
 		mHandLength = a.getFloat(R.styleable.GaugeHandView_handLength, mHandLength);
 		mHandWidth = a.getFloat(R.styleable.GaugeHandView_handWidth, mHandWidth);
+		mHandStyle = a.getInteger(R.styleable.GaugeHandView_handStyle, mHandStyle);
 		a.recycle();
 	}
 
@@ -115,24 +117,33 @@ public class GaugeHandView extends GaugeBaseView
 
 		// Converts a 0-100 value to a 0-1 value where one represents the distance from the hand pivot to the scale
 		final float handLengthScalar = (mGauge.getScaleDiameter() / scale) * 0.5f * 0.01f;
-		final float frontLength = mHandLength * handLengthScalar;
-		final float backLength = frontLength * 0.5f;
 		final float halfWidth = mHandWidth * handLengthScalar * 0.5f;
 
+		// Y 0 = top (tip of hand), 1 = bottom (back of hand)
 		mHandPath = new Path();
-		mHandPath.moveTo((0.5f - halfWidth * 0.2f) * scale, (0.5f - frontLength) * scale);
-		mHandPath.lineTo((0.5f + halfWidth * 0.2f) * scale, (0.5f - frontLength) * scale);
-		mHandPath.lineTo((0.5f + halfWidth) * scale, (0.5f + backLength) * scale);
-		mHandPath.lineTo((0.5f - halfWidth) * scale, (0.5f + backLength) * scale);
-		mHandPath.close();
-/*		mHandPath.moveTo(0.5f * scale, (0.5f + 0.2f) * scale);
-		mHandPath.lineTo((0.5f - 0.010f) * scale, (0.5f + 0.2f - 0.007f) * scale);
-		mHandPath.lineTo((0.5f - 0.002f) * scale, (0.5f - 0.32f) * scale);
-		mHandPath.lineTo((0.5f + 0.002f) * scale, (0.5f - 0.32f) * scale);
-		mHandPath.lineTo((0.5f + 0.010f) * scale, (0.5f + 0.2f - 0.007f) * scale);
-		mHandPath.lineTo(0.5f * scale, (0.5f + 0.2f) * scale);
-		mHandPath.addCircle(0.5f * scale, 0.5f * scale, 0.025f * scale, Path.Direction.CW);
-*/
+		if (mHandStyle == 0)
+		{
+			final float frontLength = mHandLength * handLengthScalar;
+			final float backLength = frontLength * 0.5f;
+
+			mHandPath.moveTo((0.5f - halfWidth * 0.2f) * scale, (0.5f - frontLength) * scale);
+			mHandPath.lineTo((0.5f + halfWidth * 0.2f) * scale, (0.5f - frontLength) * scale);
+			mHandPath.lineTo((0.5f + halfWidth) * scale, (0.5f + backLength) * scale);
+			mHandPath.lineTo((0.5f - halfWidth) * scale, (0.5f + backLength) * scale);
+			mHandPath.close();
+		}
+		else
+		{
+			final float yTip = (scale - mGauge.getScaleDiameter()) * 0.5f;
+			final float length = mHandLength * handLengthScalar;
+
+			mHandPath.moveTo((0.5f - halfWidth * 0.2f) * scale, yTip);
+			mHandPath.lineTo((0.5f + halfWidth * 0.2f) * scale, yTip);
+			mHandPath.lineTo((0.5f + halfWidth) * scale, yTip + (length * scale));
+			mHandPath.lineTo((0.5f - halfWidth) * scale, yTip + (length * scale));
+			mHandPath.close();
+		}
+
 		mHandScrewPaint = new Paint();
 		mHandScrewPaint.setAntiAlias(true);
 		mHandScrewPaint.setColor(0xff493f3c);

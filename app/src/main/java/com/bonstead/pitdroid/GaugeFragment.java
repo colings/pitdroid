@@ -28,11 +28,11 @@ public class GaugeFragment extends Fragment implements HeaterMeter.Listener
 		mHeaterMeter = ((PitDroidApplication) this.getActivity().getApplication()).mHeaterMeter;
 
 		mProbeHands[0] = (GaugeHandView) view.findViewById(R.id.pitHand);
-		mProbeHands[3] = (GaugeHandView) view.findViewById(R.id.probe1Hand);
+		mProbeHands[1] = (GaugeHandView) view.findViewById(R.id.probe1Hand);
+		mProbeHands[2] = (GaugeHandView) view.findViewById(R.id.probe2Hand);
+		mProbeHands[3] = (GaugeHandView) view.findViewById(R.id.probe3Hand);
 
 		mLastUpdate = (TextView) view.findViewById(R.id.lastUpdate);
-
-//		setDefaults();
 
 		mHeaterMeter.addListener(this);
 
@@ -56,13 +56,13 @@ public class GaugeFragment extends Fragment implements HeaterMeter.Listener
 			{
 				if (Double.isNaN(latestSample.mProbes[p]))
 				{
-					if (mProbeHands[p] != null)
-						mProbeHands[p].setHandTarget(0.f);
+					mProbeHands[p].setVisibility(View.GONE);
+					mProbeHands[p].setHandTarget(0.f);
 				}
 				else
 				{
-					if (mProbeHands[p] != null)
-						mProbeHands[p].setHandTarget((float) latestSample.mProbes[p]);
+					mProbeHands[p].setVisibility(View.VISIBLE);
+					mProbeHands[p].setHandTarget((float) latestSample.mProbes[p]);
 				}
 			}
 

@@ -1,5 +1,6 @@
 package com.bonstead.pitdroid;
 
+import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -54,10 +55,14 @@ public class MainActivity extends FragmentActivity implements
 			Log.v(TAG, "onCreate");
 		}
 
-		// Display the fragment as the main content.
-		getSupportFragmentManager().beginTransaction()
-			.add(android.R.id.content, new GaugeFragment())
-			.commit();
+		// If we don't have a fragment (being opened, not recreated), open the gauge fragment by default
+		if (getSupportFragmentManager().findFragmentById(android.R.id.content) == null)
+		{
+			// Display the fragment as the main content.
+			getSupportFragmentManager().beginTransaction()
+					.add(android.R.id.content, new GaugeFragment())
+					.commit();
+		}
 
 		mHeaterMeter = ((PitDroidApplication) this.getApplication()).mHeaterMeter;
 
@@ -66,7 +71,7 @@ public class MainActivity extends FragmentActivity implements
 		prefs.registerOnSharedPreferenceChangeListener(this);
 
 		// Uncomment to use saved sample data instead of live, for testing purposes
-		//mHeaterMeter.setHistory(new InputStreamReader(getResources().openRawResource(R.raw.sample_data)));
+		mHeaterMeter.setHistory(new InputStreamReader(getResources().openRawResource(R.raw.sample_data)));
 
 		changeScreenOn();
 

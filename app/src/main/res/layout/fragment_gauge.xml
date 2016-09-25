@@ -17,7 +17,9 @@
             app:tickValue="50"
             app:openTicks="2"
             app:subTicks="9"
-            app:backgroundColor2="#999a99"
+            app:bezelColor2="#999a99"
+            app:backgroundColor1="@color/gaugeBackground1"
+            app:backgroundColor2="@color/gaugeBackground2"
             app:scaleFontSize="5"
             app:scaleOffset="13"
             app:rimSize="5"
@@ -31,7 +33,26 @@
             android:id="@+id/probe1Hand"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:handColor="@color/probe1"/>
+            app:handColor="@color/probe1"
+            app:handStyle="Tick"
+            app:handLength="10"
+            app:handWidth="10"/>
+        <com.bonstead.pitdroid.GaugeHandView
+            android:id="@+id/probe2Hand"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:handColor="@color/probe2"
+            app:handStyle="Tick"
+            app:handLength="10"
+            app:handWidth="10"/>
+        <com.bonstead.pitdroid.GaugeHandView
+            android:id="@+id/probe3Hand"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:handColor="@color/probe3"
+            app:handStyle="Tick"
+            app:handLength="10"
+            app:handWidth="10"/>
     </RelativeLayout>
 
     <LinearLayout

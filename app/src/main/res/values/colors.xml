@@ -9,4 +9,6 @@
     <color name="setPoint">#ff0000</color>
     <color name="graphBackground">#224466</color>
     <color name="scaleColor">#0f0f0f</color>
+    <color name="gaugeBackground1">#f4f4f4</color>
+    <color name="gaugeBackground2">#bababa</color>
 </resources>

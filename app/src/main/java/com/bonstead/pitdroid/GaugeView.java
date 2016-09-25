@@ -22,6 +22,7 @@ public final class GaugeView extends GaugeBaseView
 
 	// drawing tools
 	private RectF mGaugeRect;
+	private Paint mBezelPaint;
 	private Paint mBackgroundPaint;
 	private Paint mRimPaint;
 
@@ -45,6 +46,8 @@ public final class GaugeView extends GaugeBaseView
 	private int mSubTicks = 4;
 	private int mOpenTicks = 2;
 	private int mTotalTicks;
+	private int mBezelColor1 = Color.rgb(0xf0, 0xf5, 0xf0);
+	private int mBezelColor2 = Color.rgb(0x30, 0x31, 0x30);
 	private int mBackgroundColor1 = Color.rgb(0xf0, 0xf5, 0xf0);
 	private int mBackgroundColor2 = Color.rgb(0x30, 0x31, 0x30);
 	private float mScaleFontSize = 6.0f;
@@ -69,6 +72,8 @@ public final class GaugeView extends GaugeBaseView
 		mTickValue = a.getInteger(R.styleable.GaugeView_tickValue, mTickValue);
 		mOpenTicks = a.getInteger(R.styleable.GaugeView_openTicks, mOpenTicks);
 		mSubTicks = a.getInteger(R.styleable.GaugeView_subTicks, mSubTicks);
+		mBezelColor1 = a.getColor(R.styleable.GaugeView_bezelColor1, mBezelColor1);
+		mBezelColor2 = a.getColor(R.styleable.GaugeView_bezelColor2, mBezelColor2);
 		mBackgroundColor1 = a.getColor(R.styleable.GaugeView_backgroundColor1, mBackgroundColor1);
 		mBackgroundColor2 = a.getColor(R.styleable.GaugeView_backgroundColor2, mBackgroundColor2);
 		mScaleFontSize = a.getFloat(R.styleable.GaugeView_scaleFontSize, mScaleFontSize);
@@ -109,6 +114,21 @@ public final class GaugeView extends GaugeBaseView
 		mGaugeRect = new RectF(0.f, 0.f, scale, scale);
 
 		// the linear gradient is a bit skewed for realism
+		mBezelPaint = new Paint();
+		mBezelPaint.setAntiAlias(true);
+		if (!isInEditMode())
+		{
+			mBezelPaint.setShader(new LinearGradient(0.40f * scale, 0.0f * scale, 0.60f * scale, 1.0f * scale,
+					mBezelColor1,
+					mBezelColor2,
+					Shader.TileMode.CLAMP));
+		}
+		else
+		{
+			mBezelPaint.setStyle(Paint.Style.FILL);
+			mBezelPaint.setColor(mBezelColor1);
+		}
+
 		mBackgroundPaint = new Paint();
 		mBackgroundPaint.setAntiAlias(true);
 		if (!isInEditMode())
@@ -165,24 +185,6 @@ public final class GaugeView extends GaugeBaseView
 		mCachedBackgroundPaint.setFilterBitmap(true);
 
 		regenerateBackground();
-	}
-
-	private void drawRim(Canvas canvas)
-	{
-		// first, draw the metallic body
-		canvas.drawOval(mGaugeRect, mBackgroundPaint);
-		// now the outer rim circle
-		canvas.drawOval(mGaugeRect, mRimPaint);
-	}
-
-	private void drawFace(Canvas canvas)
-	{
-		// draw the inner rim circle
-		canvas.drawOval(mFaceRect, mRimPaint);
-
-		// draw the rim shadow inside the face
-		if (!isInEditMode())
-			canvas.drawOval(mFaceRect, mRimShadowPaint);
 	}
 
 	private void drawScale(Canvas canvas)
@@ -256,8 +258,19 @@ public final class GaugeView extends GaugeBaseView
 		mCachedBackground = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.ARGB_8888);
 		Canvas backgroundCanvas = new Canvas(mCachedBackground);
 
-		drawRim(backgroundCanvas);
-		drawFace(backgroundCanvas);
+		// first, draw the bezel
+		backgroundCanvas.drawOval(mGaugeRect, mBezelPaint);
+		// now the outer rim circle
+		backgroundCanvas.drawOval(mGaugeRect, mRimPaint);
+		// draw the gauge background
+		backgroundCanvas.drawOval(mFaceRect, mBackgroundPaint);
+		// draw the inner rim circle
+		backgroundCanvas.drawOval(mFaceRect, mRimPaint);
+
+		// draw the rim shadow inside the face
+		if (!isInEditMode())
+			backgroundCanvas.drawOval(mFaceRect, mRimShadowPaint);
+
 		drawScale(backgroundCanvas);
 	}
 
