@@ -54,20 +54,19 @@ public class MainActivity extends FragmentActivity implements
 			Log.v(TAG, "onCreate");
 		}
 
-		setContentView(R.layout.fragment_main);
-
 		// Display the fragment as the main content.
-/*		FragmentManager fragmentManager = getSupportFragmentManager();
-		FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-		fragmentTransaction.replace(R.id.dash, new GraphFragment());
-		fragmentTransaction.addToBackStack(null);
-		fragmentTransaction.commit();
-*/
+		getSupportFragmentManager().beginTransaction()
+			.add(android.R.id.content, new GaugeFragment())
+			.commit();
+
 		mHeaterMeter = ((PitDroidApplication) this.getApplication()).mHeaterMeter;
 
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
 		mHeaterMeter.initPreferences(prefs);
 		prefs.registerOnSharedPreferenceChangeListener(this);
+
+		// Uncomment to use saved sample data instead of live, for testing purposes
+		//mHeaterMeter.setHistory(new InputStreamReader(getResources().openRawResource(R.raw.sample_data)));
 
 		changeScreenOn();
 
@@ -76,29 +75,26 @@ public class MainActivity extends FragmentActivity implements
 
 	public void onSettingsClick(View v)
 	{
-		FragmentManager fragmentManager = getSupportFragmentManager();
-		FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-		fragmentTransaction.replace(R.id.main, new SettingsFragment());
-		fragmentTransaction.addToBackStack(null);
-		fragmentTransaction.commit();
+		getSupportFragmentManager().beginTransaction()
+			.replace(android.R.id.content, new SettingsFragment())
+			.addToBackStack(null)
+			.commit();
 	}
 
 	public void onGraphClick(View v)
 	{
-		FragmentManager fragmentManager = getSupportFragmentManager();
-		FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-		fragmentTransaction.replace(R.id.main, new GraphFragment());
-		fragmentTransaction.addToBackStack(null);
-		fragmentTransaction.commit();
+		getSupportFragmentManager().beginTransaction()
+			.replace(android.R.id.content, new GraphFragment())
+			.addToBackStack(null)
+			.commit();
 	}
 
 	public void onDashClick(View v)
 	{
-		FragmentManager fragmentManager = getSupportFragmentManager();
-		FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-		fragmentTransaction.replace(R.id.main, new DashFragment());
-		fragmentTransaction.addToBackStack(null);
-		fragmentTransaction.commit();
+		getSupportFragmentManager().beginTransaction()
+			.replace(android.R.id.content, new DashFragment())
+			.addToBackStack(null)
+			.commit();
 	}
 
 	static class IncomingHandler extends Handler

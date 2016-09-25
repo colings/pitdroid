@@ -27,16 +27,16 @@ import au.com.bytecode.opencsv.CSVReader;
 
 public class HeaterMeter
 {
-	static final String TAG = "HeaterMeter";
+	private final static String TAG = "HeaterMeter";
 
-	public final static int kNumProbes = 4;
+	final static int kNumProbes = 4;
 	private final static String kHistoryURL = "/luci/lm/hist";
 	private final static String kStatusURL = "/luci/lm/hmstatus";
 	private final static String kAuthURL = "/luci/admin/lm";
 
 	// No point in trying to sample faster than this, it's the update rate of the
 	// HeaterMeter hardware
-	public final static int kMinSampleTime = 1000;
+	final static int kMinSampleTime = 1000;
 	// Wait at least this long between full history refreshes
 	private final static long kMinHistoryUpdateTime = 5000;
 	// If we're updating and it's been more than this long since the last update, force a
@@ -44,33 +44,36 @@ public class HeaterMeter
 	private final static long kMaxUpdateDelta = 5000;
 
 	// User settings
-	public String[] mServerAddress = new String[2];
-	int mCurrentServer = 0;
-	public String mAdminPassword;
-	public int mBackgroundUpdateTime;
-	public boolean mAlwaysSoundAlarm = true;
-	public boolean mAlarmOnLostConnection = true;
-	public int[] mProbeLoAlarm = new int[kNumProbes];
-	public int[] mProbeHiAlarm = new int[kNumProbes];
-	public boolean mKeepScreenOn;
+	private String[] mServerAddress = new String[2];
+	private int mCurrentServer = 0;
+	private String mAdminPassword;
+	int mBackgroundUpdateTime;
+	boolean mAlwaysSoundAlarm = true;
+	boolean mAlarmOnLostConnection = true;
+	int[] mProbeLoAlarm = new int[kNumProbes];
+	int[] mProbeHiAlarm = new int[kNumProbes];
+	boolean mKeepScreenOn;
 
-	public ArrayList<Sample> mSamples = new ArrayList<Sample>();
-	public String[] mProbeNames = new String[kNumProbes];
-	public double[] mDegreesPerHour = new double[kNumProbes];
+	ArrayList<Sample> mSamples = new ArrayList<>();
+	String[] mProbeNames = new String[kNumProbes];
+	private double[] mDegreesPerHour = new double[kNumProbes];
 
-	public String mLastStatusMessage = null;
+	String mLastStatusMessage = null;
 
 	private long mLastUpdateTime = 0;
 	private long mLastHistoryTime = 0;
 	private int mNewestTime = 0;
 	private double mMinTemperature = Double.MAX_VALUE;
 	private double mMaxTemperature = Double.MIN_VALUE;
-	private ArrayList<Listener> mListeners = new ArrayList<Listener>();
+	private ArrayList<Listener> mListeners = new ArrayList<>();
 	private DecimalFormat mOneDec = new DecimalFormat("0.0");
 
 	// For authentication, the cookie that's passed, and the URL token
 	private String mAuthCookie;
 	private String mAuthToken;
+
+	private ArrayList<Sample> mSavedHistory;
+	private String[] mSavedProbeNames = new String[kNumProbes];
 
 	class Sample
 	{
@@ -122,9 +125,9 @@ public class HeaterMeter
 		}
 	}
 
-	public interface Listener
+	interface Listener
 	{
-		public void samplesUpdated(final NamedSample latestSample);
+		void samplesUpdated(final NamedSample latestSample);
 	}
 
 	public HeaterMeter()
@@ -135,32 +138,32 @@ public class HeaterMeter
 		}
 	}
 
-	public void addListener(Listener listener)
+	void addListener(Listener listener)
 	{
 		mListeners.add(listener);
 	}
 
-	public void removeListener(Listener listener)
+	void removeListener(Listener listener)
 	{
 		mListeners.remove(listener);
 	}
 
-	public double getNormalized(double temperature)
+	double getNormalized(double temperature)
 	{
 		return (temperature - mMinTemperature) / (mMaxTemperature - mMinTemperature);
 	}
 
-	public double getOriginal(double normalized)
+	double getOriginal(double normalized)
 	{
 		return (normalized * (mMaxTemperature - mMinTemperature)) + mMinTemperature;
 	}
 
-	public String formatTemperature(double temperature)
+	String formatTemperature(double temperature)
 	{
 		return mOneDec.format(temperature) + "°";
 	}
 
-	public boolean hasAlarms()
+	boolean hasAlarms()
 	{
 		for (int p = 0; p < kNumProbes; p++)
 		{
@@ -174,7 +177,7 @@ public class HeaterMeter
 	}
 
 	// Returns the text to display for a triggered alarm, or an empty string if the alarm isn't triggered.
-	public String formatAlarm(int probeIndex, double temperature)
+	String formatAlarm(int probeIndex, double temperature)
 	{
 		boolean hasLo = mProbeLoAlarm[probeIndex] > 0;
 		boolean hasHi = mProbeHiAlarm[probeIndex] > 0;
@@ -195,14 +198,9 @@ public class HeaterMeter
 		return "";
 	}
 
-	public double getDegreesPerHour(int probeIndex)
+	String getTemperatureChangeText(int probeIndex)
 	{
-		return mDegreesPerHour[probeIndex];
-	}
-
-	public String getTemperatureChangeText(int probeIndex)
-	{
-		double degreesPerHour = getDegreesPerHour(probeIndex);
+		double degreesPerHour = mDegreesPerHour[probeIndex];
 
 		// Don't display if there isn't clear increase, prevents wild numbers
 		if (degreesPerHour < 1.0)
@@ -226,7 +224,7 @@ public class HeaterMeter
 				minutesRemaining = minutesRemaining % 60;
 
 				timeStr += String.format(Locale.US, ", %d:%02d to %d°", hoursRemaining,
-						minutesRemaining, (int) mProbeHiAlarm[probeIndex]);
+						minutesRemaining, mProbeHiAlarm[probeIndex]);
 			}
 		}
 
@@ -236,7 +234,7 @@ public class HeaterMeter
 	/*
 	 * Return the minimum and maximum times from our samples
 	 */
-	public int getMinTime()
+	int getMinTime()
 	{
 		if (mSamples.size() > 0)
 			return mSamples.get(0).mTime;
@@ -244,7 +242,7 @@ public class HeaterMeter
 			return 0;
 	}
 
-	public int getMaxTime()
+	int getMaxTime()
 	{
 		if (mSamples.size() > 0)
 			return mSamples.get(mSamples.size() - 1).mTime;
@@ -264,7 +262,7 @@ public class HeaterMeter
 		mMaxTemperature = Math.max(mMaxTemperature, roundedUp);
 	}
 
-	public void initPreferences(SharedPreferences prefs)
+	void initPreferences(SharedPreferences prefs)
 	{
 		mServerAddress[0] = prefs.getString("server", "");
 		mServerAddress[1] = prefs.getString("altServer", "");
@@ -296,7 +294,7 @@ public class HeaterMeter
 		}
 	}
 
-	public void preferencesChanged(SharedPreferences prefs)
+	void preferencesChanged(SharedPreferences prefs)
 	{
 		SharedPreferences.Editor editor = prefs.edit();
 
@@ -312,7 +310,7 @@ public class HeaterMeter
 		editor.apply();
 	}
 
-	public NamedSample getSample()
+	NamedSample getSample()
 	{
 		BufferedReader reader = getUrlReader(kStatusURL);
 		if (reader != null)
@@ -323,7 +321,7 @@ public class HeaterMeter
 		return null;
 	}
 
-	public Object updateThread()
+	Object updateThread()
 	{
 		Object ret = null;
 
@@ -347,10 +345,9 @@ public class HeaterMeter
 				Log.v(TAG, "Getting history");
 			}
 
-			if (false)
+			if (mSavedHistory != null)
 			{
-				Log.v(TAG, "Generating random data");
-				ret = generateDummyData(1000, currentTime);
+				ret = mSavedHistory;
 			}
 			else
 			{
@@ -363,10 +360,19 @@ public class HeaterMeter
 		}
 		else
 		{
-			BufferedReader reader = getUrlReader(kStatusURL);
-			if (reader != null)
+			if (mSavedHistory != null)
 			{
-				ret = parseStatus(readerToString(reader));
+				NamedSample namedSample = new NamedSample(mSavedHistory.get(mSavedHistory.size() - 1));
+				namedSample.mProbeNames = mSavedProbeNames;
+				ret = namedSample;
+			}
+			else
+			{
+				BufferedReader reader = getUrlReader(kStatusURL);
+				if (reader != null)
+				{
+					ret = parseStatus(readerToString(reader));
+				}
 			}
 		}
 
@@ -388,7 +394,7 @@ public class HeaterMeter
 
 	// Suppress warning since we know it's an ArrayList of samples, even if Java doesn't
 	@SuppressWarnings("unchecked")
-	public void updateMain(Object data)
+	void updateMain(Object data)
 	{
 		NamedSample latestSample = null;
 
@@ -405,7 +411,7 @@ public class HeaterMeter
 			mListeners.get(l).samplesUpdated(latestSample);
 	}
 
-	public NamedSample parseStatus(String status)
+	private NamedSample parseStatus(String status)
 	{
 		try
 		{
@@ -417,8 +423,8 @@ public class HeaterMeter
 			sample.mTime = json.getInt("time");
 			sample.mSetPoint = json.getDouble("set");
 
-			JSONObject faninfo = json.getJSONObject("fan");
-			sample.mFanSpeed = faninfo.getDouble("c");
+			JSONObject fanInfo = json.getJSONObject("fan");
+			sample.mFanSpeed = fanInfo.getDouble("c");
 
 			sample.mLidOpen = json.getDouble("lid");
 
@@ -452,7 +458,6 @@ public class HeaterMeter
 		}
 		catch (JSONException e)
 		{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		}
@@ -488,53 +493,33 @@ public class HeaterMeter
 		return sample;
 	}
 
-	public ArrayList<Sample> generateDummyData(int numSamples, long currentTime)
+	void setHistory(Reader reader)
 	{
-		ArrayList<Sample> history = new ArrayList<Sample>();
-
-		currentTime /= 1000;
-
-		for (int j = 0; j < numSamples; j++)
+		BufferedReader br = new BufferedReader(reader);
+		try
 		{
-			Sample sample = new Sample();
-			sample.mTime = (int) (currentTime - (numSamples - j) * 170);
-
-			sample.mSetPoint = 225.0;
-
-			for (int i = 0; i < 1; i++)
+			String line = null;
+			for (int i = 0; i < kNumProbes; i++)
 			{
-				if (j == 0)
-				{
-					sample.mProbes[i] = sample.mSetPoint - 50 + (Math.random() * 100);
-				}
-				else if (j == 1)
-				{
-					sample.mProbes[i] = history.get(0).mProbes[i] - 4 + (Math.random() * 10);
-				}
-				else
-				{
-					int sloping = (history.get(j - 1).mProbes[i] < history.get(j - 2).mProbes[i]) ? -1
-							: 1;
-					sloping = (Math.random() > 0.95) ? sloping * -1 : sloping;
-					sample.mProbes[i] = history.get(j - 1).mProbes[i] + sloping
-							* (Math.random() * 2);
-				}
+				mSavedProbeNames[i] = br.readLine();
 			}
 
-			// Seventh is the fan speed/lid open
-			sample.mFanSpeed = 0.0;
-			sample.mLidOpen = 0.0;
-
-			history.add(sample);
+			mSavedHistory = parseHistory(br);
 		}
-		return history;
+		catch (IOException e)
+		{
+			if (BuildConfig.DEBUG)
+			{
+				Log.e(TAG, "IO exception", e);
+			}
+		}
 	}
 
-	public ArrayList<Sample> parseHistory(Reader reader)
+	private ArrayList<Sample> parseHistory(Reader reader)
 	{
 		try
 		{
-			ArrayList<Sample> history = new ArrayList<Sample>();
+			ArrayList<Sample> history = new ArrayList<>();
 
 			CSVReader csvReader = new CSVReader(reader);
 
@@ -568,7 +553,6 @@ public class HeaterMeter
 					else
 					{
 						sample.mLidOpen = 0.0;
-						sample.mFanSpeed = sample.mFanSpeed;
 					}
 
 					history.add(sample);
@@ -709,7 +693,7 @@ public class HeaterMeter
 			{
 				builder.append(line).append("\n");
 
-				// FIXME - http://code.google.com/p/android/issues/detail?id=14562
+				// http://code.google.com/p/android/issues/detail?id=14562
 				// For Android 2.x, reader gets closed and throws an exception
 				if (!reader.ready())
 				{
@@ -721,7 +705,6 @@ public class HeaterMeter
 		}
 		catch (IOException e)
 		{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		}
@@ -753,7 +736,6 @@ public class HeaterMeter
 		}
 		catch (IOException e)
 		{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -763,7 +745,7 @@ public class HeaterMeter
 		}
 	}
 
-	public boolean isAuthenticated()
+	private boolean isAuthenticated()
 	{
 		return mAuthCookie != null && mAuthToken != null;
 	}

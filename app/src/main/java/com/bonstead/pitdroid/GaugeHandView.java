@@ -214,7 +214,8 @@ public class GaugeHandView extends GaugeBaseView
 
 	public void setHandTarget(float value)
 	{
-		value = mGauge.clampValue(value);
+		if (mGauge != null)
+			value = mGauge.clampValue(value);
 
 		mHandTarget = value;
 		mHandInitialized = true;

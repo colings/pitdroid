@@ -12,9 +12,9 @@
         <com.bonstead.pitdroid.GaugeView
             android:id="@+id/thermometer"
             app:scaleColor="@color/scaleColor"
-            app:minValue="0"
-            app:maxValue="100"
-            app:tickValue="10"
+            app:minValue="50"
+            app:maxValue="350"
+            app:tickValue="50"
             app:openTicks="2"
             app:subTicks="9"
             app:backgroundColor2="#999a99"
