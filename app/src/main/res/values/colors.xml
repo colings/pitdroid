@@ -11,4 +11,5 @@
     <color name="scaleColor">#0f0f0f</color>
     <color name="gaugeBackground1">#f4f4f4</color>
     <color name="gaugeBackground2">#bababa</color>
+    <color name="setTemp">#cc0000</color>
 </resources>
