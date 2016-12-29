@@ -22,6 +22,7 @@
             app:backgroundColor2="@color/gaugeBackground2"
             app:scaleFontSize="5"
             app:scaleOffset="13"
+            app:legendOffset="18"
             app:rimSize="5"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
@@ -60,7 +61,8 @@
             app:handColor="@android:color/holo_red_dark"
             app:handStyle="Rim"
             app:handLength="20"
-            app:handWidth="30"/>
+            app:handWidth="30"
+            app:interpolateChanges="false"/>
     </RelativeLayout>
 
     <LinearLayout

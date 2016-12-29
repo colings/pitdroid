@@ -132,10 +132,6 @@ public class HeaterMeter
 
 	public HeaterMeter()
 	{
-		for (int p = 0; p < kNumProbes; p++)
-		{
-			mProbeNames[p] = "-";
-		}
 	}
 
 	void addListener(Listener listener)
@@ -712,6 +708,9 @@ public class HeaterMeter
 
 	public void changePitSetTemp(int newTemp)
 	{
+		if (!isAuthenticated())
+			return;
+
 		String setAddr = mServerAddress[mCurrentServer] + "/luci/;stok=" + mAuthToken + "/admin/lm/set?";
 		setAddr += "sp=" + newTemp;
 

@@ -7,13 +7,16 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.PathMeasure;
 import android.graphics.RadialGradient;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.View;
+
+import java.util.ArrayList;
 
 // Based on http://mindtherobot.com/blog/272/android-custom-ui-making-a-vintage-thermometer/
 public final class GaugeView extends GaugeBaseView
@@ -32,6 +35,10 @@ public final class GaugeView extends GaugeBaseView
 	private Paint mScalePaint;
 	private Paint mScaleTextPaint;
 	private RectF mScaleRect;
+
+	private Path mLegendPath;
+	private Paint mLegendTextPaint;
+	private boolean mLegendDirty = false;
 
 	private Paint mCachedBackgroundPaint;
 	// end drawing tools
@@ -53,7 +60,10 @@ public final class GaugeView extends GaugeBaseView
 	private float mScaleFontSize = 6.0f;
 	private float mScaleThickness = 0.5f;
 	private float mScaleOffset = 10.f;
+	private float mLegendOffset = 15.f;
 	private float mRimSize = 2.f;
+
+	private ArrayList<GaugeHandView> mHands = new ArrayList<>();
 
 	public GaugeView(Context context)
 	{
@@ -79,6 +89,7 @@ public final class GaugeView extends GaugeBaseView
 		mScaleFontSize = a.getFloat(R.styleable.GaugeView_scaleFontSize, mScaleFontSize);
 		mScaleThickness = a.getFloat(R.styleable.GaugeView_scaleThickness, mScaleThickness);
 		mScaleOffset = a.getFloat(R.styleable.GaugeView_scaleOffset, mScaleOffset);
+		mLegendOffset = a.getFloat(R.styleable.GaugeView_legendOffset, mLegendOffset);
 		mRimSize = a.getFloat(R.styleable.GaugeView_rimSize, mRimSize);
 		a.recycle();
 
@@ -98,6 +109,17 @@ public final class GaugeView extends GaugeBaseView
 		mTotalTicks = ((mMaxValue - mMinValue) / mTickValue) + mOpenTicks;
 
 		//mHandTarget = mMinValue;
+	}
+
+	public void registerHand(GaugeHandView hand)
+	{
+		mHands.add(hand);
+	}
+
+	public void nameChanged(GaugeHandView hand)
+	{
+		mLegendDirty = true;
+		invalidate();
 	}
 
 	private int roundToTick(int value)
@@ -177,9 +199,20 @@ public final class GaugeView extends GaugeBaseView
 		mScaleTextPaint.setTextAlign(Paint.Align.CENTER);
 
 		float scalePosition = mScaleOffset * relativeScale;
-		mScaleRect = new RectF();
-		mScaleRect.set(mFaceRect.left + scalePosition, mFaceRect.top + scalePosition,
-				mFaceRect.right - scalePosition, mFaceRect.bottom - scalePosition);
+		mScaleRect = new RectF(mFaceRect.left + scalePosition, mFaceRect.top + scalePosition,
+								mFaceRect.right - scalePosition, mFaceRect.bottom - scalePosition);
+
+		float legendPosition = mLegendOffset * relativeScale;
+		RectF legendRect = new RectF(mFaceRect.left + legendPosition, mFaceRect.top + legendPosition,
+									mFaceRect.right - legendPosition, mFaceRect.bottom - legendPosition);
+		mLegendPath = new Path();
+		mLegendPath.addArc(legendRect, -180.0f, -180.0f);
+
+		mLegendTextPaint = new Paint();
+		mLegendTextPaint.setAntiAlias(true);
+		mLegendTextPaint.setTextSize(mScaleFontSize * relativeScale);
+		mLegendTextPaint.setTypeface(Typeface.SANS_SERIF);
+		mLegendTextPaint.setTextScaleX(0.8f);
 
 		mCachedBackgroundPaint = new Paint();
 		mCachedBackgroundPaint.setFilterBitmap(true);
@@ -234,9 +267,64 @@ public final class GaugeView extends GaugeBaseView
 		canvas.restore();
 	}
 
+	private void drawLegend(Canvas canvas)
+	{
+		float space = mLegendTextPaint.measureText("  ");
+
+		float[] lengths = new float[mHands.size()];
+		float totalLength = 0.f;
+		boolean firstText = true;
+
+		for (int i = 0; i < mHands.size(); i++)
+		{
+			GaugeHandView hand = mHands.get(i);
+
+			if (hand.getName() != null)
+			{
+				if (firstText)
+				{
+					firstText = false;
+				}
+				else
+				{
+					totalLength += space;
+				}
+
+				lengths[i] = mLegendTextPaint.measureText(hand.getName());
+
+				totalLength += lengths[i];
+			}
+			else
+			{
+				lengths[i] = 0.f;
+			}
+		}
+
+		PathMeasure measure = new PathMeasure(mLegendPath, false);
+		float currentOffset = (measure.getLength() - totalLength) / 2.f;
+
+		for (int i = 0; i < mHands.size(); i++)
+		{
+			GaugeHandView hand = mHands.get(i);
+
+			if (hand.getName() != null)
+			{
+				mLegendTextPaint.setColor(hand.getColor());
+				canvas.drawTextOnPath(hand.getName(), mLegendPath, currentOffset, 0.f, mLegendTextPaint);
+				currentOffset += lengths[i] + space;
+			}
+		}
+	}
+
 	@Override
 	protected void onDraw(Canvas canvas)
 	{
+		if (mLegendDirty)
+		{
+			mLegendDirty = false;
+			regenerateBackground();
+		}
+
 		if (mCachedBackground == null)
 		{
 			Log.w(TAG, "Background not created");
@@ -272,6 +360,8 @@ public final class GaugeView extends GaugeBaseView
 			backgroundCanvas.drawOval(mFaceRect, mRimShadowPaint);
 
 		drawScale(backgroundCanvas);
+
+		drawLegend(backgroundCanvas);
 	}
 
 	public float clampValue(float value)

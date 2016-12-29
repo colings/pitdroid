@@ -14,6 +14,7 @@
         <attr name="scaleFontSize" format="float" />
         <attr name="scaleThickness" format="float" />
         <attr name="scaleOffset" format="float" />
+        <attr name="legendOffset" format="float" />
         <attr name="rimSize" format="float" />
     </declare-styleable>
     <declare-styleable name="GaugeHandView">
@@ -25,5 +26,6 @@
             <enum name="Tick" value="1"/>
             <enum name="Rim" value="2"/>
         </attr>
+        <attr name="interpolateChanges" format="boolean" />
     </declare-styleable>
 </resources>

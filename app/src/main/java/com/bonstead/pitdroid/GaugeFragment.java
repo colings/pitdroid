@@ -14,11 +14,13 @@ import com.bonstead.pitdroid.HeaterMeter.NamedSample;
 public class GaugeFragment extends Fragment implements HeaterMeter.Listener
 {
 	private GaugeHandView[] mProbeHands = new GaugeHandView[HeaterMeter.kNumProbes];
+	private GaugeHandView mSetPoint;
 
 	private HeaterMeter mHeaterMeter;
 	private TextView mLastUpdate;
 	private int mServerTime = 0;
 	private Time mTime = new Time();
+	private boolean mSettingPit = false;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
@@ -31,6 +33,27 @@ public class GaugeFragment extends Fragment implements HeaterMeter.Listener
 		mProbeHands[1] = (GaugeHandView) view.findViewById(R.id.probe1Hand);
 		mProbeHands[2] = (GaugeHandView) view.findViewById(R.id.probe2Hand);
 		mProbeHands[3] = (GaugeHandView) view.findViewById(R.id.probe3Hand);
+
+		mSetPoint = (GaugeHandView) view.findViewById(R.id.setPoint);
+		mSetPoint.mListener = new GaugeHandView.Listener()
+		{
+			@Override
+			public void onValueChanged(final float value)
+			{
+				mSettingPit = true;
+
+				Thread trd = new Thread(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						mHeaterMeter.changePitSetTemp((int)value);
+						mSettingPit = false;
+					}
+				});
+				trd.start();
+			}
+		};
 
 		mLastUpdate = (TextView) view.findViewById(R.id.lastUpdate);
 
@@ -64,7 +87,16 @@ public class GaugeFragment extends Fragment implements HeaterMeter.Listener
 					mProbeHands[p].setVisibility(View.VISIBLE);
 					mProbeHands[p].setHandTarget((float) latestSample.mProbes[p]);
 				}
+
+				// Don't set the name on the pit temp hand, we don't want to show it in the legend
+				if (p > 0)
+				{
+					mProbeHands[p].setName(latestSample.mProbeNames[p]);
+				}
 			}
+
+			if (!Double.isNaN(latestSample.mSetPoint) && !mSetPoint.isDragging() && !mSettingPit)
+				mSetPoint.setHandTarget((float)latestSample.mSetPoint);
 
 			// Update the last update time
 			if (mServerTime < latestSample.mTime)

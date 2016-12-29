@@ -19,6 +19,8 @@ public class GaugeHandView extends GaugeBaseView
 {
 	private static final String TAG = GaugeHandView.class.getSimpleName();
 
+	private String mName;
+
 	private GaugeView mGauge;
 
 	private Paint mHandPaint;
@@ -37,10 +39,18 @@ public class GaugeHandView extends GaugeBaseView
 	private float mHandWidth = 15.f;
 	private float mHandLength = 95.f;
 	private int mHandStyle = 0;
+	private boolean mInterpolateChanges = true;
 
 	private float mPreviousRotation = 0.f;
 	private boolean mDragging = false;
-	
+
+	interface Listener
+	{
+		void onValueChanged(final float value);
+	}
+
+	public Listener mListener;
+
 	public GaugeHandView(Context context)
 	{
 		super(context);
@@ -55,6 +65,7 @@ public class GaugeHandView extends GaugeBaseView
 		mHandLength = a.getFloat(R.styleable.GaugeHandView_handLength, mHandLength);
 		mHandWidth = a.getFloat(R.styleable.GaugeHandView_handWidth, mHandWidth);
 		mHandStyle = a.getInteger(R.styleable.GaugeHandView_handStyle, mHandStyle);
+		mInterpolateChanges = a.getBoolean(R.styleable.GaugeHandView_interpolateChanges, mInterpolateChanges);
 		a.recycle();
 	}
 
@@ -102,6 +113,7 @@ public class GaugeHandView extends GaugeBaseView
 			if (view instanceof GaugeView)
 			{
 				mGauge = (GaugeView) view;
+				mGauge.registerHand(this);
 				break;
 			}
 		}
@@ -267,6 +279,11 @@ public class GaugeHandView extends GaugeBaseView
 
 		case MotionEvent.ACTION_UP:
 			mDragging = false;
+
+			if (mListener != null)
+			{
+				mListener.onValueChanged(mHandPosition);
+			}
 			break;
 		}
 
@@ -284,6 +301,12 @@ public class GaugeHandView extends GaugeBaseView
 	{
 		if (!handNeedsToMove())
 		{
+			return;
+		}
+
+		if (!mInterpolateChanges)
+		{
+			mHandPosition = mHandTarget;
 			return;
 		}
 
@@ -323,6 +346,27 @@ public class GaugeHandView extends GaugeBaseView
 		}
 	}
 
+	public void setName(String name)
+	{
+		if (	(mName == null && name != null) ||
+				(mName != null && name == null) ||
+				(mName != null && name != null && !mName.equals(name)))
+		{
+			mName = name;
+			mGauge.nameChanged(this);
+		}
+	}
+
+	public String getName()
+	{
+		return mName;
+	}
+
+	public int getColor()
+	{
+		return mHandColor;
+	}
+
 	public void setHandTarget(float value)
 	{
 		if (mGauge != null)
@@ -331,5 +375,10 @@ public class GaugeHandView extends GaugeBaseView
 		mHandTarget = value;
 		mHandInitialized = true;
 		invalidate();
+	}
+
+	public boolean isDragging()
+	{
+		return mDragging;
 	}
 }

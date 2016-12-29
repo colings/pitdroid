@@ -40,12 +40,5 @@
         android:key="keepScreenOn"
         android:summary="@string/keepScreenOnSummary"
         android:title="@string/keepScreenOnTitle" />
-    
-    <PreferenceCategory android:title="Admin Settings" >
-        <EditTextPreference
-            android:inputType="numberDecimal"
-            android:key="pitSetTemp"
-            android:title="@string/pitSetTempTitle" android:summary="@string/pitSetTempSummary"/>
-    </PreferenceCategory>
 
 </PreferenceScreen>

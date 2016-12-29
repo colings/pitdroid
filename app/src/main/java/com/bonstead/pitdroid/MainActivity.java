@@ -71,7 +71,7 @@ public class MainActivity extends FragmentActivity implements
 		prefs.registerOnSharedPreferenceChangeListener(this);
 
 		// Uncomment to use saved sample data instead of live, for testing purposes
-		mHeaterMeter.setHistory(new InputStreamReader(getResources().openRawResource(R.raw.sample_data)));
+		//mHeaterMeter.setHistory(new InputStreamReader(getResources().openRawResource(R.raw.sample_data)));
 
 		changeScreenOn();
 
