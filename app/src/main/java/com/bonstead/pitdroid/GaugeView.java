@@ -279,14 +279,28 @@ public final class GaugeView extends GaugeBaseView
 		return Math.max(mMinValue, Math.min(mMaxValue, value));
 	}
 
+	// Converts a gauge value to a 0-360 degree angle value
+	// 0 = gauge absolute min value (including open ticks), 360 = gauge absolute max value
 	public float valueToAngle(float value)
 	{
-		float clampedVal = Math.max(mMinValue, Math.min(mMaxValue, value));
+		float clampedVal = clampValue(value);
 
 		float actualMin = mMinValue - (mOpenTicks * mTickValue * 0.5f);
 		float actualMax = mMaxValue + (mOpenTicks * mTickValue * 0.5f);
 		float scalar = (clampedVal - actualMin) / (actualMax - actualMin);
-		return 180.f + (scalar * 360.f);
+		return scalar * 360.f;
+	}
+
+	public float angleToValue(float degrees)
+	{
+		float clampedVal = degrees % 360.f;
+		if (clampedVal < 0.f)
+			clampedVal = 360.f - clampedVal;
+
+		float actualMin = mMinValue - (mOpenTicks * mTickValue * 0.5f);
+		float actualMax = mMaxValue + (mOpenTicks * mTickValue * 0.5f);
+		float scalar = (clampedVal / 360.f);
+		return actualMin + ((actualMax - actualMin) * scalar);
 	}
 
 	public float getScaleDiameter()

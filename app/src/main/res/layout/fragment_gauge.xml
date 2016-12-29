@@ -53,6 +53,14 @@
             app:handStyle="Tick"
             app:handLength="10"
             app:handWidth="10"/>
+        <com.bonstead.pitdroid.GaugeHandView
+            android:id="@+id/setPoint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:handColor="@android:color/holo_red_dark"
+            app:handStyle="Rim"
+            app:handLength="20"
+            app:handWidth="30"/>
     </RelativeLayout>
 
     <LinearLayout

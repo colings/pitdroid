@@ -23,6 +23,7 @@
         <attr name="handStyle" format="enum">
             <enum name="Wedge" value="0"/>
             <enum name="Tick" value="1"/>
+            <enum name="Rim" value="2"/>
         </attr>
     </declare-styleable>
 </resources>

@@ -4,11 +4,14 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PointF;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -35,6 +38,9 @@ public class GaugeHandView extends GaugeBaseView
 	private float mHandLength = 95.f;
 	private int mHandStyle = 0;
 
+	private float mPreviousRotation = 0.f;
+	private boolean mDragging = false;
+	
 	public GaugeHandView(Context context)
 	{
 		super(context);
@@ -132,7 +138,7 @@ public class GaugeHandView extends GaugeBaseView
 			mHandPath.lineTo((0.5f - halfWidth) * scale, (0.5f + backLength) * scale);
 			mHandPath.close();
 		}
-		else
+		else if (mHandStyle == 1)
 		{
 			final float yTip = (scale - mGauge.getScaleDiameter()) * 0.5f;
 			final float length = mHandLength * handLengthScalar;
@@ -141,6 +147,17 @@ public class GaugeHandView extends GaugeBaseView
 			mHandPath.lineTo((0.5f + halfWidth * 0.2f) * scale, yTip);
 			mHandPath.lineTo((0.5f + halfWidth) * scale, yTip + (length * scale));
 			mHandPath.lineTo((0.5f - halfWidth) * scale, yTip + (length * scale));
+			mHandPath.close();
+		}
+		else
+		{
+			final float yTip = scale * 0.5f;
+			final float length = mHandLength * handLengthScalar;
+
+			mHandPath.moveTo((0.5f - halfWidth) * scale, 0);
+			mHandPath.lineTo((0.5f + halfWidth) * scale, 0);
+			mHandPath.lineTo((0.5f + halfWidth * 0.2f) * scale, (length * scale));
+			mHandPath.lineTo((0.5f - halfWidth * 0.2f) * scale, (length * scale));
 			mHandPath.close();
 		}
 
@@ -158,13 +175,15 @@ public class GaugeHandView extends GaugeBaseView
 		if (mHandInitialized)
 		{
 			float scale = (float) getWidth();
-			float handAngle = mGauge.valueToAngle(mHandPosition);
+			float handAngle = 180.f + mGauge.valueToAngle(mHandPosition);
 
 			canvas.save(Canvas.MATRIX_SAVE_FLAG);
 			canvas.rotate(handAngle, 0.5f * scale, 0.5f * scale);
 
 			canvas.drawPath(mHandPath, mHandPaint);
-			canvas.drawCircle(0.5f * scale, 0.5f * scale, 0.01f * scale, mHandScrewPaint);
+
+			if (mHandStyle == 0)
+				canvas.drawCircle(0.5f * scale, 0.5f * scale, 0.01f * scale, mHandScrewPaint);
 
 			canvas.restore();
 		}
@@ -173,6 +192,87 @@ public class GaugeHandView extends GaugeBaseView
 		{
 			moveHand();
 		}
+	}
+
+	private float positionToRotation(float x, float y)
+	{
+		double centerX = getWidth() / 2;
+		double centerY = getHeight() / 2;
+
+		double adjustedX = x - centerX;
+		double adjustedY = y - centerY;
+
+		double rad = Math.atan2(-adjustedY, adjustedX);
+
+		double deg = Math.toDegrees(rad);
+
+		// atan2 returns values in the -180 to 180 range, we want it 0-360
+		deg += 180;
+
+		// Polar coordinates are counter-clockwise, switch to clockwise
+		deg = 360 - deg;
+
+		// Polar coordinates put 0 at the right side, we want it at the bottom
+		deg += 90;
+
+		// Bring the value back into the 0-360 range
+		deg = deg % 360;
+
+		return (float) deg;
+	}
+
+	@Override
+	public boolean onTouchEvent(MotionEvent event)
+	{
+		if (mHandStyle != 2)
+			return false;
+
+		float curRotation = positionToRotation(event.getX(), event.getY());
+
+		switch (event.getAction())
+		{
+		case MotionEvent.ACTION_DOWN:
+			final float handRotation = mGauge.valueToAngle(mHandPosition);
+			final float scale = getWidth();
+			final float handLengthScalar = (mGauge.getScaleDiameter() / scale) * 0.5f * 0.01f;
+			final float width = mHandWidth * handLengthScalar;
+			final float length = mHandLength * handLengthScalar;
+
+			Matrix matrix = new Matrix();
+			matrix.preRotate(180.f + handRotation, scale / 2, scale / 2);
+
+			float[] points = new float[] { scale / 2, (length * scale) / 2 };
+			matrix.mapPoints(points);
+
+			float dist = PointF.length(event.getX() - points[0], event.getY() - points[1]);
+
+			if (dist <= (width * scale * 2))
+			{
+				mDragging = true;
+			}
+			break;
+
+		case MotionEvent.ACTION_MOVE:
+			if (mDragging)
+			{
+				float delta = curRotation - mPreviousRotation;
+
+				float newAngle = mGauge.valueToAngle(mHandPosition) + delta;
+				mHandPosition = mGauge.angleToValue(newAngle);
+				mHandTarget = mHandPosition;
+
+				invalidate();
+			}
+			break;
+
+		case MotionEvent.ACTION_UP:
+			mDragging = false;
+			break;
+		}
+
+		mPreviousRotation = curRotation;
+
+		return true;
 	}
 
 	private boolean handNeedsToMove()
