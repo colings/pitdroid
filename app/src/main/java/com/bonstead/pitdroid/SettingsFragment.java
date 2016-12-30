@@ -1,14 +1,16 @@
 package com.bonstead.pitdroid;
 
 import android.os.Bundle;
-import android.support.v7.preference.PreferenceFragmentCompat;
+import android.preference.PreferenceFragment;
 
-public class SettingsFragment extends PreferenceFragmentCompat
+public class SettingsFragment extends PreferenceFragment
 {
 	@Override
-	public void onCreatePreferences(Bundle savedInstanceState, String rootKey)
+	public void onCreate(Bundle savedInstanceState)
 	{
+		super.onCreate(savedInstanceState);
+
 		// Load the preferences from an XML resource
-		setPreferencesFromResource(R.xml.preferences, rootKey);
+		addPreferencesFromResource(R.xml.preferences);
 	}
 }

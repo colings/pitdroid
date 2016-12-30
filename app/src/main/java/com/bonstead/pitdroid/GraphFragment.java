@@ -4,11 +4,10 @@ import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import android.app.Fragment;
 import android.graphics.Color;
 import android.graphics.PointF;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -148,8 +147,8 @@ public class GraphFragment extends Fragment implements HeaterMeter.Listener,
 			private java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("h:mm a", Locale.US);
 
 			@Override
-			public StringBuffer format(Object obj, @NonNull StringBuffer toAppendTo,
-									   @NonNull java.text.FieldPosition pos)
+			public StringBuffer format(Object obj, StringBuffer toAppendTo,
+									   java.text.FieldPosition pos)
 			{
 				// Because our timestamps are in seconds and SimpleDateFormat expects
 				// milliseconds we multiply our timestamp by 1000:
@@ -159,7 +158,7 @@ public class GraphFragment extends Fragment implements HeaterMeter.Listener,
 			}
 
 			@Override
-			public Object parseObject(String source, @NonNull java.text.ParsePosition pos)
+			public Object parseObject(String source, java.text.ParsePosition pos)
 			{
 				return null;
 			}
@@ -170,8 +169,8 @@ public class GraphFragment extends Fragment implements HeaterMeter.Listener,
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public StringBuffer format(Object obj, @NonNull StringBuffer toAppendTo,
-									   @NonNull java.text.FieldPosition pos)
+			public StringBuffer format(Object obj, StringBuffer toAppendTo,
+									   java.text.FieldPosition pos)
 			{
 				double normalizedTemp = ((Number) obj).doubleValue();
 				double temp = mHeaterMeter.getOriginal(normalizedTemp);
@@ -180,7 +179,7 @@ public class GraphFragment extends Fragment implements HeaterMeter.Listener,
 			}
 
 			@Override
-			public Object parseObject(String source, @NonNull java.text.ParsePosition pos)
+			public Object parseObject(String source, java.text.ParsePosition pos)
 			{
 				return null;
 			}

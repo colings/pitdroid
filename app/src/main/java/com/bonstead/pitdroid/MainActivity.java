@@ -1,12 +1,12 @@
 package com.bonstead.pitdroid;
 
-import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -17,15 +17,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-public class MainActivity extends FragmentActivity implements
+public class MainActivity extends Activity implements
 		OnSharedPreferenceChangeListener
 {
 	static final String TAG = "MainActivity";
@@ -56,10 +53,10 @@ public class MainActivity extends FragmentActivity implements
 		}
 
 		// If we don't have a fragment (being opened, not recreated), open the gauge fragment by default
-		if (getSupportFragmentManager().findFragmentById(android.R.id.content) == null)
+		if (getFragmentManager().findFragmentById(android.R.id.content) == null)
 		{
 			// Display the fragment as the main content.
-			getSupportFragmentManager().beginTransaction()
+			getFragmentManager().beginTransaction()
 					.add(android.R.id.content, new GaugeFragment())
 					.commit();
 		}
@@ -80,7 +77,7 @@ public class MainActivity extends FragmentActivity implements
 
 	public void onSettingsClick(View v)
 	{
-		getSupportFragmentManager().beginTransaction()
+		getFragmentManager().beginTransaction()
 			.replace(android.R.id.content, new SettingsFragment())
 			.addToBackStack(null)
 			.commit();
@@ -88,7 +85,7 @@ public class MainActivity extends FragmentActivity implements
 
 	public void onGraphClick(View v)
 	{
-		getSupportFragmentManager().beginTransaction()
+		getFragmentManager().beginTransaction()
 			.replace(android.R.id.content, new GraphFragment())
 			.addToBackStack(null)
 			.commit();
@@ -96,7 +93,7 @@ public class MainActivity extends FragmentActivity implements
 
 	public void onDashClick(View v)
 	{
-		getSupportFragmentManager().beginTransaction()
+		getFragmentManager().beginTransaction()
 			.replace(android.R.id.content, new DashFragment())
 			.addToBackStack(null)
 			.commit();

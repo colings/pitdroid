@@ -21,17 +21,16 @@
             android:layout_height="wrap_content"
             android:paddingLeft="10sp"/>
     </LinearLayout>     
-    <android.support.v7.widget.GridLayout
+    <GridLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/GridLayout1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:columnCount="3" >
+        android:columnCount="3" >
     
         <ImageButton
             android:id="@+id/probe0Alarm"
-            app:layout_rowSpan="2"
+            android:layout_rowSpan="2"
             android:contentDescription="@string/alarm"
             android:src="@mipmap/ic_alarm_unset" />
     
@@ -47,13 +46,13 @@
     
         <TextView
             android:id="@+id/probe0Delta"
-            app:layout_columnSpan="2"
+            android:layout_columnSpan="2"
             android:text="0.0° above set temp"
             android:textAppearance="?android:attr/textAppearanceSmall" />
     
         <ImageButton
             android:id="@+id/probe1Alarm"
-            app:layout_rowSpan="2"
+            android:layout_rowSpan="2"
             android:contentDescription="@string/alarm"
             android:src="@mipmap/ic_alarm_unset" />
     
@@ -69,13 +68,13 @@
     
         <TextView
             android:id="@+id/probe1Time"
-            app:layout_columnSpan="2"
+            android:layout_columnSpan="2"
             android:text="0:00 to 0"
             android:textAppearance="?android:attr/textAppearanceSmall" />
         
         <ImageButton
             android:id="@+id/probe2Alarm"
-            app:layout_rowSpan="2"
+            android:layout_rowSpan="2"
             android:contentDescription="@string/alarm"
             android:src="@mipmap/ic_alarm_unset" />
     
@@ -91,13 +90,13 @@
     
          <TextView
              android:id="@+id/probe2Time"
-             app:layout_columnSpan="2"
+             android:layout_columnSpan="2"
              android:text="0:00 to 0"
              android:textAppearance="?android:attr/textAppearanceSmall" />
     
         <ImageButton
             android:id="@+id/probe3Alarm"
-            app:layout_rowSpan="2"
+            android:layout_rowSpan="2"
             android:contentDescription="@string/alarm"
             android:src="@mipmap/ic_alarm_unset" />
     
@@ -113,11 +112,11 @@
     
         <TextView
             android:id="@+id/probe3Time"
-            app:layout_columnSpan="2"
+            android:layout_columnSpan="2"
             android:text="0:00 to 0"
             android:textAppearance="?android:attr/textAppearanceSmall" />
     
-        <android.support.v7.widget.Space
+        <Space
             android:id="@+id/space2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
@@ -133,6 +132,6 @@
             android:textAppearance="?android:attr/textAppearanceLarge" />
     
     
-    </android.support.v7.widget.GridLayout>
+    </GridLayout>
   
 </RelativeLayout>

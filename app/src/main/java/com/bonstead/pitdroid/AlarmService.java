@@ -3,6 +3,7 @@ package com.bonstead.pitdroid;
 import com.bonstead.pitdroid.HeaterMeter.NamedSample;
 
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
@@ -13,8 +14,6 @@ import android.net.Uri;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
 public class AlarmService extends Service
@@ -131,7 +130,7 @@ public class AlarmService extends Service
 		PendingIntent notificationPendingIntent = PendingIntent.getActivity(this, 0, notificationIntent,
 				PendingIntent.FLAG_UPDATE_CURRENT);
 
-		NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+		Notification.Builder builder = new Notification.Builder(this)
 				.setSmallIcon(R.mipmap.ic_status)
 				.setContentTitle("PitDroid Monitor")
 				.setContentText(contentText)
@@ -186,7 +185,7 @@ public class AlarmService extends Service
 			Intent alarmIntent = new Intent(this, MainActivity.class);
 			PendingIntent alarmPendingIntent = PendingIntent.getActivity(this, 0, alarmIntent, 0);
 
-			NotificationCompat.Builder alarmBuilder = new NotificationCompat.Builder(this)
+			Notification.Builder alarmBuilder = new Notification.Builder(this)
 					.setSmallIcon(R.mipmap.ic_status)
 					.setContentTitle("PitDroid Alarm")
 					.setContentText(contentText)
@@ -219,7 +218,7 @@ public class AlarmService extends Service
 				}
 			}
 
-			NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+			NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);;
 
 			// Build the notification and issues it with notification manager.
 			notificationManager.notify(kAlarmNotificationId, alarmBuilder.build());
