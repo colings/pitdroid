@@ -7,9 +7,9 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import android.app.Activity;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
@@ -22,15 +22,13 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-public class MainActivity extends Activity implements
-		OnSharedPreferenceChangeListener
+public class MainActivity extends Activity implements OnSharedPreferenceChangeListener
 {
 	static final String TAG = "MainActivity";
 
 	private final ScheduledExecutorService mScheduler = Executors.newScheduledThreadPool(1);
 	private ScheduledFuture<?> mUpdateTimer = null;
 	private HeaterMeter mHeaterMeter = null;
-	private PendingIntent mServiceAlarm = null;
 	private boolean mAllowServiceShutdown = false;
 
 	private final Runnable mUpdate = new Runnable()
@@ -70,9 +68,83 @@ public class MainActivity extends Activity implements
 		// Uncomment to use saved sample data instead of live, for testing purposes
 		//mHeaterMeter.setHistory(new InputStreamReader(getResources().openRawResource(R.raw.sample_data)));
 
-		changeScreenOn();
-
+		updateScreenOn();
 		updateAlarmService();
+
+		// Sent when the close button is pressed on the alarm service status message
+		if (getIntent().hasExtra("close"))
+		{
+			showCloseMessage();
+		}
+	}
+
+	@Override
+	protected void onPause()
+	{
+		super.onPause();
+
+		if (BuildConfig.DEBUG)
+		{
+			Log.v(TAG, "onPause");
+		}
+
+		if (mUpdateTimer != null)
+		{
+			if (BuildConfig.DEBUG)
+			{
+				Log.v(TAG, "Canceling update timer");
+			}
+
+			mUpdateTimer.cancel(false);
+			mUpdateTimer = null;
+		}
+	}
+
+	@Override
+	protected void onPostResume()
+	{
+		super.onPostResume();
+
+		if (BuildConfig.DEBUG)
+		{
+			Log.v(TAG, "onPostResume");
+		}
+
+		if (mUpdateTimer == null)
+		{
+			if (BuildConfig.DEBUG)
+			{
+				Log.v(TAG, "Starting update timer");
+			}
+
+			mUpdateTimer = mScheduler.scheduleAtFixedRate(mUpdate, 0, HeaterMeter.kMinSampleTime, TimeUnit.MILLISECONDS);
+		}
+		else
+		{
+			if (BuildConfig.DEBUG)
+			{
+				Log.v(TAG, "Update timer already set, skipping");
+			}
+		}
+	}
+
+	@Override
+	protected void onDestroy()
+	{
+		super.onDestroy();
+
+		if (BuildConfig.DEBUG)
+		{
+			Log.v(TAG, "onDestroy");
+		}
+
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+		prefs.unregisterOnSharedPreferenceChangeListener(this);
+
+		if (mAllowServiceShutdown)
+		{
+			stopAlarmService();
+		}
 	}
 
 	public void onSettingsClick(View v)
@@ -133,12 +205,15 @@ public class MainActivity extends Activity implements
 
 	private final IncomingHandler mHandler = new IncomingHandler(this);
 
-	/**
-	 * Change screen on setting
-	 */
-	private void changeScreenOn()
+	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
 	{
-		// keep screen on
+		// If any preferences change, have the HeaterMeter re-read them all
+		mHeaterMeter.initPreferences(sharedPreferences);
+		updateScreenOn();
+	}
+
+	private void updateScreenOn()
+	{
 		if (mHeaterMeter.mKeepScreenOn)
 		{
 			getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -146,32 +221,6 @@ public class MainActivity extends Activity implements
 		else
 		{
 			getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-		}
-	}
-
-	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
-	{
-		// If any preferences change, have the HeaterMeter re-read them all
-		mHeaterMeter.initPreferences(sharedPreferences);
-		changeScreenOn();
-	}
-
-	@Override
-	protected void onDestroy()
-	{
-		super.onDestroy();
-
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-		prefs.unregisterOnSharedPreferenceChangeListener(this);
-
-		if (BuildConfig.DEBUG)
-		{
-			Log.v(TAG, "onDestroy");
-		}
-
-		if (mAllowServiceShutdown)
-		{
-			stopAlarmService();
 		}
 	}
 
@@ -190,139 +239,44 @@ public class MainActivity extends Activity implements
 
 	private void startAlarmService()
 	{
-		if (mServiceAlarm == null)
+		if (BuildConfig.DEBUG)
 		{
-			if (BuildConfig.DEBUG)
-			{
-				Log.v(TAG, "Start alarm service");
-			}
-
-			Intent alarmIntent = new Intent(this, AlarmService.class);
-			mServiceAlarm = PendingIntent.getService(this, 0, alarmIntent, 0);
-			AlarmManager alarm = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-			alarm.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),
-					mHeaterMeter.mBackgroundUpdateTime * 60 * 1000, mServiceAlarm);
+			Log.v(TAG, "Start alarm service");
 		}
+
+		startService(new Intent(this, AlarmService.class));
 	}
 
 	private void stopAlarmService()
 	{
-		if (mServiceAlarm != null)
+		if (BuildConfig.DEBUG)
 		{
-			if (BuildConfig.DEBUG)
-			{
-				Log.v(TAG, "Stop alarm service");
-			}
-
-			AlarmManager alarm = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-			alarm.cancel(mServiceAlarm);
-			mServiceAlarm = null;
+			Log.v(TAG, "Stop alarm service");
 		}
 
 		stopService(new Intent(this, AlarmService.class));
 	}
 
-	@Override
-	protected void onPause()
+	private void showCloseMessage()
 	{
-		super.onPause();
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-		if (BuildConfig.DEBUG)
-		{
-			Log.v(TAG, "onPause");
-		}
+		builder.setTitle("Confirm");
+		builder.setMessage("You have alarms set, are you sure you want to exit?");
 
-		if (mUpdateTimer != null)
+		builder.setPositiveButton("Yes", new DialogInterface.OnClickListener()
 		{
-			if (BuildConfig.DEBUG)
+			public void onClick(DialogInterface dialog, int which)
 			{
-				Log.v(TAG, "Canceling update timer");
-			}
-
-			mUpdateTimer.cancel(false);
-			mUpdateTimer = null;
-		}
-	}
-
-	@Override
-	protected void onPostResume()
-	{
-		super.onPostResume();
-
-		if (BuildConfig.DEBUG)
-		{
-			Log.v(TAG, "onPostResume");
-		}
-
-		if (mUpdateTimer == null)
-		{
-			if (BuildConfig.DEBUG)
-			{
-				Log.v(TAG, "Starting update timer");
-			}
-
-			mUpdateTimer = mScheduler.scheduleAtFixedRate(mUpdate, 0, HeaterMeter.kMinSampleTime,
-					TimeUnit.MILLISECONDS);
-		}
-		else
-		{
-			if (BuildConfig.DEBUG)
-			{
-				Log.v(TAG, "Update timer already set, skipping");
-			}
-		}
-	}
-
-//	@Override
-//	public boolean onCreateOptionsMenu(Menu menu)
-//	{
-//		// Inflate the menu; this adds items to the action bar if it is present.
-//		getMenuInflater().inflate(R.menu.fragment_main, menu);
-//		super.onCreateOptionsMenu(menu);
-//		return true;
-//	}
-/*
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item)
-	{
-		// Handle item selection
-		switch (item.getItemId())
-		{
-		case R.id.menu_settings:
-			startActivity(new Intent(this, SettingsFragment.class));
-			return true;
-		case R.id.menu_exit:
-			if (mHeaterMeter.hasAlarms())
-			{
-				AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-				builder.setTitle("Confirm");
-				builder.setMessage("You have alarms set, are you sure you want to exit?");
-
-				builder.setPositiveButton("Yes", new DialogInterface.OnClickListener()
-				{
-					public void onClick(DialogInterface dialog, int which)
-					{
-						mAllowServiceShutdown = true;
-						dialog.dismiss();
-						finish();
-					}
-
-				});
-
-				builder.setNegativeButton("No", null);
-
-				AlertDialog alert = builder.create();
-				alert.show();
-			}
-			else
-			{
+				mAllowServiceShutdown = true;
+				dialog.dismiss();
 				finish();
 			}
-			return true;
-		default:
-			return super.onOptionsItemSelected(item);
-		}
+		});
+
+		builder.setNegativeButton("No", null);
+
+		AlertDialog alert = builder.create();
+		alert.show();
 	}
-	*/
 }

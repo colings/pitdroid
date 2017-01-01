@@ -15,6 +15,8 @@ import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
 
 import java.util.ArrayList;
 
@@ -63,8 +65,6 @@ public final class GaugeView extends GaugeBaseView
 	private float mLegendOffset = 15.f;
 	private float mRimSize = 2.f;
 
-	private ArrayList<GaugeHandView> mHands = new ArrayList<>();
-
 	public GaugeView(Context context)
 	{
 		super(context);
@@ -107,13 +107,13 @@ public final class GaugeView extends GaugeBaseView
 		}
 
 		mTotalTicks = ((mMaxValue - mMinValue) / mTickValue) + mOpenTicks;
-
-		//mHandTarget = mMinValue;
 	}
 
-	public void registerHand(GaugeHandView hand)
+	public void updateRange(int minValue, int maxValue)
 	{
-		mHands.add(hand);
+		mMinValue = minValue;
+		mMaxValue = maxValue;
+		init();
 	}
 
 	public void nameChanged(GaugeHandView hand)
@@ -133,7 +133,10 @@ public final class GaugeView extends GaugeBaseView
 		float scale = getWidth();
 		float relativeScale = scale / 100.f;
 
-		mGaugeRect = new RectF(0.f, 0.f, scale, scale);
+		// The rim has a thickness, so decrease the draw rect by that to ensure it doesn't get clipped
+		float rimThickness = mScaleThickness * relativeScale * 0.5f;
+
+		mGaugeRect = new RectF(rimThickness, rimThickness, scale - rimThickness, scale - rimThickness);
 
 		// the linear gradient is a bit skewed for realism
 		mBezelPaint = new Paint();
@@ -269,6 +272,18 @@ public final class GaugeView extends GaugeBaseView
 
 	private void drawLegend(Canvas canvas)
 	{
+		ArrayList<GaugeHandView> mHands = new ArrayList<>();
+
+		ViewGroup row = (ViewGroup) getParent();
+		for (int i = 0; i < row.getChildCount(); i++)
+		{
+			View view = row.getChildAt(i);
+			if (view instanceof GaugeHandView)
+			{
+				mHands.add((GaugeHandView) view);
+			}
+		}
+
 		float space = mLegendTextPaint.measureText("  ");
 
 		float[] lengths = new float[mHands.size()];

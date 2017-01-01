@@ -20,13 +20,17 @@ public class AlarmSettingsDialog extends DialogFragment
 	}
 
 	@Override
-	public Dialog onCreateDialog( Bundle savedInstanceState)
+	public Dialog onCreateDialog(Bundle savedInstanceState)
 	{
 		Bundle bundle = this.getArguments();
 		final int probeIndex = bundle.getInt("probeIndex", 0);
 
 		// Use the Builder class for convenient dialog construction
 		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+
+		// FIXME: The alert dialog is using the wrong theme so the background and text are black,
+		// this works around that.
+		builder.setInverseBackgroundForced(true);
 
 		// Get the layout inflater
 		LayoutInflater inflater = getActivity().getLayoutInflater();

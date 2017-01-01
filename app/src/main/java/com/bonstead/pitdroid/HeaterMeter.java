@@ -55,6 +55,7 @@ public class HeaterMeter
 	boolean mKeepScreenOn;
 
 	ArrayList<Sample> mSamples = new ArrayList<>();
+	NamedSample mLatestSample;
 	String[] mProbeNames = new String[kNumProbes];
 	private double[] mDegreesPerHour = new double[kNumProbes];
 
@@ -137,6 +138,12 @@ public class HeaterMeter
 	void addListener(Listener listener)
 	{
 		mListeners.add(listener);
+
+		// To avoid waiting for the first refresh, grab the latest sample and send it over right away
+		if (mLatestSample != null)
+		{
+			listener.samplesUpdated(mLatestSample);
+		}
 	}
 
 	void removeListener(Listener listener)
@@ -392,19 +399,19 @@ public class HeaterMeter
 	@SuppressWarnings("unchecked")
 	void updateMain(Object data)
 	{
-		NamedSample latestSample = null;
+		mLatestSample = null;
 
 		if (data instanceof NamedSample)
 		{
-			latestSample = addStatus((NamedSample) data);
+			mLatestSample = addStatus((NamedSample) data);
 		}
 		else if (data != null)
 		{
-			latestSample = addHistory((ArrayList<Sample>) data);
+			mLatestSample = addHistory((ArrayList<Sample>) data);
 		}
 
 		for (int l = 0; l < mListeners.size(); l++)
-			mListeners.get(l).samplesUpdated(latestSample);
+			mListeners.get(l).samplesUpdated(mLatestSample);
 	}
 
 	private NamedSample parseStatus(String status)

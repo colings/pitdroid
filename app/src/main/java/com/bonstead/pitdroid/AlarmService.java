@@ -2,6 +2,7 @@ package com.bonstead.pitdroid;
 
 import com.bonstead.pitdroid.HeaterMeter.NamedSample;
 
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -11,6 +12,8 @@ import android.content.Intent;
 import android.media.AudioManager;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
@@ -24,21 +27,82 @@ public class AlarmService extends Service
 	static final int kStatusNotificationId = 1;
 	static final int kAlarmNotificationId = 2;
 
+	private PendingIntent mServiceAlarm;
+
+	@Override
+	public void onCreate()
+	{
+		super.onCreate();
+
+		// Create a pending intent use to schedule us for wakeups
+		Intent alarmIntent = new Intent(this, AlarmService.class);
+		mServiceAlarm = PendingIntent.getService(this, 0, alarmIntent, 0);
+	}
+
+	@Override
+	public void onDestroy()
+	{
+		super.onDestroy();
+
+		if (BuildConfig.DEBUG)
+		{
+			Log.v(TAG, "onDestroy");
+		}
+
+		cancelAlarm();
+		mServiceAlarm = null;
+
+		// Cancel the persistent notification.
+		stopForeground(true);
+	}
+
+	private void scheduleAlarm()
+	{
+		HeaterMeter heatermeter = ((PitDroidApplication) getApplication()).mHeaterMeter;
+
+		long nextTime = System.currentTimeMillis() + heatermeter.mBackgroundUpdateTime * 60 * 1000;
+		AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+		{
+			// It's important that even if the user isn't actively using their device the
+			// checks will run, so use the version that will force a wakeup on newer
+			// versions of Android with Doze mode.
+			alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextTime, mServiceAlarm);
+		}
+		else
+		{
+			alarmManager.set(AlarmManager.RTC_WAKEUP, nextTime, mServiceAlarm);
+		}
+	}
+
+	private void cancelAlarm()
+	{
+		AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+		alarmManager.cancel(mServiceAlarm);
+	}
+
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId)
 	{
-		PowerManager mgr = (PowerManager) getBaseContext().getSystemService(Context.POWER_SERVICE);
-		final WakeLock lock = mgr.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, NAME);
-		lock.acquire();
-
 		if (BuildConfig.DEBUG)
 		{
 			Log.v(TAG, "onStartCommand");
 		}
 
+		// Acquire a wake lock to ensure the device doesn't go to sleep while we're querying the
+		// HeaterMeter.  When the query thread is done it will release this.
+		PowerManager mgr = (PowerManager) getBaseContext().getSystemService(Context.POWER_SERVICE);
+		final WakeLock lock = mgr.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, NAME);
+		lock.acquire();
+
+		// It's possible this is being called due to alarm settings changing and not the alarm going
+		// off, so cancel any pending alarms before proceeding.
+		cancelAlarm();
+
 		updateStatusNotification(null, null);
 
-		Runnable NameOfRunnable = new Runnable()
+		new Thread(new Runnable()
 		{
 			@Override
 			public void run()
@@ -49,6 +113,7 @@ public class AlarmService extends Service
 				}
 
 				HeaterMeter heatermeter = ((PitDroidApplication) getApplication()).mHeaterMeter;
+
 				NamedSample sample = heatermeter.getSample();
 
 				if (BuildConfig.DEBUG)
@@ -66,29 +131,14 @@ public class AlarmService extends Service
 				updateStatusNotification(sample, heatermeter);
 				updateAlarmNotification(sample, heatermeter);
 
+				scheduleAlarm();
+
 				lock.release();
 			}
-		};
-
-		Thread name = new Thread(NameOfRunnable);
-		name.start();
+		}).start();
 
 		// We want this service to continue running until it is explicitly stopped, so return sticky.
 		return START_STICKY;
-	}
-
-	@Override
-	public void onDestroy()
-	{
-		super.onDestroy();
-
-		if (BuildConfig.DEBUG)
-		{
-			Log.v(TAG, "onDestroy");
-		}
-
-		// Cancel the persistent notification.
-		stopForeground(true);
 	}
 
 	/**
@@ -126,16 +176,20 @@ public class AlarmService extends Service
 			contentText = getString(R.string.alarm_service_info);
 		}
 
-		Intent notificationIntent = new Intent(this, MainActivity.class);
-		PendingIntent notificationPendingIntent = PendingIntent.getActivity(this, 0, notificationIntent,
-				PendingIntent.FLAG_UPDATE_CURRENT);
+		Intent mainIntent = new Intent(this, MainActivity.class);
+		PendingIntent statusIntent = PendingIntent.getActivity(this, 0, mainIntent,	0);
+
+		Intent closeIntent = new Intent(this, MainActivity.class);
+		closeIntent.putExtra("close", true);
+		PendingIntent closePendingIntent = PendingIntent.getActivity(this, 1, closeIntent, 0);
 
 		Notification.Builder builder = new Notification.Builder(this)
 				.setSmallIcon(R.mipmap.ic_status)
 				.setContentTitle("PitDroid Monitor")
 				.setContentText(contentText)
 				.setOngoing(true)
-				.setContentIntent(notificationPendingIntent);
+				.setContentIntent(statusIntent)
+				.addAction(R.mipmap.ic_status, "Close", closePendingIntent);
 
 		startForeground(kStatusNotificationId, builder.build());
 	}

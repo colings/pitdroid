@@ -113,10 +113,17 @@ public class GaugeHandView extends GaugeBaseView
 			if (view instanceof GaugeView)
 			{
 				mGauge = (GaugeView) view;
-				mGauge.registerHand(this);
 				break;
 			}
 		}
+	}
+
+	@Override
+	protected void onDetachedFromWindow()
+	{
+		super.onDetachedFromWindow();
+
+		mGauge = null;
 	}
 
 	@Override
@@ -157,8 +164,8 @@ public class GaugeHandView extends GaugeBaseView
 
 			mHandPath.moveTo((0.5f - halfWidth * 0.2f) * scale, yTip);
 			mHandPath.lineTo((0.5f + halfWidth * 0.2f) * scale, yTip);
-			mHandPath.lineTo((0.5f + halfWidth) * scale, yTip + (length * scale));
-			mHandPath.lineTo((0.5f - halfWidth) * scale, yTip + (length * scale));
+			mHandPath.lineTo((0.5f + halfWidth) * scale, yTip - (length * scale));
+			mHandPath.lineTo((0.5f - halfWidth) * scale, yTip - (length * scale));
 			mHandPath.close();
 		}
 		else
@@ -278,11 +285,14 @@ public class GaugeHandView extends GaugeBaseView
 			break;
 
 		case MotionEvent.ACTION_UP:
-			mDragging = false;
-
-			if (mListener != null)
+			if (mDragging)
 			{
-				mListener.onValueChanged(mHandPosition);
+				mDragging = false;
+
+				if (mListener != null)
+				{
+					mListener.onValueChanged(mHandPosition);
+				}
 			}
 			break;
 		}
@@ -348,6 +358,9 @@ public class GaugeHandView extends GaugeBaseView
 
 	public void setName(String name)
 	{
+		if (mGauge == null)
+			return;
+
 		if (	(mName == null && name != null) ||
 				(mName != null && name == null) ||
 				(mName != null && name != null && !mName.equals(name)))

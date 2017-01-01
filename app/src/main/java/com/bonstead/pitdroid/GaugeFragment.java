@@ -1,18 +1,20 @@
 package com.bonstead.pitdroid;
 
 import android.app.Fragment;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.text.format.Time;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.TextView;
 
 import com.bonstead.pitdroid.HeaterMeter.NamedSample;
 
-public class GaugeFragment extends Fragment implements HeaterMeter.Listener
+public class GaugeFragment extends Fragment implements HeaterMeter.Listener, SharedPreferences.OnSharedPreferenceChangeListener
 {
+	private GaugeView mGauge;
 	private GaugeHandView[] mProbeHands = new GaugeHandView[HeaterMeter.kNumProbes];
 	private GaugeHandView mSetPoint;
 
@@ -29,6 +31,7 @@ public class GaugeFragment extends Fragment implements HeaterMeter.Listener
 
 		mHeaterMeter = ((PitDroidApplication) this.getActivity().getApplication()).mHeaterMeter;
 
+		mGauge = (GaugeView) view.findViewById(R.id.thermometer);
 		mProbeHands[0] = (GaugeHandView) view.findViewById(R.id.pitHand);
 		mProbeHands[1] = (GaugeHandView) view.findViewById(R.id.probe1Hand);
 		mProbeHands[2] = (GaugeHandView) view.findViewById(R.id.probe2Hand);
@@ -57,15 +60,28 @@ public class GaugeFragment extends Fragment implements HeaterMeter.Listener
 
 		mLastUpdate = (TextView) view.findViewById(R.id.lastUpdate);
 
-		mHeaterMeter.addListener(this);
-
 		return view;
 	}
 
 	@Override
-	public void onDestroyView()
+	public void onResume()
 	{
-		super.onDestroyView();
+		super.onResume();
+
+		mHeaterMeter.addListener(this);
+
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplication().getBaseContext());
+		updatePrefs(prefs);
+		prefs.registerOnSharedPreferenceChangeListener(this);
+	}
+
+	@Override
+	public void onPause()
+	{
+		super.onPause();
+
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplication().getBaseContext());
+		prefs.unregisterOnSharedPreferenceChangeListener(this);
 
 		mHeaterMeter.removeListener(this);
 	}
@@ -88,8 +104,9 @@ public class GaugeFragment extends Fragment implements HeaterMeter.Listener
 					mProbeHands[p].setHandTarget((float) latestSample.mProbes[p]);
 				}
 
-				// Don't set the name on the pit temp hand, we don't want to show it in the legend
-				if (p > 0)
+				// Don't set the name on the pit temp hand, or any probes that aren't connected, so
+				// we wont' show them on the legend
+				if (p > 0 && !Double.isNaN(latestSample.mProbes[p]))
 				{
 					mProbeHands[p].setName(latestSample.mProbeNames[p]);
 				}
@@ -106,5 +123,19 @@ public class GaugeFragment extends Fragment implements HeaterMeter.Listener
 				mServerTime = latestSample.mTime;
 			}
 		}
+	}
+
+	@Override
+	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
+	{
+		updatePrefs(sharedPreferences);
+	}
+
+	private void updatePrefs(SharedPreferences sharedPreferences)
+	{
+		int minTemp = Integer.valueOf(sharedPreferences.getString("minTemp", "15"));
+		int maxTemp = Integer.valueOf(sharedPreferences.getString("maxTemp", "15"));
+
+		mGauge.updateRange(minTemp, maxTemp);
 	}
 }

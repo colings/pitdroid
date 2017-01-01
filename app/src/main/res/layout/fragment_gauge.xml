@@ -8,7 +8,8 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:padding="10dp">
         <com.bonstead.pitdroid.GaugeView
             android:id="@+id/thermometer"
             app:scaleColor="@color/scaleColor"
@@ -60,7 +61,7 @@
             android:layout_height="wrap_content"
             app:handColor="@color/setTemp"
             app:handStyle="Rim"
-            app:handLength="20"
+            app:handLength="27"
             app:handWidth="30"
             app:interpolateChanges="false"/>
     </RelativeLayout>

@@ -25,6 +25,18 @@
         android:summary="@string/backgroundUpdateTimeSummary"
         android:title="@string/backgroundUpdateTimeTitle" />
 
+    <EditTextPreference
+        android:defaultValue="50"
+        android:inputType="numberDecimal"
+        android:key="minTemp"
+        android:title="Minimum temperature" />
+
+    <EditTextPreference
+        android:defaultValue="350"
+        android:inputType="numberDecimal"
+        android:key="maxTemp"
+        android:title="Maximum temperature" />
+
     <CheckBoxPreference
         android:defaultValue="true"
         android:key="alwaysSoundAlarm"

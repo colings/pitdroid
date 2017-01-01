@@ -63,7 +63,6 @@ public class GraphFragment extends Fragment implements HeaterMeter.Listener,
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 	{
 		mHeaterMeter = ((PitDroidApplication) this.getActivity().getApplication()).mHeaterMeter;
-		mHeaterMeter.addListener(this);
 
 		View view = inflater.inflate(R.layout.fragment_graph, container, false);
 
@@ -189,9 +188,17 @@ public class GraphFragment extends Fragment implements HeaterMeter.Listener,
 	}
 
 	@Override
-	public void onDestroyView()
+	public void onResume()
 	{
-		super.onDestroyView();
+		super.onResume();
+
+		mHeaterMeter.addListener(this);
+	}
+
+	@Override
+	public void onPause()
+	{
+		super.onPause();
 
 		mHeaterMeter.removeListener(this);
 	}
