@@ -47,21 +47,28 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
 	private void onTemperatureChanged(SharedPreferences sharedPreferences)
 	{
-		Preference minTemp = findPreference(KEY_MIN_TEMP);
-		Preference maxTemp = findPreference(KEY_MAX_TEMP);
+		int initialMinTempValue = Integer.valueOf(sharedPreferences.getString(KEY_MIN_TEMP, "50"));
+		int initialMaxTempValue = Integer.valueOf(sharedPreferences.getString(KEY_MAX_TEMP, "350"));
 
-		int minTempValue = Integer.valueOf(sharedPreferences.getString(KEY_MIN_TEMP, ""));
-		int maxTempValue = Integer.valueOf(sharedPreferences.getString(KEY_MAX_TEMP, ""));
-
-		minTempValue -= minTempValue % 50;
-		maxTempValue -= maxTempValue % 50;
+		// If a temperature range value has changed, ensure that the min and max are both multiples
+		// of 50, and that the max is greater than the min.
+		int minTempValue = initialMinTempValue - (initialMinTempValue % 50);
+		int maxTempValue = initialMaxTempValue - (initialMaxTempValue % 50);
 
 		if (maxTempValue <= minTempValue)
 		{
-			maxTempValue = minTempValue * 50;
+			maxTempValue = minTempValue + 50;
 		}
 
-		minTemp.setSummary(Integer.toString(minTempValue) + "°");
-		maxTemp.setSummary(Integer.toString(maxTempValue) + "°");
+		if (initialMinTempValue != minTempValue || initialMaxTempValue != maxTempValue)
+		{
+			SharedPreferences.Editor edit = sharedPreferences.edit();
+			edit.putString(KEY_MIN_TEMP, Integer.toString(minTempValue));
+			edit.putString(KEY_MAX_TEMP, Integer.toString(maxTempValue));
+			edit.apply();
+		}
+
+		findPreference(KEY_MIN_TEMP).setSummary(Integer.toString(minTempValue) + "°");
+		findPreference(KEY_MAX_TEMP).setSummary(Integer.toString(maxTempValue) + "°");
 	}
 }

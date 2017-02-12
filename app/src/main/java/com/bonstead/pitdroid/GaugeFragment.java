@@ -133,8 +133,8 @@ public class GaugeFragment extends Fragment implements HeaterMeter.Listener, Sha
 
 	private void updatePrefs(SharedPreferences sharedPreferences)
 	{
-		int minTemp = Integer.valueOf(sharedPreferences.getString("minTemp", "15"));
-		int maxTemp = Integer.valueOf(sharedPreferences.getString("maxTemp", "15"));
+		int minTemp = Integer.valueOf(sharedPreferences.getString(SettingsFragment.KEY_MIN_TEMP, "50"));
+		int maxTemp = Integer.valueOf(sharedPreferences.getString(SettingsFragment.KEY_MAX_TEMP, "350"));
 
 		mGauge.updateRange(minTemp, maxTemp);
 	}
