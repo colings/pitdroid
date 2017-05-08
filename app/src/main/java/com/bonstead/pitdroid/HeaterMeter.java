@@ -718,8 +718,10 @@ public class HeaterMeter
 		if (!isAuthenticated())
 			return;
 
-		String setAddr = mServerAddress[mCurrentServer] + "/luci/;stok=" + mAuthToken + "/admin/lm/set?";
-		setAddr += "sp=" + newTemp;
+		String setAddr = mServerAddress[mCurrentServer] + "/luci";
+		if (mAuthToken != null)
+			setAddr += "/;stok=" + mAuthToken;
+		setAddr += "/admin/lm/set?sp=" + newTemp;
 
 		HttpURLConnection urlConnection = null;
 
@@ -728,7 +730,7 @@ public class HeaterMeter
 			URL url = new URL(setAddr);
 			urlConnection = (HttpURLConnection) url.openConnection();
 			urlConnection.setDoOutput(true);
-			urlConnection.setChunkedStreamingMode(0);
+			urlConnection.setRequestMethod("POST");
 			urlConnection.setRequestProperty("Cookie", "sysauth=" + mAuthCookie);
 
 			urlConnection.getInputStream();
@@ -753,7 +755,7 @@ public class HeaterMeter
 
 	private boolean isAuthenticated()
 	{
-		return mAuthCookie != null && mAuthToken != null;
+		return mAuthCookie != null;
 	}
 
 	private void authenticate()
@@ -770,10 +772,10 @@ public class HeaterMeter
 			URL url = new URL(mServerAddress[mCurrentServer] + kAuthURL);
 			urlConnection = (HttpURLConnection) url.openConnection();
 			urlConnection.setDoOutput(true);
-			urlConnection.setChunkedStreamingMode(0);
 
 			urlConnection.setDoInput(true);
 			urlConnection.setRequestMethod("POST");
+			urlConnection.setInstanceFollowRedirects(false);
 
 			DataOutputStream out = new DataOutputStream(urlConnection.getOutputStream());
 			out.writeBytes("username=root&");
