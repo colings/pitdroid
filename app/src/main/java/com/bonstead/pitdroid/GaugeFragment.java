@@ -2,12 +2,14 @@ package com.bonstead.pitdroid;
 
 import android.app.Fragment;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.format.Time;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.bonstead.pitdroid.HeaterMeter.NamedSample;
@@ -36,6 +38,15 @@ public class GaugeFragment extends Fragment implements HeaterMeter.Listener, Sha
 		mProbeHands[1] = (GaugeHandView) view.findViewById(R.id.probe1Hand);
 		mProbeHands[2] = (GaugeHandView) view.findViewById(R.id.probe2Hand);
 		mProbeHands[3] = (GaugeHandView) view.findViewById(R.id.probe3Hand);
+
+		if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE)
+		{
+			LinearLayout masterLayout = (LinearLayout) view.findViewById(R.id.masterLayout);
+			masterLayout.setOrientation(LinearLayout.HORIZONTAL);
+
+			LinearLayout buttonLayout = (LinearLayout) view.findViewById(R.id.buttonLayout);
+			buttonLayout.setOrientation(LinearLayout.VERTICAL);
+		}
 
 		mSetPoint = (GaugeHandView) view.findViewById(R.id.setPoint);
 		mSetPoint.mListener = new GaugeHandView.Listener()
