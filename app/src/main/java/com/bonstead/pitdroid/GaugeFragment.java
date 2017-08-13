@@ -47,6 +47,9 @@ public class GaugeFragment extends Fragment implements HeaterMeter.Listener, Sha
 			LinearLayout masterLayout = (LinearLayout) view.findViewById(R.id.masterLayout);
 			masterLayout.setOrientation(LinearLayout.HORIZONTAL);
 
+			LinearLayout gaugeLayout = (LinearLayout) view.findViewById(R.id.gaugeLayout);
+			gaugeLayout.setOrientation(LinearLayout.HORIZONTAL);
+
 			LinearLayout buttonLayout = (LinearLayout) view.findViewById(R.id.buttonLayout);
 			buttonLayout.setOrientation(LinearLayout.VERTICAL);
 		}
