@@ -1,6 +1,8 @@
 package com.bonstead.pitdroid;
 
+import android.app.AlertDialog;
 import android.app.Fragment;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -10,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.NumberPicker;
 import android.widget.TextView;
 
 import com.bonstead.pitdroid.HeaterMeter.NamedSample;
@@ -27,11 +30,11 @@ public class GaugeFragment extends Fragment implements HeaterMeter.Listener, Sha
 	private boolean mSettingPit = false;
 
 	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+	public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 	{
 		View view = inflater.inflate(R.layout.fragment_gauge, container, false);
 
-		mHeaterMeter = ((PitDroidApplication) this.getActivity().getApplication()).mHeaterMeter;
+		mHeaterMeter = ((PitDroidApplication) getActivity().getApplication()).mHeaterMeter;
 
 		mGauge = (GaugeView) view.findViewById(R.id.thermometer);
 		mProbeHands[0] = (GaugeHandView) view.findViewById(R.id.pitHand);
@@ -56,16 +59,42 @@ public class GaugeFragment extends Fragment implements HeaterMeter.Listener, Sha
 			{
 				mSettingPit = true;
 
-				Thread trd = new Thread(new Runnable()
+				View setTempView = inflater.inflate(R.layout.dialog_settemp, null);
+
+				final NumberPicker picker = (NumberPicker)setTempView.findViewById(R.id.temperature);
+				picker.setMinValue(mGauge.getMinValue());
+				picker.setMaxValue(mGauge.getMaxValue());
+				picker.setValue((int)value);
+
+				AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+				builder.setView(setTempView);
+				builder.setTitle("New pit set temp");
+				builder.setPositiveButton("Set", new DialogInterface.OnClickListener()
 				{
-					@Override
-					public void run()
+					public void onClick(DialogInterface dialog, int id)
 					{
-						mHeaterMeter.changePitSetTemp((int)value);
+						final int newTemp = picker.getValue();
+
+						Thread trd = new Thread(new Runnable()
+						{
+							@Override
+							public void run()
+							{
+								mHeaterMeter.changePitSetTemp(newTemp);
+								mSettingPit = false;
+							}
+						});
+						trd.start();
+					}
+				})
+				.setNegativeButton("Cancel", new DialogInterface.OnClickListener()
+				{
+					public void onClick(DialogInterface dialog, int id)
+					{
 						mSettingPit = false;
 					}
-				});
-				trd.start();
+				})
+				.create().show();
 			}
 		};
 

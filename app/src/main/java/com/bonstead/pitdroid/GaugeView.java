@@ -412,4 +412,7 @@ public final class GaugeView extends GaugeBaseView
 	{
 		return mScaleRect.width();
 	}
+
+	public int getMinValue() { return mMinValue; }
+	public int getMaxValue() { return mMaxValue; }
 }
