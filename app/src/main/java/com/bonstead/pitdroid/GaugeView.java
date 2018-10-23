@@ -231,7 +231,7 @@ public final class GaugeView extends GaugeBaseView
 
 		canvas.drawArc(mScaleRect, 90.0f + (openDegrees * 0.5f), 360.0f - openDegrees, false, mScalePaint);
 
-		canvas.save(Canvas.MATRIX_SAVE_FLAG);
+		canvas.save();
 
 		// We want to start drawing from the bottom center, so first flip the canvas around so
 		// that's on top.

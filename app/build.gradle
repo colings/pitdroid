@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion '25.0.0'
+    compileSdkVersion 28
+    buildToolsVersion '28.0.3'
     defaultConfig {
         applicationId "com.bonstead.pitdroid"
         minSdkVersion 16
-        targetSdkVersion 25
-        versionCode 19
+        targetSdkVersion 28
+        versionCode 20
         versionName '2.0'
     }
     buildTypes {
@@ -21,6 +21,6 @@ android {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.androidplot:androidplot-core:1.0.0'
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.androidplot:androidplot-core:1.0.0'
 }

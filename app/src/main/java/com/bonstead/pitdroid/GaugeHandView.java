@@ -196,7 +196,7 @@ public class GaugeHandView extends GaugeBaseView
 			float scale = (float) getWidth();
 			float handAngle = 180.f + mGauge.valueToAngle(mHandPosition);
 
-			canvas.save(Canvas.MATRIX_SAVE_FLAG);
+			canvas.save();
 			canvas.rotate(handAngle, 0.5f * scale, 0.5f * scale);
 
 			canvas.drawPath(mHandPath, mHandPaint);
