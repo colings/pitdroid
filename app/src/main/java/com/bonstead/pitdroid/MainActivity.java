@@ -6,6 +6,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -13,6 +14,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -237,6 +239,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		}
 	}
 
+	@TargetApi(Build.VERSION_CODES.O)
 	private void startAlarmService()
 	{
 		if (BuildConfig.DEBUG)
@@ -244,6 +247,14 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			Log.v(TAG, "Start alarm service");
 		}
 
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+		{
+			startForegroundService(new Intent(this, AlarmService.class));
+		}
+		else
+		{
+			startService(new Intent(this, AlarmService.class));
+		}
 		startService(new Intent(this, AlarmService.class));
 	}
 

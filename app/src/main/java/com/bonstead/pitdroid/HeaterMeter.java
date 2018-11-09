@@ -633,7 +633,6 @@ public class HeaterMeter
 				}
 
 				return reader;
-
 			}
 			catch (MalformedURLException e)
 			{
@@ -653,7 +652,7 @@ public class HeaterMeter
 			{
 				if (BuildConfig.DEBUG)
 				{
-					Log.e(TAG, "IO exception");
+					Log.e(TAG, "IO exception" + e.getLocalizedMessage());
 				}
 			}
 			catch (IllegalArgumentException e)
