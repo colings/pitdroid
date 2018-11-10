@@ -1,6 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PitDroid</string>
+    <string name="title_graph">Graph</string>
+    <string name="title_dash">Dash</string>
+    <string name="title_gauge">Dial</string>
+    <string name="title_settings">Settings</string>
     <string name="menu_settings">Settings</string>
     <string name="service_name">Status Service</string>
     <string name="fan_speed">Fan:</string>
@@ -29,16 +32,15 @@
         <item >25</item>
         <item >30</item>
     </string-array>
-        <string name="serverSummary">The address of the HeaterMeter</string>
-        <string name="serverTitle">Server</string>
-        <string name="altServerSummary">An optional alternate address for the HeaterMeter that will be tried if the first address isn\'t reachable</string>
-        <string name="altServerTitle">Alternate Server</string>
-        <string name="alwaysSoundAlarmTitle">Always use alarm sound</string>
-        <string name="alwaysSoundAlarmSummary">Always use alarm sounds, even when in vibrate or silent mode</string>
-        <string name="no_server">Unable to contact server</string>
-        <string name="alarmOnLostConnectionTitle">Alarm on lost connection</string>
-        <string name="alarmOnLostConnectionSummary">Sound an alarm when a connection to the server can\'t be established.</string>
-        <string name="keepScreenOnSummary">Keep the screen on while PitDroid is running.</string>
-        <string name="keepScreenOnTitle">Keep screen on</string>
-        
+    <string name="serverSummary">The address of the HeaterMeter</string>
+    <string name="serverTitle">Server</string>
+    <string name="altServerSummary">An optional alternate address for the HeaterMeter that will be tried if the first address isn\'t reachable</string>
+    <string name="altServerTitle">Alternate Server</string>
+    <string name="alwaysSoundAlarmTitle">Always use alarm sound</string>
+    <string name="alwaysSoundAlarmSummary">Always use alarm sounds, even when in vibrate or silent mode</string>
+    <string name="no_server">Unable to contact server</string>
+    <string name="alarmOnLostConnectionTitle">Alarm on lost connection</string>
+    <string name="alarmOnLostConnectionSummary">Sound an alarm when a connection to the server can\'t be established.</string>
+    <string name="keepScreenOnSummary">Keep the screen on while PitDroid is running.</string>
+    <string name="keepScreenOnTitle">Keep screen on</string>
 </resources>
