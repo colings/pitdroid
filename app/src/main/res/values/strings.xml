@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name">PitDroid</string>
     <string name="title_graph">Graph</string>
-    <string name="title_dash">Dash</string>
-    <string name="title_gauge">Dial</string>
+    <string name="title_dash">Alarms</string>
+    <string name="title_gauge">Dashboard</string>
     <string name="title_settings">Settings</string>
     <string name="menu_settings">Settings</string>
     <string name="service_name">Status Service</string>

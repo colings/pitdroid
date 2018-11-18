@@ -71,6 +71,8 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         }
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(baseContext)
+        prefs.registerOnSharedPreferenceChangeListener(this);
+
         HeaterMeter.initPreferences(prefs)
 
         // Uncomment to use saved sample data instead of live, for testing purposes

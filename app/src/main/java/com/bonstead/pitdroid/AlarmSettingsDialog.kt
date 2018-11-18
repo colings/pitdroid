@@ -17,7 +17,7 @@ class AlarmSettingsDialog : DialogFragment() {
         fun onFinishAlarmDialog(probeIndex: Int)
     }
 
-    override fun onCreateDialog(savedInstanceState: Bundle): Dialog {
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val bundle = this.arguments
         val probeIndex = bundle.getInt("probeIndex", 0)
 
@@ -35,7 +35,7 @@ class AlarmSettingsDialog : DialogFragment() {
         // Pass null as the parent view because its going in the dialog layout
         val view = inflater.inflate(R.layout.dialog_alarm, null)
 
-        builder.setView(view).setPositiveButton(R.string.ok) { dialog, id ->
+        builder.setView(view).setPositiveButton(R.string.ok) { _, _ ->
             // Get the low temperature
             var text = view.findViewById<View>(R.id.belowTemp) as EditText
             var loValue = Integer.parseInt(text.text.toString())

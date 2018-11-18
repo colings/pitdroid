@@ -52,7 +52,7 @@ class DashFragment : Fragment(), HeaterMeter.Listener, AlarmDialogListener {
 
         val probeIds = intArrayOf(R.id.probe0Alarm, R.id.probe1Alarm, R.id.probe2Alarm, R.id.probe3Alarm)
         for (p in 0 until HeaterMeter.kNumProbes) {
-            //setAlarmClickListener(view, probeIds[p], p)
+            setAlarmClickListener(view, probeIds[p], p)
             updateAlarmButtonImage(view, probeIds[p], p)
         }
 
@@ -144,13 +144,13 @@ class DashFragment : Fragment(), HeaterMeter.Listener, AlarmDialogListener {
                     mProbeNames[p]!!.setText(latestSample.mProbeNames[p] + ": ")
                 }
 
-                if (latestSample.mProbes[p] != Double.NaN) {
+                if (latestSample.mProbes[p].isNaN()) {
                     mProbeVals[p]!!.setText("-")
                 } else {
                     mProbeVals[p]!!.setText(HeaterMeter.formatTemperature(latestSample.mProbes[p]))
                 }
 
-                if (HeaterMeter.formatAlarm(p, latestSample.mProbes[p]).length > 0) {
+                if (HeaterMeter.formatAlarm(p, latestSample.mProbes[p]).isNotEmpty()) {
                     mProbeVals[p]!!.setTextColor(Color.RED)
                 } else {
                     mProbeVals[p]!!.setTextColor(Color.BLACK)
