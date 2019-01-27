@@ -35,8 +35,7 @@ class SettingsFragment : PreferenceFragment(), SharedPreferences.OnSharedPrefere
     }
 
     private fun onTemperatureChanged(sharedPreferences: SharedPreferences) {
-        val initialMinTempValue = Integer.valueOf(sharedPreferences.getString(KEY_MIN_TEMP, "50"))
-        val initialMaxTempValue = Integer.valueOf(sharedPreferences.getString(KEY_MAX_TEMP, "350"))
+        var (initialMinTempValue, initialMaxTempValue) = getMinMax(sharedPreferences)
 
         // If a temperature range value has changed, ensure that the min and max are both multiples
         // of 50, and that the max is greater than the min.
@@ -61,5 +60,21 @@ class SettingsFragment : PreferenceFragment(), SharedPreferences.OnSharedPrefere
     companion object {
         const val KEY_MIN_TEMP = "minTemp"
         const val KEY_MAX_TEMP = "maxTemp"
+
+        public fun getMinMax(sharedPreferences: SharedPreferences): Pair<Int, Int> {
+            var minTemp = 50
+            var maxTemp = 350
+
+            val minTempStr = sharedPreferences.getString(KEY_MIN_TEMP, null)
+            if (minTempStr != null) {
+                minTemp = Integer.valueOf(minTempStr)
+            }
+            val maxTempStr = sharedPreferences.getString(KEY_MAX_TEMP, null)
+            if (maxTempStr != null) {
+                maxTemp = Integer.valueOf(maxTempStr)
+            }
+
+            return Pair(minTemp, maxTemp)
+        }
     }
 }

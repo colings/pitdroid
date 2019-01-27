@@ -22,21 +22,21 @@ import android.content.SharedPreferences
 import android.util.Log
 
 object HeaterMeter {
-    private val TAG = "HeaterMeter"
+    private const val TAG = "HeaterMeter"
 
-    internal val kNumProbes = 4
-    private val kHistoryURL = "/luci/lm/hist"
-    private val kStatusURL = "/luci/lm/hmstatus"
-    private val kAuthURL = "/luci/admin/lm"
+    internal const val kNumProbes = 4
+    private const val kHistoryURL = "/luci/lm/hist"
+    private const val kStatusURL = "/luci/lm/hmstatus"
+    private const val kAuthURL = "/luci/admin/lm"
 
     // No point in trying to sample faster than this, it's the update rate of the
     // HeaterMeter hardware
-    internal val kMinSampleTime: Long = 1000
+    internal const val kMinSampleTime: Long = 1000
     // Wait at least this long between full history refreshes
-    private val kMinHistoryUpdateTime: Long = 5000
+    private const val kMinHistoryUpdateTime: Long = 5000
     // If we're updating and it's been more than this long since the last update, force a
     // full history refresh, so we don't have too much data missing.
-    private val kMaxUpdateDelta: Long = 5000
+    private const val kMaxUpdateDelta: Long = 5000
 
     // User settings
     private val mServerAddress = arrayOfNulls<String>(2)
@@ -389,7 +389,6 @@ object HeaterMeter {
             e.printStackTrace()
             return null
         }
-
     }
 
     private fun addStatus(sample: NamedSample): NamedSample {
@@ -430,7 +429,6 @@ object HeaterMeter {
                 Log.e(TAG, "IO exception", e)
             }
         }
-
     }
 
     private fun parseHistory(reader: Reader): ArrayList<Sample>? {

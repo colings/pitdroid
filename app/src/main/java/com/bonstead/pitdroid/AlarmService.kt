@@ -171,7 +171,7 @@ class AlarmService : Service() {
                 val alert = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
                 alarmBuilder.setSound(alert, AudioManager.STREAM_ALARM)
             }
-            
+
             return alarmBuilder
         }
     }

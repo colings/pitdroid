@@ -97,11 +97,11 @@ class GraphFragment : Fragment(), HeaterMeter.Listener, OnTouchListener {
         var lpf: LineAndPointFormatter
 
         lpf = LineAndPointFormatter(kFanSpeed, null, kFanSpeed, null)
-        lpf.getFillPaint().setAlpha(80)
+        lpf.fillPaint.setAlpha(80)
         mPlot!!.addSeries(mFanSpeed, lpf)
 
         lpf = LineAndPointFormatter(kLidOpen, null, kLidOpen, null)
-        lpf.getFillPaint().setAlpha(80)
+        lpf.fillPaint.setAlpha(80)
         mPlot!!.addSeries(mLidOpen, lpf)
 
         lpf = LineAndPointFormatter(kSetPoint, null, null, null)
@@ -109,7 +109,7 @@ class GraphFragment : Fragment(), HeaterMeter.Listener, OnTouchListener {
 
         for (p in 0 until HeaterMeter.kNumProbes) {
             lpf = LineAndPointFormatter(kProbes[p], null, null, null)
-            lpf.getLinePaint().setShadowLayer(2.0f, 1.0f, 1.0f, Color.BLACK)
+            lpf.linePaint.setShadowLayer(2.0f, 1.0f, 1.0f, Color.BLACK)
             mPlot!!.addSeries(mProbes[p], lpf)
         }
 
@@ -120,7 +120,7 @@ class GraphFragment : Fragment(), HeaterMeter.Listener, OnTouchListener {
         val tempStyle = graphWidget.getLineLabelStyle(XYGraphWidget.Edge.LEFT)
 
         // Set up the legend as a vertical stack instead of horizontal, since it ends up too wide otherwise
-        //legendWidget.setTableModel(DynamicTableModel(1, mPlot!!.getSeriesRegistry().size()))
+        legendWidget.setTableModel(DynamicTableModel(1, mPlot!!.getRegistry().size()))
 
         // Set all the background colors to the same value
         mPlot!!.getBackgroundPaint().setColor(kGraphBackground)

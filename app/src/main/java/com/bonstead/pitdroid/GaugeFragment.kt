@@ -59,7 +59,7 @@ class GaugeFragment : Fragment(), HeaterMeter.Listener, SharedPreferences.OnShar
                 val builder = AlertDialog.Builder(activity)
                 builder.setView(setTempView)
                 builder.setTitle("New pit set temp")
-                builder.setPositiveButton("Set") { _dialog, _id ->
+                builder.setPositiveButton("Set") { _, _ ->
                     val newTemp = picker.value
 
                     val trd = Thread(Runnable {
@@ -68,7 +68,7 @@ class GaugeFragment : Fragment(), HeaterMeter.Listener, SharedPreferences.OnShar
                     })
                     trd.start()
                 }
-                .setNegativeButton("Cancel") { _dialog, _id -> mSettingPit = false }
+                .setNegativeButton("Cancel") { _, _ -> mSettingPit = false }
                 .create().show()
             }
         }
@@ -132,9 +132,7 @@ class GaugeFragment : Fragment(), HeaterMeter.Listener, SharedPreferences.OnShar
     }
 
     private fun updatePrefs(sharedPreferences: SharedPreferences) {
-//        val minTemp = Integer.valueOf(sharedPreferences.getString(SettingsFragment.getKEY_MIN_TEMP(), "50"))
-//        val maxTemp = Integer.valueOf(sharedPreferences.getString(SettingsFragment.getKEY_MAX_TEMP(), "350"))
-
- //       mGauge!!.updateRange(minTemp, maxTemp)
+        var (minTemp, maxTemp) = SettingsFragment.getMinMax(sharedPreferences)
+        mGauge.updateRange(minTemp, maxTemp)
     }
 }
