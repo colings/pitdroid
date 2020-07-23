@@ -27,7 +27,7 @@ class DashFragment : Fragment(), HeaterMeter.Listener, AlarmDialogListener {
     private var mServerTime = 0
     private val mTime = Time()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle?): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_dash, container, false)
 
         mFanSpeed = view.findViewById<View>(R.id.fanSpeedVal) as TextView
@@ -88,12 +88,11 @@ class DashFragment : Fragment(), HeaterMeter.Listener, AlarmDialogListener {
             3 -> id = R.id.probe3Alarm
         }
 
-        updateAlarmButtonImage(view, id, probeIndex)
+        updateAlarmButtonImage(view!!, id, probeIndex)
 
         // Since we may have changed alarm settings, tell the HeaterMeter to write them
         // out
-        val prefs = PreferenceManager.getDefaultSharedPreferences(activity
-                .baseContext)
+        val prefs = PreferenceManager.getDefaultSharedPreferences(activity!!.baseContext)
         HeaterMeter.preferencesChanged(prefs)
 
         // Update the alarm service, so it gets stopped if there are no alarms any more,

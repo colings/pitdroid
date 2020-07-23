@@ -27,7 +27,7 @@ class GaugeFragment : Fragment(), HeaterMeter.Listener, SharedPreferences.OnShar
     private val mTime = Time()
     private var mSettingPit = false
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle?): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_gauge, container, false)
 
         mGauge = view.findViewById<View>(R.id.thermometer) as GaugeView
@@ -83,7 +83,7 @@ class GaugeFragment : Fragment(), HeaterMeter.Listener, SharedPreferences.OnShar
 
         HeaterMeter.addListener(this)
 
-        val prefs = PreferenceManager.getDefaultSharedPreferences(activity.application.baseContext)
+        val prefs = PreferenceManager.getDefaultSharedPreferences(activity!!.application.baseContext)
         updatePrefs(prefs)
         prefs.registerOnSharedPreferenceChangeListener(this)
     }
@@ -91,7 +91,7 @@ class GaugeFragment : Fragment(), HeaterMeter.Listener, SharedPreferences.OnShar
     override fun onPause() {
         super.onPause()
 
-        val prefs = PreferenceManager.getDefaultSharedPreferences(activity.application.baseContext)
+        val prefs = PreferenceManager.getDefaultSharedPreferences(activity!!.application.baseContext)
         prefs.unregisterOnSharedPreferenceChangeListener(this)
 
         HeaterMeter.removeListener(this)

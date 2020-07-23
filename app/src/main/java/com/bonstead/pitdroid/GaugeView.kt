@@ -213,7 +213,7 @@ class GaugeView : GaugeBaseView {
 
         val openDegrees = mOpenTicks / mTotalTicks.toFloat() * 360.0f
 
-        canvas.drawArc(mScaleRect, 90.0f + openDegrees * 0.5f, 360.0f - openDegrees, false, mScalePaint)
+        canvas.drawArc(mScaleRect, 90.0f + openDegrees * 0.5f, 360.0f - openDegrees, false, mScalePaint!!)
 
         canvas.save()
 
@@ -230,18 +230,18 @@ class GaugeView : GaugeBaseView {
             val y1 = mScaleRect.top
             var y2 = y1 - 0.020f * scale
 
-            canvas.drawLine(0.5f * scale, y1, 0.5f * scale, y2, mScalePaint)
+            canvas.drawLine(0.5f * scale, y1, 0.5f * scale, y2, mScalePaint!!)
 
             val curValue = minValue + i * mTickValue
             val valueString = Integer.toString(curValue)
-            canvas.drawText(valueString, 0.5f * scale, y2 - 0.015f * scale, mScaleTextPaint)
+            canvas.drawText(valueString, 0.5f * scale, y2 - 0.015f * scale, mScaleTextPaint!!)
 
             if (i < numSteps - 1) {
                 for (j in 0 until mSubTicks) {
                     y2 = y1 - 0.010f * scale
 
                     canvas.rotate(subTickAngleIncrement, 0.5f * scale, 0.5f * scale)
-                    canvas.drawLine(0.5f * scale, y1, 0.5f * scale, y2, mScalePaint)
+                    canvas.drawLine(0.5f * scale, y1, 0.5f * scale, y2, mScalePaint!!)
                 }
 
                 canvas.rotate(subTickAngleIncrement, 0.5f * scale, 0.5f * scale)
@@ -294,7 +294,7 @@ class GaugeView : GaugeBaseView {
 
             if (hand.name != null) {
                 mLegendTextPaint!!.color = hand.color
-                canvas.drawTextOnPath(hand.name, mLegendPath, currentOffset, 0f, mLegendTextPaint)
+                canvas.drawTextOnPath(hand.name!!, mLegendPath!!, currentOffset, 0f, mLegendTextPaint!!)
                 currentOffset += lengths[i] + space
             }
         }
@@ -309,7 +309,7 @@ class GaugeView : GaugeBaseView {
         if (mCachedBackground == null) {
             Log.w(TAG, "Background not created")
         } else {
-            canvas.drawBitmap(mCachedBackground, 0f, 0f, mCachedBackgroundPaint)
+            canvas.drawBitmap(mCachedBackground!!, 0f, 0f, mCachedBackgroundPaint)
         }
     }
 
@@ -320,20 +320,20 @@ class GaugeView : GaugeBaseView {
         }
 
         mCachedBackground = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        val backgroundCanvas = Canvas(mCachedBackground)
+        val backgroundCanvas = Canvas(mCachedBackground!!)
 
         // first, draw the bezel
-        backgroundCanvas.drawOval(mGaugeRect, mBezelPaint)
+        backgroundCanvas.drawOval(mGaugeRect, mBezelPaint!!)
         // now the outer rim circle
-        backgroundCanvas.drawOval(mGaugeRect, mRimPaint)
+        backgroundCanvas.drawOval(mGaugeRect, mRimPaint!!)
         // draw the gauge background
-        backgroundCanvas.drawOval(mFaceRect, mBackgroundPaint)
+        backgroundCanvas.drawOval(mFaceRect, mBackgroundPaint!!)
         // draw the inner rim circle
-        backgroundCanvas.drawOval(mFaceRect, mRimPaint)
+        backgroundCanvas.drawOval(mFaceRect, mRimPaint!!)
 
         // draw the rim shadow inside the face
         if (!isInEditMode)
-            backgroundCanvas.drawOval(mFaceRect, mRimShadowPaint)
+            backgroundCanvas.drawOval(mFaceRect, mRimShadowPaint!!)
 
         drawScale(backgroundCanvas)
 
