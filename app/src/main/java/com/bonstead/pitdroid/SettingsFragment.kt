@@ -2,14 +2,12 @@ package com.bonstead.pitdroid
 
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.preference.Preference
-import android.preference.PreferenceFragment
+import androidx.preference.EditTextPreference
+import androidx.preference.PreferenceFragmentCompat
 
-class SettingsFragment : PreferenceFragment(), SharedPreferences.OnSharedPreferenceChangeListener {
+class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedPreferenceChangeListener {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
+    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         // Load the preferences from an XML resource
         addPreferencesFromResource(R.xml.preferences)
     }
@@ -35,7 +33,7 @@ class SettingsFragment : PreferenceFragment(), SharedPreferences.OnSharedPrefere
     }
 
     private fun onTemperatureChanged(sharedPreferences: SharedPreferences) {
-        var (initialMinTempValue, initialMaxTempValue) = getMinMax(sharedPreferences)
+        val (initialMinTempValue, initialMaxTempValue) = getMinMax(sharedPreferences)
 
         // If a temperature range value has changed, ensure that the min and max are both multiples
         // of 50, and that the max is greater than the min.
@@ -48,13 +46,13 @@ class SettingsFragment : PreferenceFragment(), SharedPreferences.OnSharedPrefere
 
         if (initialMinTempValue != minTempValue || initialMaxTempValue != maxTempValue) {
             val edit = sharedPreferences.edit()
-            edit.putString(KEY_MIN_TEMP, Integer.toString(minTempValue))
-            edit.putString(KEY_MAX_TEMP, Integer.toString(maxTempValue))
+            edit.putString(KEY_MIN_TEMP, minTempValue.toString())
+            edit.putString(KEY_MAX_TEMP, maxTempValue.toString())
             edit.apply()
         }
 
-        findPreference(KEY_MIN_TEMP).summary = Integer.toString(minTempValue) + "°"
-        findPreference(KEY_MAX_TEMP).summary = Integer.toString(maxTempValue) + "°"
+        findPreference<EditTextPreference>(KEY_MIN_TEMP)!!.summary = minTempValue.toString() + "°"
+        findPreference<EditTextPreference>(KEY_MAX_TEMP)!!.summary = maxTempValue.toString() + "°"
     }
 
     companion object {

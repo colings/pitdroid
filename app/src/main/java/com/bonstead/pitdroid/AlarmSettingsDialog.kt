@@ -2,10 +2,8 @@ package com.bonstead.pitdroid
 
 import android.app.AlertDialog
 import android.app.Dialog
-import android.app.DialogFragment
-import android.content.DialogInterface
+import androidx.fragment.app.DialogFragment
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
 import android.widget.CheckBox
 import android.widget.EditText
@@ -19,7 +17,7 @@ class AlarmSettingsDialog : DialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val bundle = this.arguments
-        val probeIndex = bundle.getInt("probeIndex", 0)
+        val probeIndex = bundle!!.getInt("probeIndex", 0)
 
         // Use the Builder class for convenient dialog construction
         val builder = AlertDialog.Builder(activity)
@@ -29,7 +27,7 @@ class AlarmSettingsDialog : DialogFragment() {
         builder.setInverseBackgroundForced(true)
 
         // Get the layout inflater
-        val inflater = activity.layoutInflater
+        val inflater = requireActivity().layoutInflater
 
         // Inflate and set the layout for the dialog
         // Pass null as the parent view because its going in the dialog layout

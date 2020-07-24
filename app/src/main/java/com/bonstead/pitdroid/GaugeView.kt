@@ -1,7 +1,6 @@
 package com.bonstead.pitdroid
 
 import android.content.Context
-import android.content.res.TypedArray
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -15,7 +14,6 @@ import android.graphics.Shader
 import android.graphics.Typeface
 import android.util.AttributeSet
 import android.util.Log
-import android.view.View
 import android.view.ViewGroup
 
 import java.util.ArrayList
@@ -112,7 +110,7 @@ class GaugeView : GaugeBaseView {
         init()
     }
 
-    fun nameChanged(hand: GaugeHandView) {
+    fun nameChanged() {
         mLegendDirty = true
         invalidate()
     }

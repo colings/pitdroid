@@ -26,7 +26,7 @@ class GaugeHandView : GaugeBaseView {
                     this.name != null && name == null ||
                     this.name != null && name != null && this.name != name) {
                 field = name
-                mGauge!!.nameChanged(this)
+                mGauge!!.nameChanged()
             }
         }
 
@@ -156,7 +156,6 @@ class GaugeHandView : GaugeBaseView {
             mHandPath.lineTo((0.5f - halfWidth) * scale, yTip - length * scale)
             mHandPath.close()
         } else {
-            val yTip = scale * 0.5f
             val length = mHandLength * handLengthScalar
 
             mHandPath.moveTo((0.5f - halfWidth) * scale, 0f)
@@ -318,7 +317,7 @@ class GaugeHandView : GaugeBaseView {
         if (mGauge != null)
             clamped = mGauge!!.clampValue(value)
 
-        mHandTarget = value
+        mHandTarget = clamped
         mHandInitialized = true
         invalidate()
     }

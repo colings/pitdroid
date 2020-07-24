@@ -339,7 +339,7 @@ object HeaterMeter {
 
         if (data is NamedSample) {
             mLatestSample = addStatus((data as NamedSample?)!!)
-        } else if (data != null) {
+        } else if (data is ArrayList<*>) {
             var sampleData = data as ArrayList<Sample>?
             if (sampleData != null) {
                 mLatestSample = addHistory(sampleData)
@@ -439,7 +439,7 @@ object HeaterMeter {
                 val tokens = line.split(",")
                 if (tokens.size == 7) {
                     // Without a valid set point the graph doesn't work
-                    if (parseDouble(tokens[1]) != Double.NaN) {
+                    if (!parseDouble(tokens[1]).isNaN()) {
                         val sample = Sample()
 
                         // First parameter is the time
@@ -556,10 +556,10 @@ object HeaterMeter {
     }
 
     private fun parseDouble(value: String): Double {
-        try {
-            return value.toDouble()
+        return try {
+            value.toDouble()
         } catch (e: NumberFormatException) {
-            return Double.NaN
+            Double.NaN
         }
 
     }
@@ -637,10 +637,10 @@ object HeaterMeter {
 
             // The cookieHeader will be null if we used the wrong password
             if (cookieHeader != null) {
-                val cookies = cookieHeader.split(";".toRegex()).dropLastWhile({ it.isEmpty() }).toTypedArray()
+                val cookies = cookieHeader.split(";".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
 
                 for (cookie in cookies) {
-                    val cookieChunks = cookie.split("=".toRegex()).dropLastWhile({ it.isEmpty() }).toTypedArray()
+                    val cookieChunks = cookie.split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
                     val cookieKey = cookieChunks[0]
                     if (cookieKey == "sysauth") {
                         mAuthCookie = cookieChunks[1]
@@ -662,10 +662,10 @@ object HeaterMeter {
 
         urlConnection?.disconnect()
 
-        if (isAuthenticated) {
-            mLastStatusMessage = "Authentication succeeded"
+        mLastStatusMessage = if (isAuthenticated) {
+            "Authentication succeeded"
         } else {
-            mLastStatusMessage = "Authentication failed"
+            "Authentication failed"
         }
     }
 }

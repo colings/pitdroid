@@ -33,26 +33,25 @@ class SampleTimeSeries(private val mIndex: Int) : XYSeries {
     override fun getY(index: Int): Number? {
         val sample = HeaterMeter.mSamples.get(index)
 
-        if (mIndex < HeaterMeter.kNumProbes) {
-            return if (java.lang.Double.isNaN(sample.mProbes[mIndex])) {
-                null
-            } else {
-                HeaterMeter.getNormalized(sample.mProbes[mIndex])
+        when {
+            (mIndex < HeaterMeter.kNumProbes) -> {
+                return if (java.lang.Double.isNaN(sample.mProbes[mIndex])) {
+                    null
+                } else {
+                    HeaterMeter.getNormalized(sample.mProbes[mIndex])
+                }
             }
-        } else if (mIndex == kFanSpeed) {
-            return sample.mFanSpeed.toInt() / 100.0
-        } else if (mIndex == kLidOpen) {
-            return sample.mLidOpen
-        } else if (mIndex == kSetPoint) {
-            return HeaterMeter.getNormalized(sample.mSetPoint)
+            (mIndex == kFanSpeed) -> return sample.mFanSpeed.toInt() / 100.0
+            (mIndex == kLidOpen) -> return sample.mLidOpen
+            (mIndex == kSetPoint) -> return HeaterMeter.getNormalized(sample.mSetPoint)
         }
 
         return null
     }
 
     companion object {
-        internal val kFanSpeed = HeaterMeter.kNumProbes
-        internal val kLidOpen = HeaterMeter.kNumProbes + 1
-        internal val kSetPoint = HeaterMeter.kNumProbes + 2
+        internal const val kFanSpeed = HeaterMeter.kNumProbes
+        internal const val kLidOpen = HeaterMeter.kNumProbes + 1
+        internal const val kSetPoint = HeaterMeter.kNumProbes + 2
     }
 }

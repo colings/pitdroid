@@ -4,7 +4,7 @@ import java.util.Locale
 import java.util.Timer
 import java.util.TimerTask
 
-import android.app.Fragment
+import androidx.fragment.app.Fragment
 import android.graphics.Color
 import android.graphics.PointF
 import android.os.Bundle
@@ -15,6 +15,7 @@ import android.view.ScaleGestureDetector
 import android.view.View
 import android.view.View.OnTouchListener
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 
 import com.androidplot.ui.DynamicTableModel
 import com.androidplot.xy.BoundaryMode
@@ -51,7 +52,7 @@ class GraphFragment : Fragment(), HeaterMeter.Listener, OnTouchListener {
 	 * Returns percentage of zoom percentage
 	 */
     val scaleFactor: Float
-        get() = ((mDomainWindowMax - mDomainWindowMin) / (HeaterMeter.maxTime - HeaterMeter.minTime)) as Float
+        get() = ((mDomainWindowMax - mDomainWindowMin) / (HeaterMeter.maxTime - HeaterMeter.minTime)).toFloat()
 
     /*
 	 * Helper function to check whether panning window is showing the most recent samples
@@ -88,11 +89,15 @@ class GraphFragment : Fragment(), HeaterMeter.Listener, OnTouchListener {
         mProbes[2] = SampleTimeSeries(2)
         mProbes[3] = SampleTimeSeries(3)
 
-        val kFanSpeed = resources.getColor(R.color.fanSpeed)
-        val kLidOpen = resources.getColor(R.color.lidOpen)
-        val kSetPoint = resources.getColor(R.color.setPoint)
-        val kProbes = intArrayOf(resources.getColor(R.color.probe0), resources.getColor(R.color.probe1), resources.getColor(R.color.probe2), resources.getColor(R.color.probe3))
-        val kGraphBackground = resources.getColor(R.color.graphBackground)
+        val kFanSpeed = ContextCompat.getColor(requireContext(), R.color.fanSpeed)
+        val kLidOpen = ContextCompat.getColor(requireContext(), R.color.lidOpen)
+        val kSetPoint = ContextCompat.getColor(requireContext(), R.color.setPoint)
+        val kProbes = intArrayOf(
+            ContextCompat.getColor(requireContext(), R.color.probe0),
+            ContextCompat.getColor(requireContext(), R.color.probe1),
+            ContextCompat.getColor(requireContext(), R.color.probe2),
+            ContextCompat.getColor(requireContext(), R.color.probe3))
+        val kGraphBackground = ContextCompat.getColor(requireContext(), R.color.graphBackground)
 
         var lpf: LineAndPointFormatter
 
@@ -150,7 +155,7 @@ class GraphFragment : Fragment(), HeaterMeter.Listener, OnTouchListener {
             }
         })
 
-        tempStyle.setFormat(object : java.text.Format() {
+        tempStyle.format = object : java.text.Format() {
             private val serialVersionUID = 1L
 
             override fun format(obj: Any, toAppendTo: StringBuffer,
@@ -164,7 +169,7 @@ class GraphFragment : Fragment(), HeaterMeter.Listener, OnTouchListener {
             override fun parseObject(source: String, pos: java.text.ParsePosition): Any? {
                 return null
             }
-        })
+        }
 
         return view
     }
@@ -310,10 +315,10 @@ class GraphFragment : Fragment(), HeaterMeter.Listener, OnTouchListener {
         // Clamp to make sure we don't scroll past our first/last sample, then update the
         // other value to match.
         if (offset < 0) {
-            newMin = Math.max(mDomainWindowMin + offset.toInt(), HeaterMeter.minTime)
+            newMin = (mDomainWindowMin + offset.toInt()).coerceAtLeast(HeaterMeter.minTime)
             newMax = newMin + mDomainWindowSpan
         } else {
-            newMax = Math.min(mDomainWindowMax + offset.toInt(), HeaterMeter.maxTime)
+            newMax = (mDomainWindowMax + offset.toInt()).coerceAtMost(HeaterMeter.maxTime)
             newMin = newMax - mDomainWindowSpan
         }
 
@@ -350,13 +355,13 @@ class GraphFragment : Fragment(), HeaterMeter.Listener, OnTouchListener {
     }
 
     companion object {
-        internal val TAG = "GraphFragment"
+        internal const val TAG = "GraphFragment"
 
-        internal val INVALID_POINTER_ID = -1
+        internal const val INVALID_POINTER_ID = -1
 
-        internal val DOMAIN_WINDOW_SPAN = "domainSpan"
-        internal val DOMAIN_WINDOW_MIN = "domainMin"
-        internal val DOMAIN_WINDOW_MAX = "domainMax"
-        internal val IS_PANNING = "isPanning"
+        internal const val DOMAIN_WINDOW_SPAN = "domainSpan"
+        internal const val DOMAIN_WINDOW_MIN = "domainMin"
+        internal const val DOMAIN_WINDOW_MAX = "domainMax"
+        internal const val IS_PANNING = "isPanning"
     }
 }

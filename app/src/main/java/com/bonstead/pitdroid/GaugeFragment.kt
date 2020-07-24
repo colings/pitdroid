@@ -1,21 +1,20 @@
 package com.bonstead.pitdroid
 
 import android.app.AlertDialog
-import android.app.Fragment
-import android.content.DialogInterface
 import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.os.Bundle
-import android.preference.PreferenceManager
-import android.text.format.Time
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.NumberPicker
 import android.widget.TextView
-
+import androidx.fragment.app.Fragment
+import androidx.preference.PreferenceManager
 import com.bonstead.pitdroid.HeaterMeter.NamedSample
+import java.text.SimpleDateFormat
+import java.util.Date
 
 class GaugeFragment : Fragment(), HeaterMeter.Listener, SharedPreferences.OnSharedPreferenceChangeListener {
     private lateinit var mGauge: GaugeView
@@ -24,7 +23,7 @@ class GaugeFragment : Fragment(), HeaterMeter.Listener, SharedPreferences.OnShar
 
     private lateinit var mLastUpdate: TextView
     private var mServerTime = 0
-    private val mTime = Time()
+    private val mTime = SimpleDateFormat.getTimeInstance(SimpleDateFormat.LONG)
     private var mSettingPit = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -83,7 +82,7 @@ class GaugeFragment : Fragment(), HeaterMeter.Listener, SharedPreferences.OnShar
 
         HeaterMeter.addListener(this)
 
-        val prefs = PreferenceManager.getDefaultSharedPreferences(activity!!.application.baseContext)
+        val prefs = PreferenceManager.getDefaultSharedPreferences(requireActivity().application.baseContext)
         updatePrefs(prefs)
         prefs.registerOnSharedPreferenceChangeListener(this)
     }
@@ -91,7 +90,7 @@ class GaugeFragment : Fragment(), HeaterMeter.Listener, SharedPreferences.OnShar
     override fun onPause() {
         super.onPause()
 
-        val prefs = PreferenceManager.getDefaultSharedPreferences(activity!!.application.baseContext)
+        val prefs = PreferenceManager.getDefaultSharedPreferences(requireActivity().application.baseContext)
         prefs.unregisterOnSharedPreferenceChangeListener(this)
 
         HeaterMeter.removeListener(this)
@@ -110,18 +109,17 @@ class GaugeFragment : Fragment(), HeaterMeter.Listener, SharedPreferences.OnShar
 
                 // Don't set the name on the pit temp hand, or any probes that aren't connected, so
                 // we wont' show them on the legend
-                if (p > 0 && latestSample.mProbes[p] != Double.NaN) {
+                if (p > 0 && !latestSample.mProbes[p].isNaN()) {
                     mProbeHands[p]!!.name = latestSample.mProbeNames[p]
                 }
             }
 
-            if (latestSample.mSetPoint != Double.NaN && !mSetPoint.isDragging && !mSettingPit)
+            if (!latestSample.mSetPoint.isNaN() && !mSetPoint.isDragging && !mSettingPit)
                 mSetPoint.setHandTarget(latestSample.mSetPoint.toFloat())
 
             // Update the last update time
             if (mServerTime < latestSample.mTime) {
-                mTime.setToNow()
-                mLastUpdate.text = mTime.format("%r")
+                mLastUpdate.text = mTime.format(Date())
                 mServerTime = latestSample.mTime
             }
         }
@@ -132,7 +130,7 @@ class GaugeFragment : Fragment(), HeaterMeter.Listener, SharedPreferences.OnShar
     }
 
     private fun updatePrefs(sharedPreferences: SharedPreferences) {
-        var (minTemp, maxTemp) = SettingsFragment.getMinMax(sharedPreferences)
+        val (minTemp, maxTemp) = SettingsFragment.getMinMax(sharedPreferences)
         mGauge.updateRange(minTemp, maxTemp)
     }
 }

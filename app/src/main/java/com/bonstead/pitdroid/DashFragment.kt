@@ -1,20 +1,19 @@
 package com.bonstead.pitdroid
 
-import android.app.Fragment
-import android.content.SharedPreferences
+import androidx.fragment.app.Fragment
 import android.graphics.Color
 import android.os.Bundle
-import android.preference.PreferenceManager
-import android.text.format.Time
+import androidx.preference.PreferenceManager
 import android.view.LayoutInflater
 import android.view.View
-import android.view.View.OnClickListener
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.TextView
 
 import com.bonstead.pitdroid.AlarmSettingsDialog.AlarmDialogListener
 import com.bonstead.pitdroid.HeaterMeter.NamedSample
+import java.text.SimpleDateFormat
+import java.util.Date
 
 class DashFragment : Fragment(), HeaterMeter.Listener, AlarmDialogListener {
     private lateinit var mFanSpeed: TextView
@@ -25,7 +24,7 @@ class DashFragment : Fragment(), HeaterMeter.Listener, AlarmDialogListener {
 
     private lateinit var mLastUpdate: TextView
     private var mServerTime = 0
-    private val mTime = Time()
+    private val mTime = SimpleDateFormat.getTimeInstance(SimpleDateFormat.LONG)
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_dash, container, false)
@@ -74,7 +73,7 @@ class DashFragment : Fragment(), HeaterMeter.Listener, AlarmDialogListener {
 
             dialog.mListener = this@DashFragment
 
-            dialog.show(fragmentManager, "AlarmDialog")
+            dialog.show(parentFragmentManager, "AlarmDialog")
         }
     }
 
@@ -88,11 +87,11 @@ class DashFragment : Fragment(), HeaterMeter.Listener, AlarmDialogListener {
             3 -> id = R.id.probe3Alarm
         }
 
-        updateAlarmButtonImage(view!!, id, probeIndex)
+        updateAlarmButtonImage(requireView(), id, probeIndex)
 
         // Since we may have changed alarm settings, tell the HeaterMeter to write them
         // out
-        val prefs = PreferenceManager.getDefaultSharedPreferences(activity!!.baseContext)
+        val prefs = PreferenceManager.getDefaultSharedPreferences(requireActivity().baseContext)
         HeaterMeter.preferencesChanged(prefs)
 
         // Update the alarm service, so it gets stopped if there are no alarms any more,
@@ -178,8 +177,7 @@ class DashFragment : Fragment(), HeaterMeter.Listener, AlarmDialogListener {
 
             // Update the last update time
             if (mServerTime < latestSample.mTime) {
-                mTime.setToNow()
-                mLastUpdate.text = mTime.format("%r")
+                mLastUpdate.text = mTime.format(Date())
                 mServerTime = latestSample.mTime
             }
         }

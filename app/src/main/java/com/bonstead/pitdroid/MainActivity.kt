@@ -2,11 +2,11 @@ package com.bonstead.pitdroid
 
 import java.lang.ref.WeakReference
 import android.os.Bundle
-import android.support.design.widget.BottomNavigationView
-import android.support.v7.app.AppCompatActivity
-import android.app.Fragment
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import android.content.SharedPreferences
-import android.preference.PreferenceManager
+import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
@@ -54,7 +54,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
     private fun openFragment(fragment: Fragment) {
-        val transaction = fragmentManager.beginTransaction()
+        val transaction = supportFragmentManager.beginTransaction()
         transaction.replace(R.id.fragment, fragment)
         transaction.addToBackStack(null)
         transaction.commit()
@@ -65,7 +65,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         setContentView(R.layout.activity_main)
 
         // If we don't have a fragment (being opened, not recreated), open the gauge fragment by default
-        if (fragmentManager.findFragmentById(android.R.id.content) == null) {
+        if (supportFragmentManager.findFragmentById(android.R.id.content) == null) {
             // Display the fragment as the main content.
             openFragment(GaugeFragment())
         }
@@ -118,11 +118,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
     }
 
     internal class IncomingHandler(activity: MainActivity) : Handler() {
-        private val mActivity: WeakReference<MainActivity>
-
-        init {
-            mActivity = WeakReference(activity)
-        }
+        private val mActivity: WeakReference<MainActivity> = WeakReference(activity)
 
         override fun handleMessage(msg: Message) {
             val activity = mActivity.get()
@@ -186,7 +182,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         builder.setTitle("Confirm")
         builder.setMessage("You have alarms set, are you sure you want to exit?")
 
-        builder.setPositiveButton("Yes") { dialog, which ->
+        builder.setPositiveButton("Yes") { dialog, _ ->
             mAllowServiceShutdown = true
             dialog.dismiss()
             finish()

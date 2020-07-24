@@ -126,7 +126,7 @@ class AlarmService : Service() {
             if (isAlarm)
                 importance = NotificationManager.IMPORTANCE_HIGH
 
-            var chan = NotificationChannel(channelId, channelName, importance)
+            val chan = NotificationChannel(channelId, channelName, importance)
             chan.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
 
             if (isAlarm) {
@@ -146,10 +146,10 @@ class AlarmService : Service() {
             return channelId
         }
         else {
-            if (isAlarm)
-                return "alarm"
+            return if (isAlarm)
+                "alarm"
             else
-                return ""
+                ""
         }
     }
 
